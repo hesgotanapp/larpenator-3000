@@ -343,6 +343,19 @@
   .rtp-pill:hover { border-color: var(--border-strong); }
   .rtp-pill.selected { background: var(--amber-bg); border-color: var(--amber); color: var(--amber); }
 
+  .checklist-picker { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border-radius: var(--radius-sm); border: 1px dashed var(--border-strong); background: var(--surface-2); }
+  .checklist-picker .rtp-empty { color: var(--ink-faint); font-size: 13px; }
+  .checklist-progress { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-bottom: 8px; }
+  .checklist-pill { display: flex; align-items: center; gap: 6px; padding: 6px 13px 6px 9px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); font-size: 12.5px; color: var(--ink-dim); cursor: pointer; font-weight: 500; transition: all var(--transition); }
+  .checklist-pill:hover { border-color: var(--border-strong); }
+  .checklist-pill.selected { background: var(--cyan-bg); border-color: var(--cyan); color: var(--cyan); }
+  .checklist-pill .ck { width: 14px; height: 14px; border-radius: 4px; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+  .checklist-pill.selected .ck { background: var(--cyan); color: #04140f; }
+  .checklist-item-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); margin-bottom: 8px; }
+  .checklist-item-row .txt { flex: 1; font-size: 13.5px; color: var(--ink-dim); }
+  .checklist-item-row .rm { cursor: pointer; color: var(--ink-faint); font-size: 13px; transition: color var(--transition); }
+  .checklist-item-row .rm:hover { color: var(--red); }
+
   .pnl-input-wrap { position: relative; }
   .pnl-input-wrap input { padding-left: 26px; font-family: var(--font-mono); }
   .pnl-input-wrap::before { content: "$"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-faint); font-family: var(--font-mono); font-size: 14px; }
@@ -722,6 +735,10 @@
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
       Dashboard
     </div>
+    <div class="nav-item" data-tab="premarket">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="4"></circle><path d="M12 3v3"></path><path d="M4.2 8.2l1.9 1.9"></path><path d="M1 16h3"></path><path d="M20 16h3"></path><path d="M17.9 10.1l1.9-1.9"></path><path d="M4 21h16"></path></svg>
+      Premarket
+    </div>
     <div class="nav-item" data-tab="new">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
       New Entry
@@ -749,6 +766,10 @@
     <div class="nav-item" data-tab="rulebook">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
       Rule Book
+    </div>
+    <div class="nav-item" data-tab="checklist">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M9 3v2h6V3"></path><polyline points="8,12 10.5,14.5 16,9"></polyline></svg>
+      Checklist
     </div>
     <div class="nav-item" data-tab="goals">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1"></circle></svg>
@@ -902,6 +923,46 @@
       </div>
     </section>
 
+    <!-- PREMARKET -->
+    <section class="section" id="section-premarket">
+      <div class="page-head"><h1>Premarket</h1><p>Write down what you expect before the bell — then compare it to what actually happened.</p></div>
+
+      <form id="premarket-form">
+        <div class="form-grid">
+          <div class="field">
+            <label for="pm-date">Date</label>
+            <input type="date" id="pm-date" required>
+          </div>
+          <div class="field">
+            <label for="pm-levels">Key levels to watch (optional)</label>
+            <input type="text" id="pm-levels" placeholder="e.g. Support 5480, Resistance 5510">
+          </div>
+          <div class="field full">
+            <label for="pm-outlook">What do you think will happen today?</label>
+            <textarea id="pm-outlook" placeholder="Bias, catalysts, what would confirm or invalidate it..." required></textarea>
+          </div>
+          <div class="field full">
+            <label>Screenshot (optional)</label>
+            <div class="paste-zone" id="pm-paste-zone" tabindex="0">
+              <div class="paste-placeholder" id="pm-paste-placeholder">Click here, then paste a screenshot with Ctrl/Cmd+V</div>
+              <img id="pm-paste-preview" style="display:none;">
+              <br>
+              <button type="button" class="remove-shot" id="pm-remove-screenshot" style="display:none;">Remove image</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn" id="pm-submit-btn">Save Premarket Note</button>
+          <button type="button" class="btn ghost" id="pm-cancel-edit-btn" style="display:none;">Cancel edit</button>
+        </div>
+      </form>
+
+      <div class="card" style="margin-top:22px;">
+        <div class="cal-card-head"><h3>Past premarket notes</h3></div>
+        <div id="premarket-list"></div>
+      </div>
+    </section>
+
     <!-- NEW ENTRY -->
     <section class="section" id="section-new">
       <div class="page-head">
@@ -937,6 +998,12 @@
             <label>Discipline</label>
             <div class="rule-toggle" id="rule-toggle"><span class="box">⚠</span> I broke my trading rules today</div>
             <div class="rule-tags-picker" id="rule-tags-picker"></div>
+          </div>
+
+          <div class="field full">
+            <label>Pre-trade checklist</label>
+            <div class="checklist-progress" id="checklist-progress"></div>
+            <div class="checklist-picker" id="entry-checklist-picker"></div>
           </div>
 
           <div class="field full">
@@ -1160,6 +1227,20 @@
       </div>
       <div class="form-actions">
         <button class="btn" id="rulebook-save-btn">Save rule book</button>
+      </div>
+    </section>
+
+    <!-- CHECKLIST -->
+    <section class="section" id="section-checklist">
+      <div class="page-head"><h1>Trade Checklist</h1><p>What you need to see before you enter a trade — set it here, confirm it when you log the trade.</p></div>
+
+      <div class="card">
+        <div class="cal-card-head"><h3>Your checklist items</h3></div>
+        <div id="checklist-items-manage"></div>
+        <div class="tag-add-row">
+          <input type="text" id="checklist-item-input" placeholder="Add a check, e.g. Higher timeframe bias confirmed">
+          <button class="btn small cyan" id="checklist-item-add">Add</button>
+        </div>
       </div>
     </section>
 
@@ -1472,6 +1553,8 @@
   const BACKTEST_MISTAKE_TAGS_KEY = 'lvd_backtest_mistake_tags';
   const ALGO_PNL_KEY = 'lvd_algo_pnl';
   const ACHIEVEMENTS_KEY = 'lvd_achievements';
+  const PREMARKET_KEY = 'lvd_premarket_entries';
+  const CHECKLIST_ITEMS_KEY = 'lvd_checklist_items';
 
   let entries = loadJSON(STORAGE_KEY, []);
   let focusRules = loadJSON(FOCUS_RULES_KEY, null);
@@ -1490,10 +1573,15 @@
   let backtestMistakeTags = loadJSON(BACKTEST_MISTAKE_TAGS_KEY, ['Entered before confirmation', 'Ignored higher timeframe bias', 'Moved stop loss', 'FOMO entry', 'Oversized risk', 'Skipped the checklist']);
   let algoPnl = loadJSON(ALGO_PNL_KEY, {});
   let achievements = loadJSON(ACHIEVEMENTS_KEY, []);
+  let premarketEntries = loadJSON(PREMARKET_KEY, []);
+  let checklistItems = loadJSON(CHECKLIST_ITEMS_KEY, ['Higher timeframe bias confirmed', 'Key level reacted as expected', 'Risk defined before entry', 'Setup matches the rulebook']);
 
   let achEditingId = null;
   let achCurrentScreenshot = null;
   let achCurrentView = 'add';
+
+  let pmEditingId = null;
+  let pmCurrentScreenshot = null;
 
   let selectedResult = null;
   let editingId = null;
@@ -1501,6 +1589,7 @@
   let currentScreenshot = null;
   let rulesBroken = false;
   let selectedBrokenRules = [];
+  let selectedChecklistChecked = [];
   let calYear, calMonth;
   let reviewWeekStart;
   let dashboardMode = localStorage.getItem('lvd_dashboard_mode') || 'manual';
@@ -1559,6 +1648,11 @@
     try { localStorage.setItem(ACHIEVEMENTS_KEY, JSON.stringify(achievements)); }
     catch (e) { showToast('Could not save — storage may be full'); console.error(e); }
   }
+  function savePremarketEntries() {
+    try { localStorage.setItem(PREMARKET_KEY, JSON.stringify(premarketEntries)); }
+    catch (e) { showToast('Could not save — storage may be full'); console.error(e); }
+  }
+  function saveChecklistItems() { localStorage.setItem(CHECKLIST_ITEMS_KEY, JSON.stringify(checklistItems)); }
 
   function getAlgoEntries() {
     return Object.keys(algoPnl).map(date => {
@@ -1579,6 +1673,8 @@
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('section-' + name).classList.add('active');
     if (name === 'dashboard') renderDashboard();
+    if (name === 'premarket') renderPremarketList();
+    if (name === 'checklist') renderChecklistManage();
     if (name === 'entries') renderEntries();
     if (name === 'calendar') renderCalendar();
     if (name === 'equity') renderEquity('equity-chart-wrap', 'equity-stats-strip');
@@ -1726,6 +1822,30 @@
     });
   }
 
+  function renderEntryChecklistPicker() {
+    const picker = document.getElementById('entry-checklist-picker');
+    const progress = document.getElementById('checklist-progress');
+    if (!checklistItems.length) {
+      picker.innerHTML = `<span class="rtp-empty">No checklist items yet — add some in the Checklist section to pick from here.</span>`;
+      progress.textContent = '';
+      return;
+    }
+    progress.textContent = `${selectedChecklistChecked.length} of ${checklistItems.length} confirmed`;
+    picker.innerHTML = checklistItems.map(item => {
+      const on = selectedChecklistChecked.includes(item);
+      return `<div class="checklist-pill${on ? ' selected' : ''}" data-item="${escapeHtml(item)}"><span class="ck">${on ? '✓' : ''}</span>${escapeHtml(item)}</div>`;
+    }).join('');
+    picker.querySelectorAll('.checklist-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        const item = pill.dataset.item;
+        if (selectedChecklistChecked.includes(item)) selectedChecklistChecked = selectedChecklistChecked.filter(t => t !== item);
+        else selectedChecklistChecked.push(item);
+        renderEntryChecklistPicker();
+      });
+    });
+  }
+  renderEntryChecklistPicker();
+
   document.getElementById('cancel-edit-btn').addEventListener('click', resetForm);
 
   // ---------- algo daily P&L ----------
@@ -1820,6 +1940,7 @@
       pnl: parseFloat(document.getElementById('f-pnl').value) || 0,
       rulesBroken: rulesBroken,
       brokenRules: rulesBroken ? [...selectedBrokenRules] : [],
+      checklistChecked: [...selectedChecklistChecked],
       emotions: document.getElementById('f-emotions').value.trim(),
       happened: document.getElementById('f-happened').value.trim(),
       good: document.getElementById('f-good').value.trim(),
@@ -1838,10 +1959,11 @@
   function resetForm() {
     form.reset();
     dateInput.value = todayStr;
-    selectedResult = null; editingId = null; rulesBroken = false; selectedBrokenRules = [];
+    selectedResult = null; editingId = null; rulesBroken = false; selectedBrokenRules = []; selectedChecklistChecked = [];
     document.querySelectorAll('.result-toggle button').forEach(b => b.classList.remove('selected'));
     ruleToggle.classList.remove('active'); ruleToggle.querySelector('.box').textContent = '⚠';
     ruleTagsPicker.classList.remove('open');
+    renderEntryChecklistPicker();
     document.getElementById('submit-btn').textContent = 'Save Entry';
     document.getElementById('cancel-edit-btn').style.display = 'none';
     setScreenshot(null);
@@ -1862,10 +1984,12 @@
     selectedResult = e.result;
     rulesBroken = !!e.rulesBroken;
     selectedBrokenRules = e.brokenRules ? [...e.brokenRules] : [];
+    selectedChecklistChecked = e.checklistChecked ? [...e.checklistChecked] : [];
     ruleToggle.classList.toggle('active', rulesBroken);
     ruleToggle.querySelector('.box').textContent = rulesBroken ? '✓' : '⚠';
     ruleTagsPicker.classList.toggle('open', rulesBroken);
     renderRuleTagsPicker();
+    renderEntryChecklistPicker();
     document.querySelectorAll('.result-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.result === e.result));
     setScreenshot(e.screenshot || null);
     document.getElementById('submit-btn').textContent = 'Update Entry';
@@ -2129,6 +2253,7 @@
         </div>
         <div class="entry-body" id="body-${e.id}">
           ${e.brokenRules && e.brokenRules.length ? block('Rules broken', e.brokenRules.join(', ')) : ''}
+          ${e.checklistChecked && e.checklistChecked.length ? block('Pre-trade checklist confirmed', e.checklistChecked.join(', ')) : ''}
           ${block('Emotions', e.emotions)}
           ${block('What happened', e.happened)}
           ${block('What went well', e.good)}
@@ -3200,6 +3325,166 @@
     grid.querySelectorAll('.ach-card-img-wrap[data-full]').forEach(el => el.addEventListener('click', () => openLightbox(el.dataset.full)));
   }
 
+  // ---------- checklist ----------
+  function renderChecklistManage() {
+    const el = document.getElementById('checklist-items-manage');
+    if (!checklistItems.length) {
+      el.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>No checklist items yet — add your first one below.</p></div>`;
+      return;
+    }
+    el.innerHTML = checklistItems.map((item, i) => `
+      <div class="checklist-item-row">
+        <span class="txt">${escapeHtml(item)}</span>
+        <span class="rm" data-i="${i}">✕</span>
+      </div>
+    `).join('');
+    el.querySelectorAll('.rm').forEach(rm => rm.addEventListener('click', () => {
+      const item = checklistItems[parseInt(rm.dataset.i, 10)];
+      checklistItems.splice(parseInt(rm.dataset.i, 10), 1);
+      saveChecklistItems();
+      selectedChecklistChecked = selectedChecklistChecked.filter(t => t !== item);
+      renderChecklistManage();
+      renderEntryChecklistPicker();
+    }));
+  }
+  document.getElementById('checklist-item-add').addEventListener('click', addChecklistItem);
+  document.getElementById('checklist-item-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addChecklistItem(); } });
+  function addChecklistItem() {
+    const input = document.getElementById('checklist-item-input');
+    const val = input.value.trim();
+    if (!val) return;
+    checklistItems.push(val);
+    saveChecklistItems();
+    input.value = '';
+    renderChecklistManage();
+    renderEntryChecklistPicker();
+  }
+
+  // ---------- premarket ----------
+  const pmForm = document.getElementById('premarket-form');
+  const pmDateInput = document.getElementById('pm-date');
+  pmDateInput.value = todayStr;
+
+  const pmPasteZone = document.getElementById('pm-paste-zone');
+  const pmPastePreview = document.getElementById('pm-paste-preview');
+  const pmPastePlaceholder = document.getElementById('pm-paste-placeholder');
+  const pmRemoveShotBtn = document.getElementById('pm-remove-screenshot');
+
+  pmPasteZone.addEventListener('click', () => pmPasteZone.focus());
+  pmPasteZone.addEventListener('paste', (e) => {
+    const items = (e.clipboardData || window.clipboardData).items;
+    for (const item of items) {
+      if (item.type.indexOf('image') === 0) {
+        const blob = item.getAsFile();
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = () => {
+          img.onload = () => setPmScreenshot(compressImage(img));
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(blob);
+        e.preventDefault();
+        return;
+      }
+    }
+    showToast('No image found on clipboard');
+  });
+  pmRemoveShotBtn.addEventListener('click', (e) => { e.stopPropagation(); setPmScreenshot(null); });
+
+  function setPmScreenshot(dataUrl) {
+    pmCurrentScreenshot = dataUrl;
+    if (dataUrl) {
+      pmPastePreview.src = dataUrl; pmPastePreview.style.display = 'block';
+      pmPastePlaceholder.style.display = 'none'; pmRemoveShotBtn.style.display = 'inline-block';
+      pmPasteZone.classList.add('has-image');
+    } else {
+      pmPastePreview.style.display = 'none'; pmPastePreview.src = '';
+      pmPastePlaceholder.style.display = 'block'; pmRemoveShotBtn.style.display = 'none';
+      pmPasteZone.classList.remove('has-image');
+    }
+  }
+
+  document.getElementById('pm-cancel-edit-btn').addEventListener('click', resetPmForm);
+
+  pmForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const outlook = document.getElementById('pm-outlook').value.trim();
+    if (!outlook) { showToast('Write down what you expect to happen'); return; }
+    const entry = {
+      id: pmEditingId || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
+      date: pmDateInput.value,
+      levels: document.getElementById('pm-levels').value.trim(),
+      outlook,
+      screenshot: pmCurrentScreenshot || null,
+      createdAt: pmEditingId ? (premarketEntries.find(x => x.id === pmEditingId) || {}).createdAt || Date.now() : Date.now()
+    };
+    if (pmEditingId) { premarketEntries = premarketEntries.map(x => x.id === pmEditingId ? entry : x); showToast('Premarket note updated'); }
+    else { premarketEntries.push(entry); showToast('Premarket note saved'); }
+    savePremarketEntries();
+    resetPmForm();
+    renderPremarketList();
+  });
+
+  function resetPmForm() {
+    pmForm.reset();
+    pmDateInput.value = todayStr;
+    pmEditingId = null;
+    document.getElementById('pm-submit-btn').textContent = 'Save Premarket Note';
+    document.getElementById('pm-cancel-edit-btn').style.display = 'none';
+    setPmScreenshot(null);
+  }
+
+  function loadPremarketIntoForm(id) {
+    const p = premarketEntries.find(x => x.id === id);
+    if (!p) return;
+    pmEditingId = id;
+    pmDateInput.value = p.date;
+    document.getElementById('pm-levels').value = p.levels || '';
+    document.getElementById('pm-outlook').value = p.outlook || '';
+    setPmScreenshot(p.screenshot || null);
+    document.getElementById('pm-submit-btn').textContent = 'Update Premarket Note';
+    document.getElementById('pm-cancel-edit-btn').style.display = 'inline-block';
+    switchTab('premarket');
+  }
+
+  function deletePremarketEntry(id) {
+    if (!confirm('Delete this premarket note? This cannot be undone.')) return;
+    premarketEntries = premarketEntries.filter(x => x.id !== id);
+    savePremarketEntries();
+    renderPremarketList();
+  }
+
+  function renderPremarketList() {
+    const list = document.getElementById('premarket-list');
+    const sorted = [...premarketEntries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+    if (!sorted.length) {
+      list.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>No premarket notes yet. Log what you expect before the next session opens.</p></div>`;
+      return;
+    }
+    list.innerHTML = sorted.map(p => `
+      <div class="entry-card" data-id="${p.id}">
+        <div class="entry-top" data-toggle="pm-${p.id}">
+          <div class="entry-meta">
+            <span class="entry-date">${fmtDate(p.date)}</span>
+            ${p.levels ? `<span class="entry-symbol">${escapeHtml(p.levels)}</span>` : ''}
+          </div>
+        </div>
+        <div class="entry-body" id="body-pm-${p.id}">
+          ${block('Outlook', p.outlook)}
+          ${p.screenshot ? `<div class="entry-block"><div class="k">Screenshot</div><img class="entry-screenshot-thumb" src="${p.screenshot}" data-full="${p.screenshot}"></div>` : ''}
+          <div class="entry-actions">
+            <button class="btn ghost small" data-pmedit="${p.id}">Edit</button>
+            <button class="btn danger small" data-pmdelete="${p.id}">Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    list.querySelectorAll('[data-toggle]').forEach(el => el.addEventListener('click', () => document.getElementById('body-' + el.dataset.toggle).classList.toggle('open')));
+    list.querySelectorAll('[data-pmedit]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); loadPremarketIntoForm(el.dataset.pmedit); }));
+    list.querySelectorAll('[data-pmdelete]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); deletePremarketEntry(el.dataset.pmdelete); }));
+    list.querySelectorAll('.entry-screenshot-thumb').forEach(img => img.addEventListener('click', (ev) => { ev.stopPropagation(); openLightbox(img.dataset.full); }));
+  }
+
   // ---------- notes ----------
   const NOTES_KEY = 'lvd_notes';
   let notesStore = loadJSON(NOTES_KEY, { notes: [], lastOpenedId: null });
@@ -4118,7 +4403,9 @@
       rulebook,
       goals,
       achievements,
-      notes: notesStore
+      notes: notesStore,
+      premarketEntries,
+      checklistItems
     };
     const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -4182,6 +4469,14 @@
               const existingNoteIds = new Set(notesStore.notes.map(n => n.id));
               imported.notes.notes.forEach(n => { if (!existingNoteIds.has(n.id)) notesStore.notes.push(n); });
             }
+            if (Array.isArray(imported.premarketEntries)) {
+              const existingPmIds = new Set(premarketEntries.map(p => p.id));
+              imported.premarketEntries.forEach(p => { if (!existingPmIds.has(p.id)) premarketEntries.push(p); });
+            }
+            if (Array.isArray(imported.checklistItems)) {
+              const existingChecks = new Set(checklistItems);
+              imported.checklistItems.forEach(c => { if (!existingChecks.has(c)) checklistItems.push(c); });
+            }
           } else {
             entries = importedEntries;
             backtestEntries = importedBacktest;
@@ -4196,6 +4491,8 @@
             if (typeof imported.focusIndex === 'number') focusIndex = imported.focusIndex;
             if (imported.milestone && typeof imported.milestone === 'object') milestone = imported.milestone;
             if (imported.notes && typeof imported.notes === 'object' && Array.isArray(imported.notes.notes)) notesStore = imported.notes;
+            if (Array.isArray(imported.premarketEntries)) premarketEntries = imported.premarketEntries;
+            if (Array.isArray(imported.checklistItems)) checklistItems = imported.checklistItems;
           }
 
           saveEntries();
@@ -4210,11 +4507,13 @@
           saveFocusIndex();
           saveMilestone();
           saveNotes();
+          savePremarketEntries();
+          saveChecklistItems();
         } else {
           throw new Error('bad format');
         }
 
-        renderDashboard(); renderEntries(); renderBacktestStats();
+        renderDashboard(); renderEntries(); renderBacktestStats(); renderEntryChecklistPicker();
         showToast('Import complete');
         if (typeof dismissWelcome === 'function' && document.getElementById('welcome-overlay').style.display !== 'none') dismissWelcome();
       } catch (err) { showToast('Could not read that file'); console.error(err); }
