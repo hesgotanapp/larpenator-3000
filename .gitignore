@@ -1,0 +1,6 @@
+node_modules/
+dist/
+build/app.ico
+build/app.icns
+build/app.png
+build/tmp-*.png

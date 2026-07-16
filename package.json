@@ -1,0 +1,59 @@
+{
+  "name": "larpenator-3000",
+  "productName": "Larpenator 3000",
+  "version": "1.0.0",
+  "description": "Personal trading journal — entries, streaks, equity curve, backtests, and a linked notes graph. All data stays on your machine.",
+  "author": "Kaine Durham",
+  "license": "UNLICENSED",
+  "repository": "github:hesgotanapp/larpenator-3000",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "icons": "node scripts/make-icons.js",
+    "dist": "electron-builder --win",
+    "dist:all": "electron-builder -wml"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "icon-gen": "^5.0.0",
+    "sharp": "^0.33.5"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "build": {
+    "appId": "com.larpenator.journal",
+    "productName": "Larpenator 3000",
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/app.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/app.icns",
+      "category": "public.app-category.finance"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/app.png",
+      "category": "Office"
+    },
+    "publish": {
+      "provider": "github"
+    }
+  }
+}
