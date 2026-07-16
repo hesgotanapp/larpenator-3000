@@ -3771,9 +3771,9 @@
     graph.links.forEach(l => {
       const a = graph.byId[l.a], b = graph.byId[l.b];
       const touched = hover && (l.a === hover.id || l.b === hover.id);
-      ctx.strokeStyle = touched ? colors.cyan : 'rgba(255,255,255,0.10)';
-      ctx.globalAlpha = hover ? (touched ? 0.9 : 0.08) : 0.55;
-      ctx.lineWidth = (touched ? 1.6 : 1) / graph.zoom;
+      ctx.strokeStyle = touched ? colors.cyan : 'rgba(255,255,255,0.34)';
+      ctx.globalAlpha = hover ? (touched ? 1 : 0.1) : 0.85;
+      ctx.lineWidth = (touched ? 2 : 1.4) / graph.zoom;
       ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
     });
 
@@ -3919,7 +3919,7 @@
 
     g3.linkGeo = new THREE.BufferGeometry();
     g3.linkGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(g3.links.length * 6), 3));
-    g3.lines = new THREE.LineSegments(g3.linkGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.13 }));
+    g3.lines = new THREE.LineSegments(g3.linkGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.32 }));
     g3.scene.add(g3.lines);
     g3.hlGeo = new THREE.BufferGeometry();
     g3.hlGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(g3.links.length * 6), 3));
@@ -3997,7 +3997,10 @@
       n._mesh.material.opacity = hover && !emphasized ? (n.ghost ? 0.12 : 0.25) : (n.ghost ? 0.45 : 1);
       n._mesh.material.transparent = true;
       n._labelSprite.position.set(n.x, n.y - n.r * 1.6 - 12, n.z);
-      n._labelSprite.material.opacity = hover ? (emphasized ? 1 : 0.08) : 0.85;
+      // labels fade out as the camera pulls away
+      const camDist = g3.camera.position.distanceTo(n._mesh.position);
+      const distFade = Math.max(0, Math.min(1, (1150 - camDist) / (1150 - 480)));
+      n._labelSprite.material.opacity = isHover ? 1 : (hover ? (emphasized ? 1 : 0.08) : 0.85) * distFade;
     });
 
     const pos = g3.linkGeo.attributes.position.array;
