@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, protocol, net } = require('electron');
+const { app, BrowserWindow, Menu, dialog, protocol, net, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
@@ -95,6 +95,17 @@ function wireAutoBackup() {
   setInterval(writeAutoBackup, 2 * 60 * 1000);
   if (win) win.on('blur', writeAutoBackup);
 }
+
+// Lets the renderer read its own on-disk safety-net backup, so it can silently
+// recover if localStorage is ever unexpectedly empty at launch (e.g. a storage
+// race on first run after an update) instead of showing "start fresh".
+ipcMain.handle('lvd-read-auto-backup', () => {
+  try {
+    return fs.readFileSync(path.join(app.getPath('userData'), 'auto-backup.json'), 'utf8');
+  } catch (e) {
+    return null;
+  }
+});
 
 function wireUpdater() {
   if (updaterWired || !app.isPackaged) return;

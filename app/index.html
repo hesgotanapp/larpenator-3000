@@ -5152,8 +5152,28 @@
     && !localStorage.getItem('lvd_backtest_entries')
     && !localStorage.getItem('lvd_notes')
     && !localStorage.getItem('lvd_achievements');
-  if (isFreshInstall) welcomeOverlay.style.display = 'flex';
-  else localStorage.setItem('lvd_welcomed', '1');
+
+  // If storage looks empty, check for a recent on-disk safety-net backup before
+  // assuming this is really a fresh install — silently recover rather than
+  // showing "start fresh" if we find real data (guards against any storage
+  // race on first launch after an update).
+  if (isFreshInstall && window.larpenatorDesktop && typeof window.larpenatorDesktop.readAutoBackup === 'function') {
+    window.larpenatorDesktop.readAutoBackup().then(raw => {
+      if (!raw) { welcomeOverlay.style.display = 'flex'; return; }
+      let backup;
+      try { backup = JSON.parse(raw); } catch (e) { welcomeOverlay.style.display = 'flex'; return; }
+      const keys = Object.keys(backup).filter(k => k.indexOf('lvd_') === 0);
+      const hasRealData = keys.some(k => { const v = backup[k]; return v && v !== '[]' && v !== '{}' && v !== '""' && v !== 'null'; });
+      if (!hasRealData) { welcomeOverlay.style.display = 'flex'; return; }
+      keys.forEach(k => localStorage.setItem(k, backup[k]));
+      localStorage.setItem('lvd_welcomed', '1');
+      location.reload();
+    }).catch(() => { welcomeOverlay.style.display = 'flex'; });
+  } else if (isFreshInstall) {
+    welcomeOverlay.style.display = 'flex';
+  } else {
+    localStorage.setItem('lvd_welcomed', '1');
+  }
   document.getElementById('welcome-fresh').addEventListener('click', dismissWelcome);
   document.getElementById('welcome-import').addEventListener('click', () => document.getElementById('import-input').click());
 
