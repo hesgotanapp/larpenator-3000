@@ -429,6 +429,12 @@
   .accent-swatch-custom { width: 28px; height: 28px; border-radius: 50%; border: none; padding: 0; cursor: pointer; background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); flex-shrink: 0; }
   .accent-swatch-custom::-webkit-color-swatch-wrapper { padding: 2px; border-radius: 50%; }
   .accent-swatch-custom::-webkit-color-swatch { border: 1px solid var(--border-strong); border-radius: 50%; }
+
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 3px; background: var(--surface-3); outline: none; cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-strong); transition: transform var(--transition); }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-strong); }
+  input[type=range]::-moz-range-track { height: 4px; border-radius: 3px; background: var(--surface-3); }
   .premarket-reminder-banner { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 18px; border-radius: var(--radius); border: 1px solid var(--accent-border-soft); background: var(--grad-accent-soft); margin-bottom: 20px; flex-wrap: wrap; }
   .premarket-reminder-banner .txt { font-size: 13.5px; color: var(--ink); font-weight: 500; }
   .premarket-reminder-banner .txt b { color: var(--cyan); }
@@ -1631,9 +1637,16 @@
             <button class="mode-btn" data-theme="light" type="button">Light</button>
           </div>
         </div>
-        <div class="field">
+        <div class="field" style="margin-bottom:16px;">
           <label>Accent color</label>
           <div class="accent-swatch-row" id="accent-swatches"></div>
+        </div>
+        <div class="field">
+          <label>Corner glow brightness</label>
+          <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
+            <input type="range" id="glow-intensity-slider" min="0" max="150" step="5">
+            <span id="glow-intensity-value" style="font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); min-width:38px; text-align:right;"></span>
+          </div>
         </div>
       </div>
 
@@ -1695,8 +1708,11 @@
   // ---------- theme / accent (applied first to minimize flash) ----------
   const THEME_KEY = 'lvd_theme_mode';
   const ACCENT_KEY = 'lvd_theme_accent';
+  const GLOW_KEY = 'lvd_glow_intensity';
   let themeMode = localStorage.getItem(THEME_KEY) || 'dark';
   let customAccent = localStorage.getItem(ACCENT_KEY) || null;
+  let glowIntensity = parseInt(localStorage.getItem(GLOW_KEY), 10);
+  if (isNaN(glowIntensity) || glowIntensity < 0) glowIntensity = 100;
   const ACCENT_PRESETS = [
     { name: 'Emerald', hex: '#30d68a' },
     { name: 'Azure', hex: '#3b9eff' },
@@ -1704,10 +1720,26 @@
     { name: 'Amber', hex: '#f0a23a' },
     { name: 'Rose', hex: '#f16c93' }
   ];
+  // base color-mix percentages the CSS defaults use per theme, at 100% intensity
+  const GLOW_BASE = { dark: { core: 42, mid: 30 }, light: { core: 24, mid: 16 } };
+  function applyGlowIntensity() {
+    const base = GLOW_BASE[themeMode] || GLOW_BASE.dark;
+    if (glowIntensity === 100) {
+      document.documentElement.style.removeProperty('--wash-corner-core');
+      document.documentElement.style.removeProperty('--wash-corner');
+      return;
+    }
+    const scale = glowIntensity / 100;
+    const core = Math.max(0, Math.min(100, Math.round(base.core * scale)));
+    const mid = Math.max(0, Math.min(100, Math.round(base.mid * scale)));
+    document.documentElement.style.setProperty('--wash-corner-core', `color-mix(in srgb, var(--accent) ${core}%, transparent)`);
+    document.documentElement.style.setProperty('--wash-corner', `color-mix(in srgb, var(--accent) ${mid}%, transparent)`);
+  }
   function applyTheme() {
     document.documentElement.setAttribute('data-theme', themeMode);
     if (customAccent) document.documentElement.style.setProperty('--accent', customAccent);
     else document.documentElement.style.removeProperty('--accent');
+    applyGlowIntensity();
   }
   applyTheme();
 
@@ -4791,6 +4823,9 @@
       applyTheme();
       renderAppearanceControls();
     });
+    const slider = document.getElementById('glow-intensity-slider');
+    slider.value = glowIntensity;
+    document.getElementById('glow-intensity-value').textContent = glowIntensity + '%';
   }
   document.querySelectorAll('#theme-toggle .mode-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -4799,6 +4834,12 @@
       applyTheme();
       renderAppearanceControls();
     });
+  });
+  document.getElementById('glow-intensity-slider').addEventListener('input', (e) => {
+    glowIntensity = parseInt(e.target.value, 10);
+    localStorage.setItem(GLOW_KEY, String(glowIntensity));
+    document.getElementById('glow-intensity-value').textContent = glowIntensity + '%';
+    applyGlowIntensity();
   });
 
   // ---------- import / export ----------
