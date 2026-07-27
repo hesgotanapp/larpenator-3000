@@ -22,25 +22,63 @@
     --ink-faint: #5c6370;
     --green: #30d68a;
     --green-dim: #1e5c3e;
-    --green-bg: rgba(48,214,138,0.09);
+    --green-bg: color-mix(in srgb, var(--green) 9%, transparent);
     --red: #ef6a5f;
     --red-dim: #6e332e;
-    --red-bg: rgba(239,106,95,0.09);
+    --red-bg: color-mix(in srgb, var(--red) 9%, transparent);
     --amber: #f0954a;
-    --amber-bg: rgba(240,149,74,0.12);
+    --amber-bg: color-mix(in srgb, var(--amber) 12%, transparent);
     --amber-dim: #8a5426;
-    --cyan: #30d68a;
-    --cyan-bg: rgba(48,214,138,0.09);
-    --grad-primary: linear-gradient(135deg, #35e094, #2bc47e);
-    --grad-primary-soft: linear-gradient(135deg, rgba(48,214,138,0.13), rgba(48,214,138,0.06));
-    --glow-green: rgba(48,214,138,0.16);
-    --glow-cyan: rgba(48,214,138,0.16);
+    /* accent: the single re-themeable brand color. Everything decorative (buttons,
+       links, active states) chains through this; --green/--red/--amber stay fixed
+       P&L semantics and are never touched by the accent picker. */
+    --accent: #30d68a;
+    --accent-dim: #1e5c3e;
+    --accent-bg: color-mix(in srgb, var(--accent) 9%, transparent);
+    --accent-border: color-mix(in srgb, var(--accent) 30%, transparent);
+    --accent-border-soft: color-mix(in srgb, var(--accent) 25%, transparent);
+    --grad-accent: linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, white), var(--accent));
+    --grad-accent-soft: linear-gradient(135deg, color-mix(in srgb, var(--accent) 13%, transparent), color-mix(in srgb, var(--accent) 6%, transparent));
+    --glow-accent: color-mix(in srgb, var(--accent) 16%, transparent);
+    --wash-1: color-mix(in srgb, var(--accent) 10%, transparent);
+    --wash-2: color-mix(in srgb, var(--accent) 6%, transparent);
+    --wash-corner: color-mix(in srgb, var(--accent) 9%, transparent);
+    --cyan: var(--accent);
+    --cyan-bg: var(--accent-bg);
+    --grad-primary: var(--grad-accent);
+    --grad-primary-soft: var(--grad-accent-soft);
+    --glow-green: var(--glow-accent);
+    --glow-cyan: var(--glow-accent);
     --font-body: 'Plus Jakarta Sans', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
     --radius: 16px;
     --radius-sm: 8px;
     --shadow-card: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.25);
     --transition: .16s ease;
+  }
+  :root[data-theme="light"] {
+    --bg: #f4f5f7;
+    --sidebar: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f1f2f5;
+    --surface-3: #e6e8ed;
+    --border: rgba(20,25,40,0.09);
+    --border-strong: rgba(20,25,40,0.17);
+    --ink: #14161c;
+    --ink-dim: #565d6d;
+    --ink-faint: #878e9e;
+    --green: #16a35f;
+    --green-dim: #a9dcc3;
+    --red: #d9483c;
+    --red-dim: #f0c3bf;
+    --amber: #b8690a;
+    --amber-dim: #f0d3ab;
+    --accent: #16a35f;
+    --accent-dim: #a9dcc3;
+    --shadow-card: 0 1px 2px rgba(20,25,40,0.06), 0 8px 20px rgba(20,25,40,0.06);
+    --wash-1: color-mix(in srgb, var(--accent) 6%, transparent);
+    --wash-2: color-mix(in srgb, var(--accent) 4%, transparent);
+    --wash-corner: color-mix(in srgb, var(--accent) 5%, transparent);
   }
   * { box-sizing: border-box; }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -59,17 +97,28 @@
   body::before {
     content: ""; position: fixed; inset: -25%; z-index: -1; pointer-events: none;
     background:
-      radial-gradient(ellipse 1000px 560px at 18% 4%, rgba(48,214,138,0.10), transparent),
-      radial-gradient(ellipse 900px 600px at 88% 92%, rgba(48,214,138,0.06), transparent);
+      radial-gradient(ellipse 1000px 560px at 18% 4%, var(--wash-1), transparent),
+      radial-gradient(ellipse 900px 600px at 88% 92%, var(--wash-2), transparent);
     animation: ambientDrift 22s ease-in-out infinite alternate;
+  }
+  body::after {
+    content: ""; position: fixed; top: -15%; right: -15%; width: 60vw; height: 60vw; max-width: 900px; max-height: 900px;
+    z-index: -1; pointer-events: none;
+    background: radial-gradient(circle at 100% 0%, var(--wash-corner), transparent 65%);
+    animation: cornerGlowDrift 26s ease-in-out infinite alternate;
   }
   @keyframes ambientDrift {
     0% { transform: translate(0, 0) scale(1); opacity: 0.75; }
     50% { transform: translate(4%, 2.5%) scale(1.07); opacity: 1; }
     100% { transform: translate(-3.5%, -2.5%) scale(1.02); opacity: 0.7; }
   }
+  @keyframes cornerGlowDrift {
+    0% { transform: translate(0, 0) scale(1); opacity: 0.85; }
+    50% { transform: translate(-2%, 2%) scale(1.06); opacity: 1; }
+    100% { transform: translate(1%, -1.5%) scale(0.97); opacity: 0.8; }
+  }
   @media (prefers-reduced-motion: reduce) {
-    body::before { animation: none; }
+    body::before, body::after { animation: none; }
     * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   }
   a, button, input, textarea, select { font-family: inherit; color: inherit; }
@@ -370,6 +419,33 @@
   .premarket-grading { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .premarket-grading .badge { cursor: default; }
 
+  .accent-swatch-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+  .accent-swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; flex-shrink: 0; transition: transform var(--transition); position: relative; }
+  .accent-swatch:hover { transform: scale(1.1); }
+  .accent-swatch.selected { border-color: var(--ink); }
+  .accent-swatch.selected::after { content: "✓"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+  .accent-swatch-custom { width: 28px; height: 28px; border-radius: 50%; border: none; padding: 0; cursor: pointer; background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); flex-shrink: 0; }
+  .accent-swatch-custom::-webkit-color-swatch-wrapper { padding: 2px; border-radius: 50%; }
+  .accent-swatch-custom::-webkit-color-swatch { border: 1px solid var(--border-strong); border-radius: 50%; }
+  .premarket-reminder-banner { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 18px; border-radius: var(--radius); border: 1px solid var(--accent-border-soft); background: var(--grad-accent-soft); margin-bottom: 20px; flex-wrap: wrap; }
+  .premarket-reminder-banner .txt { font-size: 13.5px; color: var(--ink); font-weight: 500; }
+  .premarket-reminder-banner .txt b { color: var(--cyan); }
+
+  .print-header { display: none; }
+  @media print {
+    body::before, body::after, .sidebar, .page-head::after, .form-actions, .week-nav .cal-nav-btns, .cal-nav-btns, .link-btn, #dash-view-equity, .toast, .lightbox { display: none !important; }
+    body { background: #fff; color: #111; }
+    body * { visibility: hidden; }
+    .printable, .printable * { visibility: visible; }
+    .printable { position: absolute; left: 0; top: 0; width: 100%; padding: 0; }
+    .print-header { display: block; margin-bottom: 18px; }
+    .print-header h1 { font-size: 20px; margin: 0 0 3px; color: #111; }
+    .print-header p { font-size: 12px; color: #555; margin: 0; }
+    .card, .stats-strip, .entry-card { break-inside: avoid; border-color: #ddd !important; box-shadow: none !important; background: #fff !important; }
+    .stats-strip { background: #ddd !important; }
+    .stats-strip .stat { background: #fff !important; }
+  }
+
   .pnl-input-wrap { position: relative; }
   .pnl-input-wrap input { padding-left: 26px; font-family: var(--font-mono); }
   .pnl-input-wrap::before { content: "$"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-faint); font-family: var(--font-mono); font-size: 14px; }
@@ -622,7 +698,7 @@
     transition: background var(--transition), color var(--transition);
   }
   .note-list-item:hover { background: var(--surface-2); color: var(--ink); }
-  .note-list-item.active { background: var(--cyan-bg); color: var(--cyan); border-color: rgba(48,214,138,0.25); }
+  .note-list-item.active { background: var(--cyan-bg); color: var(--cyan); border-color: var(--accent-border-soft); }
   .note-list-item .t { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .note-list-item .pin-ic { flex-shrink: 0; color: var(--green); font-size: 10px; }
   .note-list-item .d { flex-shrink: 0; font-family: var(--font-mono); font-size: 9.5px; color: var(--ink-faint); }
@@ -665,7 +741,7 @@
   .note-preview pre { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; overflow-x: auto; margin: 0 0 10px; }
   .note-preview pre code { background: transparent; padding: 0; font-size: 12.5px; line-height: 1.6; }
   .note-preview hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-  .wiki-link { color: var(--cyan); cursor: pointer; border-bottom: 1px solid rgba(48,214,138,0.35); transition: all var(--transition); }
+  .wiki-link { color: var(--cyan); cursor: pointer; border-bottom: 1px solid var(--accent-border); transition: all var(--transition); }
   .wiki-link:hover { background: var(--cyan-bg); }
   .wiki-link.dangling { color: rgba(48,214,138,0.55); border-bottom-style: dashed; }
 
@@ -674,11 +750,11 @@
   .note-outlinks { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 10px; }
   .note-outlinks-hint { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.4px; color: var(--ink-faint); }
   .note-outlink {
-    background: var(--cyan-bg); border: 1px solid rgba(48,214,138,0.3); color: var(--cyan);
+    background: var(--cyan-bg); border: 1px solid var(--accent-border); color: var(--cyan);
     font-size: 12px; font-weight: 600; padding: 4px 11px; border-radius: 20px; cursor: pointer;
     transition: all var(--transition);
   }
-  .note-outlink:hover { border-color: var(--cyan); background: rgba(48,214,138,0.16); }
+  .note-outlink:hover { border-color: var(--cyan); background: var(--glow-accent); }
   .note-outlink.dangling { color: rgba(48,214,138,0.55); border-style: dashed; }
 
   .backlinks-panel { margin-top: 16px; }
@@ -834,6 +910,11 @@
         </div>
       </div>
 
+      <div class="premarket-reminder-banner" id="premarket-reminder-banner" style="display:none;">
+        <div class="txt">You haven't logged today's <b>premarket note</b> yet — write down what you expect before the bell.</div>
+        <button class="btn small cyan" id="premarket-reminder-btn" type="button">Log premarket →</button>
+      </div>
+
       <div class="stat-row" id="dash-stats"></div>
 
       <div class="card algo-pnl-card" id="algo-pnl-card" style="display:none; margin-bottom:22px;">
@@ -941,6 +1022,8 @@
     <section class="section" id="section-premarket">
       <div class="page-head"><h1>Premarket</h1><p>Write down what you expect before the bell — then compare it to what actually happened.</p></div>
 
+      <div class="stats-strip" id="premarket-stats-strip"></div>
+
       <form id="premarket-form">
         <div class="form-grid">
           <div class="field">
@@ -1021,6 +1104,10 @@
 
           <div class="field full">
             <label>Pre-trade checklist</label>
+            <div class="result-toggle" id="entry-setup-toggle" style="margin-bottom:10px;">
+              <button type="button" class="sel-be" data-setup="continuation">Continuation setup</button>
+              <button type="button" class="sel-be" data-setup="reversal">Reversal setup</button>
+            </div>
             <div class="checklist-progress" id="checklist-progress"></div>
             <div class="checklist-picker" id="entry-checklist-picker"></div>
           </div>
@@ -1127,12 +1214,18 @@
 
       <!-- PERFORMANCE VIEW -->
       <div class="subview" id="cal-view-performance">
-        <div class="card">
-          <div class="cal-card-head">
-            <h3>Monthly performance</h3>
+        <div class="printable" id="cal-perf-printable">
+          <div class="print-header"><h1>Larpenator 3000 — Monthly Performance</h1><p>All logged entries</p></div>
+          <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+            <button class="btn ghost small" id="cal-perf-print-btn" type="button">Print report</button>
           </div>
-          <div id="cal-monthly-chart-wrap"></div>
-          <div class="equity-caption"><span>P&amp;L by month</span><span>Win rate shown under each bar</span></div>
+          <div class="card">
+            <div class="cal-card-head">
+              <h3>Monthly performance</h3>
+            </div>
+            <div id="cal-monthly-chart-wrap"></div>
+            <div class="equity-caption"><span>P&amp;L by month</span><span>Win rate shown under each bar</span></div>
+          </div>
         </div>
       </div>
     </section>
@@ -1146,7 +1239,10 @@
 
     <!-- WEEKLY REVIEW -->
     <section class="section" id="section-weekly">
-      <div class="page-head"><h1>Weekly Review</h1><p>Step back once a week and review the bigger picture.</p></div>
+      <div class="page-head dash-head">
+        <div><h1>Weekly Review</h1><p>Step back once a week and review the bigger picture.</p></div>
+        <button class="btn ghost small" id="week-print-btn" type="button">Print report</button>
+      </div>
       <div class="week-nav">
         <div class="week-label" id="week-label"></div>
         <div class="cal-nav-btns">
@@ -1155,25 +1251,29 @@
           <button id="week-next">›</button>
         </div>
       </div>
-      <div class="stats-strip" id="week-stats-strip"></div>
 
-      <div class="card">
-        <div class="cal-card-head"><h3>This week's entries</h3></div>
-        <div id="week-entries-list"></div>
-      </div>
+      <div class="printable" id="week-printable">
+        <div class="print-header"><h1>Larpenator 3000 — Weekly Review</h1><p id="week-print-label"></p></div>
+        <div class="stats-strip" id="week-stats-strip"></div>
 
-      <div class="review-grid">
-        <div class="field full">
-          <label for="w-good">What went well this week</label>
-          <textarea id="w-good" placeholder="Patterns of discipline, good decisions, progress worth repeating."></textarea>
+        <div class="card">
+          <div class="cal-card-head"><h3>This week's entries</h3></div>
+          <div id="week-entries-list"></div>
         </div>
-        <div class="field full">
-          <label for="w-bad">What went badly / mistakes this week</label>
-          <textarea id="w-bad" placeholder="Recurring errors, emotional slips, rules broken."></textarea>
-        </div>
-        <div class="field full">
-          <label for="w-focus">Focus for next week</label>
-          <textarea id="w-focus" placeholder="One or two concrete things to carry into next week."></textarea>
+
+        <div class="review-grid">
+          <div class="field full">
+            <label for="w-good">What went well this week</label>
+            <textarea id="w-good" placeholder="Patterns of discipline, good decisions, progress worth repeating."></textarea>
+          </div>
+          <div class="field full">
+            <label for="w-bad">What went badly / mistakes this week</label>
+            <textarea id="w-bad" placeholder="Recurring errors, emotional slips, rules broken."></textarea>
+          </div>
+          <div class="field full">
+            <label for="w-focus">Focus for next week</label>
+            <textarea id="w-focus" placeholder="One or two concrete things to carry into next week."></textarea>
+          </div>
         </div>
       </div>
       <div class="form-actions">
@@ -1256,10 +1356,15 @@
 
     <!-- CHECKLIST -->
     <section class="section" id="section-checklist">
-      <div class="page-head"><h1>Trade Checklist</h1><p>What you need to see before you enter a trade — set it here, confirm it when you log the trade.</p></div>
+      <div class="page-head"><h1>Trade Checklist</h1><p>What you need to see before you enter a trade — set it per setup type, confirm it when you log the trade.</p></div>
+
+      <div class="subnav" id="checklist-subnav">
+        <div class="subnav-item active" data-checklistcat="continuation">Continuation setup</div>
+        <div class="subnav-item" data-checklistcat="reversal">Reversal setup</div>
+      </div>
 
       <div class="card">
-        <div class="cal-card-head"><h3>Your checklist items</h3></div>
+        <div class="cal-card-head"><h3 id="checklist-manage-title">Continuation setup checklist</h3></div>
         <div id="checklist-items-manage"></div>
         <div class="tag-add-row">
           <input type="text" id="checklist-item-input" placeholder="Add a check, e.g. Higher timeframe bias confirmed">
@@ -1514,6 +1619,22 @@
     <!-- DATA -->
     <section class="section" id="section-data">
       <div class="page-head"><h1>Backup &amp; export</h1><p>Keep your data safe and portable.</p></div>
+
+      <div class="card" style="margin-bottom:22px;">
+        <div class="cal-card-head"><h3>Appearance</h3></div>
+        <div class="field" style="margin-bottom:16px;">
+          <label>Theme</label>
+          <div class="mode-switch" id="theme-toggle" style="margin-top:6px;">
+            <button class="mode-btn" data-theme="dark" type="button">Dark</button>
+            <button class="mode-btn" data-theme="light" type="button">Light</button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Accent color</label>
+          <div class="accent-swatch-row" id="accent-swatches"></div>
+        </div>
+      </div>
+
       <div class="data-card">
         <div class="dtxt">Export everything as a <b>JSON</b> file you can store or move to another device.</div>
         <button class="btn small cyan" id="export-btn">Export JSON</button>
@@ -1522,6 +1643,11 @@
         <div class="dtxt">Import a previously exported <b>JSON</b> file — merge with or replace current entries.</div>
         <button class="btn small ghost" id="import-trigger">Import JSON</button>
         <input type="file" id="import-input" accept="application/json">
+      </div>
+      <div class="data-card">
+        <div class="dtxt">Import trades from a <b>CSV</b> export from your broker. Looks for Date, Symbol, and P&amp;L columns (common header names are matched automatically) and adds them as new entries.</div>
+        <button class="btn small ghost" id="csv-import-trigger">Import CSV</button>
+        <input type="file" id="csv-import-input" accept=".csv,text/csv">
       </div>
     </section>
 
@@ -1564,6 +1690,25 @@
 
 <script>
 (function () {
+  // ---------- theme / accent (applied first to minimize flash) ----------
+  const THEME_KEY = 'lvd_theme_mode';
+  const ACCENT_KEY = 'lvd_theme_accent';
+  let themeMode = localStorage.getItem(THEME_KEY) || 'dark';
+  let customAccent = localStorage.getItem(ACCENT_KEY) || null;
+  const ACCENT_PRESETS = [
+    { name: 'Emerald', hex: '#30d68a' },
+    { name: 'Azure', hex: '#3b9eff' },
+    { name: 'Violet', hex: '#a685fa' },
+    { name: 'Amber', hex: '#f0a23a' },
+    { name: 'Rose', hex: '#f16c93' }
+  ];
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', themeMode);
+    if (customAccent) document.documentElement.style.setProperty('--accent', customAccent);
+    else document.documentElement.style.removeProperty('--accent');
+  }
+  applyTheme();
+
   const STORAGE_KEY = 'lvd_journal_entries';
   const FOCUS_KEY = 'lvd_focus_rule';
   const FOCUS_RULES_KEY = 'lvd_focus_rules';
@@ -1579,6 +1724,7 @@
   const ACHIEVEMENTS_KEY = 'lvd_achievements';
   const PREMARKET_KEY = 'lvd_premarket_entries';
   const CHECKLIST_ITEMS_KEY = 'lvd_checklist_items';
+  const CHECKLIST_CATEGORIES_KEY = 'lvd_checklist_categories';
 
   let entries = loadJSON(STORAGE_KEY, []);
   let focusRules = loadJSON(FOCUS_RULES_KEY, null);
@@ -1598,7 +1744,15 @@
   let algoPnl = loadJSON(ALGO_PNL_KEY, {});
   let achievements = loadJSON(ACHIEVEMENTS_KEY, []);
   let premarketEntries = loadJSON(PREMARKET_KEY, []);
-  let checklistItems = loadJSON(CHECKLIST_ITEMS_KEY, ['Higher timeframe bias confirmed', 'Key level reacted as expected', 'Risk defined before entry', 'Setup matches the rulebook']);
+  let checklistCategories = loadJSON(CHECKLIST_CATEGORIES_KEY, null);
+  if (!checklistCategories) {
+    const legacyChecklist = loadJSON(CHECKLIST_ITEMS_KEY, null);
+    checklistCategories = {
+      continuation: (legacyChecklist && legacyChecklist.length) ? legacyChecklist : ['Higher timeframe bias confirmed', 'Key level reacted as expected', 'Risk defined before entry', 'Setup matches the rulebook'],
+      reversal: ['Clear reversal candle or pattern confirmed', 'Divergence or exhaustion signal present', 'Key level held or reclaimed', 'Volume confirms the reversal']
+    };
+  }
+  let activeChecklistCat = 'continuation';
 
   let achEditingId = null;
   let achCurrentScreenshot = null;
@@ -1614,6 +1768,7 @@
   let rulesBroken = false;
   let selectedBrokenRules = [];
   let selectedChecklistChecked = [];
+  let selectedSetupType = null;
   let selectedPremarketId = null;
   let selectedPremarketScenarioId = null;
   let selectedPremarketCorrectness = null;
@@ -1679,7 +1834,7 @@
     try { localStorage.setItem(PREMARKET_KEY, JSON.stringify(premarketEntries)); }
     catch (e) { showToast('Could not save — storage may be full'); console.error(e); }
   }
-  function saveChecklistItems() { localStorage.setItem(CHECKLIST_ITEMS_KEY, JSON.stringify(checklistItems)); }
+  function saveChecklistCategories() { localStorage.setItem(CHECKLIST_CATEGORIES_KEY, JSON.stringify(checklistCategories)); }
 
   function getAlgoEntries() {
     return Object.keys(algoPnl).map(date => {
@@ -1713,10 +1868,16 @@
     if (name === 'achievements') renderAchievementsGallery();
     if (name === 'backtest') renderBacktestStats();
     if (name === 'notes') renderNotesSection();
+    if (name === 'data') renderAppearanceControls();
   }
   document.getElementById('dash-view-calendar').addEventListener('click', () => switchTab('calendar'));
   document.getElementById('dash-view-entries').addEventListener('click', () => switchTab('entries'));
   document.getElementById('dash-view-equity').addEventListener('click', () => switchTab('equity'));
+  document.getElementById('premarket-reminder-btn').addEventListener('click', () => {
+    switchTab('premarket');
+    resetPmForm();
+    document.getElementById('pm-date').value = todayStr;
+  });
 
   // ---------- focus rule ----------
   function saveFocusRules() { localStorage.setItem(FOCUS_RULES_KEY, JSON.stringify(focusRules)); }
@@ -1849,16 +2010,31 @@
     });
   }
 
+  document.querySelectorAll('#entry-setup-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedSetupType = selectedSetupType === btn.dataset.setup ? null : btn.dataset.setup;
+      selectedChecklistChecked = [];
+      document.querySelectorAll('#entry-setup-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.setup === selectedSetupType));
+      renderEntryChecklistPicker();
+    });
+  });
+
   function renderEntryChecklistPicker() {
     const picker = document.getElementById('entry-checklist-picker');
     const progress = document.getElementById('checklist-progress');
-    if (!checklistItems.length) {
-      picker.innerHTML = `<span class="rtp-empty">No checklist items yet — add some in the Checklist section to pick from here.</span>`;
+    if (!selectedSetupType) {
+      picker.innerHTML = `<span class="rtp-empty">Choose Continuation or Reversal above to see that setup's checklist.</span>`;
       progress.textContent = '';
       return;
     }
-    progress.textContent = `${selectedChecklistChecked.length} of ${checklistItems.length} confirmed`;
-    picker.innerHTML = checklistItems.map(item => {
+    const items = checklistCategories[selectedSetupType] || [];
+    if (!items.length) {
+      picker.innerHTML = `<span class="rtp-empty">No checklist items for this setup yet — add some in the Checklist section.</span>`;
+      progress.textContent = '';
+      return;
+    }
+    progress.textContent = `${selectedChecklistChecked.length} of ${items.length} confirmed`;
+    picker.innerHTML = items.map(item => {
       const on = selectedChecklistChecked.includes(item);
       return `<div class="checklist-pill${on ? ' selected' : ''}" data-item="${escapeHtml(item)}"><span class="ck">${on ? '✓' : ''}</span>${escapeHtml(item)}</div>`;
     }).join('');
@@ -2043,6 +2219,7 @@
       rulesBroken: rulesBroken,
       brokenRules: rulesBroken ? [...selectedBrokenRules] : [],
       checklistChecked: [...selectedChecklistChecked],
+      setupType: selectedSetupType,
       premarketLink: selectedPremarketId ? { premarketId: selectedPremarketId, scenarioId: selectedPremarketScenarioId, correctness: selectedPremarketCorrectness } : null,
       emotions: document.getElementById('f-emotions').value.trim(),
       happened: document.getElementById('f-happened').value.trim(),
@@ -2062,9 +2239,10 @@
   function resetForm() {
     form.reset();
     dateInput.value = todayStr;
-    selectedResult = null; editingId = null; rulesBroken = false; selectedBrokenRules = []; selectedChecklistChecked = [];
+    selectedResult = null; editingId = null; rulesBroken = false; selectedBrokenRules = []; selectedChecklistChecked = []; selectedSetupType = null;
     selectedPremarketId = null; selectedPremarketScenarioId = null; selectedPremarketCorrectness = null;
     document.querySelectorAll('#entry-result-toggle button').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('#entry-setup-toggle button').forEach(b => b.classList.remove('selected'));
     ruleToggle.classList.remove('active'); ruleToggle.querySelector('.box').textContent = '⚠';
     ruleTagsPicker.classList.remove('open');
     renderEntryChecklistPicker();
@@ -2090,6 +2268,7 @@
     rulesBroken = !!e.rulesBroken;
     selectedBrokenRules = e.brokenRules ? [...e.brokenRules] : [];
     selectedChecklistChecked = e.checklistChecked ? [...e.checklistChecked] : [];
+    selectedSetupType = e.setupType || null;
     selectedPremarketId = e.premarketLink ? e.premarketLink.premarketId : null;
     selectedPremarketScenarioId = e.premarketLink ? e.premarketLink.scenarioId : null;
     selectedPremarketCorrectness = e.premarketLink ? e.premarketLink.correctness : null;
@@ -2097,6 +2276,7 @@
     ruleToggle.querySelector('.box').textContent = rulesBroken ? '✓' : '⚠';
     ruleTagsPicker.classList.toggle('open', rulesBroken);
     renderRuleTagsPicker();
+    document.querySelectorAll('#entry-setup-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.setup === selectedSetupType));
     renderEntryChecklistPicker();
     renderEntryPremarketCheck();
     document.querySelectorAll('#entry-result-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.result === e.result));
@@ -2157,6 +2337,7 @@
     const s = computeStats(activeList);
     const todayEntries = activeList.filter(e => e.date === todayStr);
     const todayPnl = todayEntries.reduce((sum,e) => sum + (e.pnl||0), 0);
+    document.getElementById('premarket-reminder-banner').style.display = premarketEntries.some(p => p.date === todayStr) ? 'none' : 'flex';
     const avgWin = s.wins ? activeList.filter(e => e.result === 'win').reduce((sum,e) => sum + (e.pnl||0), 0) / s.wins : 0;
     const avgLoss = s.losses ? activeList.filter(e => e.result === 'loss').reduce((sum,e) => sum + (e.pnl||0), 0) / s.losses : 0;
     const unitLabel = isAlgo ? 'days' : 'entries';
@@ -2751,6 +2932,7 @@
     const weekEnd = new Date(reviewWeekStart); weekEnd.setDate(weekEnd.getDate() + 6);
     const weekEndStr = toDateStr(weekEnd);
     document.getElementById('week-label').textContent = `${fmtDateShort(weekStartStr)} – ${fmtDateShort(weekEndStr)}, ${weekEnd.getFullYear()}`;
+    document.getElementById('week-print-label').textContent = `${fmtDateShort(weekStartStr)} – ${fmtDateShort(weekEndStr)}, ${weekEnd.getFullYear()}`;
 
     const weekEntries = entries.filter(e => e.date >= weekStartStr && e.date <= weekEndStr).sort((a,b) => a.date.localeCompare(b.date));
     const s = computeStats(weekEntries);
@@ -2784,6 +2966,9 @@
     document.getElementById('w-bad').value = saved.bad;
     document.getElementById('w-focus').value = saved.focus;
   }
+
+  document.getElementById('week-print-btn').addEventListener('click', () => window.print());
+  document.getElementById('cal-perf-print-btn').addEventListener('click', () => window.print());
 
   document.getElementById('week-save-btn').addEventListener('click', () => {
     const weekStartStr = toDateStr(reviewWeekStart);
@@ -3435,22 +3620,32 @@
   }
 
   // ---------- checklist ----------
+  document.querySelectorAll('#checklist-subnav .subnav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      activeChecklistCat = item.dataset.checklistcat;
+      document.querySelectorAll('#checklist-subnav .subnav-item').forEach(i => i.classList.toggle('active', i.dataset.checklistcat === activeChecklistCat));
+      document.getElementById('checklist-manage-title').textContent = (activeChecklistCat === 'reversal' ? 'Reversal setup' : 'Continuation setup') + ' checklist';
+      renderChecklistManage();
+    });
+  });
   function renderChecklistManage() {
     const el = document.getElementById('checklist-items-manage');
-    if (!checklistItems.length) {
-      el.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>No checklist items yet — add your first one below.</p></div>`;
+    const items = checklistCategories[activeChecklistCat] || [];
+    if (!items.length) {
+      el.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>No checklist items yet for this setup — add your first one below.</p></div>`;
       return;
     }
-    el.innerHTML = checklistItems.map((item, i) => `
+    el.innerHTML = items.map((item, i) => `
       <div class="checklist-item-row">
         <span class="txt">${escapeHtml(item)}</span>
         <span class="rm" data-i="${i}">✕</span>
       </div>
     `).join('');
     el.querySelectorAll('.rm').forEach(rm => rm.addEventListener('click', () => {
-      const item = checklistItems[parseInt(rm.dataset.i, 10)];
-      checklistItems.splice(parseInt(rm.dataset.i, 10), 1);
-      saveChecklistItems();
+      const list = checklistCategories[activeChecklistCat];
+      const item = list[parseInt(rm.dataset.i, 10)];
+      list.splice(parseInt(rm.dataset.i, 10), 1);
+      saveChecklistCategories();
       selectedChecklistChecked = selectedChecklistChecked.filter(t => t !== item);
       renderChecklistManage();
       renderEntryChecklistPicker();
@@ -3462,8 +3657,8 @@
     const input = document.getElementById('checklist-item-input');
     const val = input.value.trim();
     if (!val) return;
-    checklistItems.push(val);
-    saveChecklistItems();
+    checklistCategories[activeChecklistCat].push(val);
+    saveChecklistCategories();
     input.value = '';
     renderChecklistManage();
     renderEntryChecklistPicker();
@@ -3596,7 +3791,22 @@
   function gradingsFor(premarketId) {
     return entries.filter(e => e.premarketLink && e.premarketLink.premarketId === premarketId);
   }
+  function renderPremarketStats() {
+    const strip = document.getElementById('premarket-stats-strip');
+    const graded = entries.filter(e => e.premarketLink && e.premarketLink.correctness);
+    const correct = graded.filter(e => e.premarketLink.correctness === 'correct').length;
+    const partial = graded.filter(e => e.premarketLink.correctness === 'partial').length;
+    const incorrect = graded.filter(e => e.premarketLink.correctness === 'incorrect').length;
+    const pct = graded.length ? Math.round((correct / graded.length) * 100) : null;
+    strip.innerHTML = `
+      <div class="stat"><div class="label">Premarket notes</div><div class="value">${premarketEntries.length}</div></div>
+      <div class="stat"><div class="label">Graded trades</div><div class="value">${graded.length}</div></div>
+      <div class="stat"><div class="label">Correct calls</div><div class="value ${pct === null ? '' : pct >= 50 ? 'win' : 'loss'}">${pct === null ? '—' : pct + '%'}</div></div>
+      <div class="stat"><div class="label">Breakdown</div><div class="value" style="font-size:16px;"><span class="win">${correct}</span> / <span style="color:var(--amber)">${partial}</span> / <span class="loss">${incorrect}</span></div></div>
+    `;
+  }
   function renderPremarketList() {
+    renderPremarketStats();
     const list = document.getElementById('premarket-list');
     const sorted = [...premarketEntries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
     if (!sorted.length) {
@@ -4068,7 +4278,8 @@
   function graphColors() {
     const cs = getComputedStyle(document.documentElement);
     const v = name => cs.getPropertyValue(name).trim();
-    return { green: v('--green'), cyan: v('--cyan'), ink: v('--ink'), inkDim: v('--ink-dim'), inkFaint: v('--ink-faint'), surface: v('--surface') };
+    const accent = v('--accent');
+    return { green: accent, cyan: accent, ink: v('--ink'), inkDim: v('--ink-dim'), inkFaint: v('--ink-faint'), surface: v('--surface') };
   }
 
   function initNotesGraph() {
@@ -4551,6 +4762,43 @@
     g3.raf = requestAnimationFrame(step);
   }
 
+  // ---------- appearance ----------
+  function renderAppearanceControls() {
+    document.querySelectorAll('#theme-toggle .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === themeMode));
+    const row = document.getElementById('accent-swatches');
+    const sel = (customAccent || '').toLowerCase();
+    row.innerHTML = ACCENT_PRESETS.map(p => `<div class="accent-swatch${sel === p.hex.toLowerCase() ? ' selected' : ''}" style="background:${p.hex};" data-hex="${p.hex}" title="${p.name}"></div>`).join('')
+      + `<input type="color" class="accent-swatch-custom" id="accent-custom-input" value="${customAccent || (themeMode === 'light' ? '#16a35f' : '#30d68a')}" title="Custom color">`
+      + (customAccent ? `<button type="button" class="link-btn" id="accent-reset-btn">Reset to default</button>` : '');
+    row.querySelectorAll('.accent-swatch').forEach(sw => sw.addEventListener('click', () => {
+      customAccent = sw.dataset.hex;
+      localStorage.setItem(ACCENT_KEY, customAccent);
+      applyTheme();
+      renderAppearanceControls();
+    }));
+    document.getElementById('accent-custom-input').addEventListener('input', (ev) => {
+      customAccent = ev.target.value;
+      localStorage.setItem(ACCENT_KEY, customAccent);
+      applyTheme();
+    });
+    document.getElementById('accent-custom-input').addEventListener('change', renderAppearanceControls);
+    const resetBtn = document.getElementById('accent-reset-btn');
+    if (resetBtn) resetBtn.addEventListener('click', () => {
+      customAccent = null;
+      localStorage.removeItem(ACCENT_KEY);
+      applyTheme();
+      renderAppearanceControls();
+    });
+  }
+  document.querySelectorAll('#theme-toggle .mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      themeMode = btn.dataset.theme;
+      localStorage.setItem(THEME_KEY, themeMode);
+      applyTheme();
+      renderAppearanceControls();
+    });
+  });
+
   // ---------- import / export ----------
   document.getElementById('export-btn').addEventListener('click', () => {
     const bundle = {
@@ -4568,7 +4816,7 @@
       achievements,
       notes: notesStore,
       premarketEntries,
-      checklistItems
+      checklistCategories
     };
     const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -4636,9 +4884,16 @@
               const existingPmIds = new Set(premarketEntries.map(p => p.id));
               imported.premarketEntries.forEach(p => { if (!existingPmIds.has(p.id)) premarketEntries.push(p); });
             }
-            if (Array.isArray(imported.checklistItems)) {
-              const existingChecks = new Set(checklistItems);
-              imported.checklistItems.forEach(c => { if (!existingChecks.has(c)) checklistItems.push(c); });
+            if (imported.checklistCategories && typeof imported.checklistCategories === 'object') {
+              ['continuation', 'reversal'].forEach(cat => {
+                if (Array.isArray(imported.checklistCategories[cat])) {
+                  const existing = new Set(checklistCategories[cat]);
+                  imported.checklistCategories[cat].forEach(c => { if (!existing.has(c)) checklistCategories[cat].push(c); });
+                }
+              });
+            } else if (Array.isArray(imported.checklistItems)) {
+              const existing = new Set(checklistCategories.continuation);
+              imported.checklistItems.forEach(c => { if (!existing.has(c)) checklistCategories.continuation.push(c); });
             }
           } else {
             entries = importedEntries;
@@ -4655,7 +4910,8 @@
             if (imported.milestone && typeof imported.milestone === 'object') milestone = imported.milestone;
             if (imported.notes && typeof imported.notes === 'object' && Array.isArray(imported.notes.notes)) notesStore = imported.notes;
             if (Array.isArray(imported.premarketEntries)) premarketEntries = imported.premarketEntries;
-            if (Array.isArray(imported.checklistItems)) checklistItems = imported.checklistItems;
+            if (imported.checklistCategories && typeof imported.checklistCategories === 'object') checklistCategories = imported.checklistCategories;
+            else if (Array.isArray(imported.checklistItems)) checklistCategories = { continuation: imported.checklistItems, reversal: checklistCategories.reversal };
           }
 
           saveEntries();
@@ -4671,7 +4927,7 @@
           saveMilestone();
           saveNotes();
           savePremarketEntries();
-          saveChecklistItems();
+          saveChecklistCategories();
         } else {
           throw new Error('bad format');
         }
@@ -4680,6 +4936,103 @@
         showToast('Import complete');
         if (typeof dismissWelcome === 'function' && document.getElementById('welcome-overlay').style.display !== 'none') dismissWelcome();
       } catch (err) { showToast('Could not read that file'); console.error(err); }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  // ---------- CSV import (generic broker export) ----------
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQuotes = false; }
+        else field += c;
+      } else if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.length > 1 || row[0] !== '') rows.push(row);
+        row = [];
+      } else field += c;
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+  const CSV_HEADER_SYNONYMS = {
+    date: ['date', 'trade date', 'open date', 'entry date', 'closed date', 'close date'],
+    symbol: ['symbol', 'ticker', 'instrument', 'market', 'pair'],
+    pnl: ['pnl', 'p&l', 'p/l', 'profit', 'profit/loss', 'net profit', 'realized pnl', 'net pnl', 'gain/loss', 'gain']
+  };
+  function findCsvColumn(headers, synonyms) {
+    const norm = headers.map(h => h.toLowerCase().trim());
+    for (let i = 0; i < norm.length; i++) if (synonyms.includes(norm[i])) return i;
+    for (let i = 0; i < norm.length; i++) if (synonyms.some(s => norm[i].includes(s))) return i;
+    return -1;
+  }
+  function parseCsvDate(str) {
+    str = (str || '').trim();
+    let m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+    m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (m) return `${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : toDateStr(d);
+  }
+  function parseCsvPnl(str) {
+    if (str == null) return NaN;
+    let s = String(str).trim();
+    let neg = false;
+    if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1); }
+    s = s.replace(/[$,%]/g, '').trim();
+    let v = parseFloat(s);
+    if (isNaN(v)) return NaN;
+    return neg ? -Math.abs(v) : v;
+  }
+  document.getElementById('csv-import-trigger').addEventListener('click', () => document.getElementById('csv-import-input').click());
+  document.getElementById('csv-import-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const rows = parseCSV(String(reader.result));
+        if (rows.length < 2) { showToast('No data rows found in that CSV'); e.target.value = ''; return; }
+        const headers = rows[0];
+        const dateCol = findCsvColumn(headers, CSV_HEADER_SYNONYMS.date);
+        const pnlCol = findCsvColumn(headers, CSV_HEADER_SYNONYMS.pnl);
+        const symbolCol = findCsvColumn(headers, CSV_HEADER_SYNONYMS.symbol);
+        if (dateCol === -1 || pnlCol === -1) {
+          showToast('Could not find Date and P&L columns in that CSV');
+          e.target.value = '';
+          return;
+        }
+        let imported = 0, skipped = 0;
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i];
+          if (!r || r.every(c => !c || !c.trim())) continue;
+          const dateStr = parseCsvDate(r[dateCol]);
+          const pnl = parseCsvPnl(r[pnlCol]);
+          if (!dateStr || isNaN(pnl)) { skipped++; continue; }
+          entries.push({
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7) + i,
+            date: dateStr,
+            symbol: symbolCol !== -1 ? (r[symbolCol] || '').trim() : '',
+            result: pnl > 0 ? 'win' : pnl < 0 ? 'loss' : 'breakeven',
+            pnl,
+            rulesBroken: false, brokenRules: [], checklistChecked: [], setupType: null, premarketLink: null,
+            emotions: '', happened: '', good: '', bad: '', improve: '', screenshot: null,
+            createdAt: Date.now() + i
+          });
+          imported++;
+        }
+        if (imported) saveEntries();
+        renderDashboard(); renderEntries();
+        showToast(`Imported ${imported} trade${imported === 1 ? '' : 's'}${skipped ? `, ${skipped} row${skipped === 1 ? '' : 's'} skipped` : ''}`);
+      } catch (err) { showToast('Could not read that CSV file'); console.error(err); }
       e.target.value = '';
     };
     reader.readAsText(file);
