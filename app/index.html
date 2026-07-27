@@ -356,6 +356,20 @@
   .checklist-item-row .rm { cursor: pointer; color: var(--ink-faint); font-size: 13px; transition: color var(--transition); }
   .checklist-item-row .rm:hover { color: var(--red); }
 
+  .scenario-row { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); padding: 12px 14px; margin-bottom: 10px; }
+  .scenario-row-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .scenario-row-head .scenario-label-input { flex: 1; font-weight: 600; }
+  .scenario-row-head .rm { cursor: pointer; color: var(--ink-faint); font-size: 14px; padding: 2px; flex-shrink: 0; transition: color var(--transition); }
+  .scenario-row-head .rm:hover { color: var(--red); }
+  .scenario-body-input { min-height: 60px; }
+  .scenario-summary { border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); padding: 10px 13px; margin-bottom: 8px; }
+  .scenario-summary:last-child { margin-bottom: 0; }
+  .scenario-summary .st { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .scenario-summary .sb { font-size: 13px; line-height: 1.55; color: var(--ink-dim); white-space: pre-wrap; }
+  .premarket-check-empty { color: var(--ink-faint); font-size: 13.5px; padding: 4px 2px; }
+  .premarket-grading { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .premarket-grading .badge { cursor: default; }
+
   .pnl-input-wrap { position: relative; }
   .pnl-input-wrap input { padding-left: 26px; font-family: var(--font-mono); }
   .pnl-input-wrap::before { content: "$"; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-faint); font-family: var(--font-mono); font-size: 14px; }
@@ -938,8 +952,13 @@
             <input type="text" id="pm-levels" placeholder="e.g. Support 5480, Resistance 5510">
           </div>
           <div class="field full">
-            <label for="pm-outlook">What do you think will happen today?</label>
-            <textarea id="pm-outlook" placeholder="Bias, catalysts, what would confirm or invalidate it..." required></textarea>
+            <label for="pm-overview">Overview / general notes (optional)</label>
+            <textarea id="pm-overview" placeholder="Context, catalysts, anything that applies across every scenario..."></textarea>
+          </div>
+          <div class="field full">
+            <label>Scenarios — what you think could happen</label>
+            <div id="pm-scenarios-list"></div>
+            <button type="button" class="btn ghost small" id="pm-add-scenario-btn" style="margin-top:2px;">+ Add scenario</button>
           </div>
           <div class="field full">
             <label>Screenshot (optional)</label>
@@ -983,7 +1002,7 @@
 
           <div class="field">
             <label>Result</label>
-            <div class="result-toggle">
+            <div class="result-toggle" id="entry-result-toggle">
               <button type="button" class="sel-win" data-result="win">Win</button>
               <button type="button" class="sel-loss" data-result="loss">Loss</button>
               <button type="button" class="sel-be" data-result="breakeven">Breakeven</button>
@@ -1004,6 +1023,11 @@
             <label>Pre-trade checklist</label>
             <div class="checklist-progress" id="checklist-progress"></div>
             <div class="checklist-picker" id="entry-checklist-picker"></div>
+          </div>
+
+          <div class="field full">
+            <label>Premarket check</label>
+            <div id="entry-premarket-check"></div>
           </div>
 
           <div class="field full">
@@ -1590,6 +1614,9 @@
   let rulesBroken = false;
   let selectedBrokenRules = [];
   let selectedChecklistChecked = [];
+  let selectedPremarketId = null;
+  let selectedPremarketScenarioId = null;
+  let selectedPremarketCorrectness = null;
   let calYear, calMonth;
   let reviewWeekStart;
   let dashboardMode = localStorage.getItem('lvd_dashboard_mode') || 'manual';
@@ -1787,10 +1814,10 @@
   const dateInput = document.getElementById('f-date');
   dateInput.value = todayStr;
 
-  document.querySelectorAll('.result-toggle button').forEach(btn => {
+  document.querySelectorAll('#entry-result-toggle button').forEach(btn => {
     btn.addEventListener('click', () => {
       selectedResult = btn.dataset.result;
-      document.querySelectorAll('.result-toggle button').forEach(b => b.classList.remove('selected'));
+      document.querySelectorAll('#entry-result-toggle button').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     });
   });
@@ -1845,6 +1872,81 @@
     });
   }
   renderEntryChecklistPicker();
+
+  function getPremarketMatchesForDate(dateStr) {
+    return premarketEntries.filter(p => p.date === dateStr).sort((a, b) => b.createdAt - a.createdAt);
+  }
+  function getScenariosFor(pm) {
+    if (pm.scenarios && pm.scenarios.length) return pm.scenarios;
+    return pm.outlook ? [{ id: '__overview', label: 'Overview', body: pm.outlook }] : [];
+  }
+  function renderEntryPremarketCheck() {
+    const wrap = document.getElementById('entry-premarket-check');
+    const dateVal = document.getElementById('f-date').value;
+    const matches = getPremarketMatchesForDate(dateVal);
+    if (!matches.length) {
+      wrap.innerHTML = `<div class="premarket-check-empty">No premarket note for ${dateVal ? fmtDateShort(dateVal) : 'this date'} yet. <button type="button" class="link-btn" id="pmcheck-create-link" style="padding:2px 6px;">Log one →</button></div>`;
+      const link = document.getElementById('pmcheck-create-link');
+      if (link) link.addEventListener('click', () => {
+        const goDate = dateVal;
+        switchTab('premarket');
+        resetPmForm();
+        document.getElementById('pm-date').value = goDate;
+      });
+      selectedPremarketId = null; selectedPremarketScenarioId = null; selectedPremarketCorrectness = null;
+      return;
+    }
+    if (!matches.find(m => m.id === selectedPremarketId)) {
+      selectedPremarketId = matches[0].id;
+      selectedPremarketScenarioId = null;
+      selectedPremarketCorrectness = null;
+    }
+    const pm = matches.find(m => m.id === selectedPremarketId);
+    const scenarios = getScenariosFor(pm);
+
+    let html = '';
+    if (matches.length > 1) {
+      html += `<select id="pmcheck-select" style="margin-bottom:10px;">${matches.map(m => {
+        const lbl = (m.scenarios && m.scenarios[0] && m.scenarios[0].label) || m.outlook || m.levels || 'Note';
+        return `<option value="${m.id}" ${m.id === selectedPremarketId ? 'selected' : ''}>${escapeHtml(lbl.slice(0, 44))}</option>`;
+      }).join('')}</select>`;
+    }
+    html += `<div class="checklist-progress">Which scenario played out?</div>`;
+    if (!scenarios.length) {
+      html += `<div class="rtp-empty">This note has no scenarios written yet.</div>`;
+    } else {
+      html += `<div class="checklist-picker" id="pmcheck-scenario-picker">` + scenarios.map(s =>
+        `<div class="checklist-pill${s.id === selectedPremarketScenarioId ? ' selected' : ''}" data-scenario="${escAttr(s.id)}"><span class="ck">${s.id === selectedPremarketScenarioId ? '✓' : ''}</span>${escapeHtml(s.label || 'Untitled scenario')}</div>`
+      ).join('') + `</div>`;
+    }
+    html += `
+      <div class="checklist-progress" style="margin-top:12px;">Was your analysis correct?</div>
+      <div class="result-toggle" id="pmcheck-correctness-toggle">
+        <button type="button" class="sel-win${selectedPremarketCorrectness === 'correct' ? ' selected' : ''}" data-correctness="correct">Correct</button>
+        <button type="button" class="sel-be${selectedPremarketCorrectness === 'partial' ? ' selected' : ''}" data-correctness="partial">Partial</button>
+        <button type="button" class="sel-loss${selectedPremarketCorrectness === 'incorrect' ? ' selected' : ''}" data-correctness="incorrect">Incorrect</button>
+      </div>
+    `;
+    wrap.innerHTML = html;
+
+    const sel = document.getElementById('pmcheck-select');
+    if (sel) sel.addEventListener('change', () => { selectedPremarketId = sel.value; selectedPremarketScenarioId = null; selectedPremarketCorrectness = null; renderEntryPremarketCheck(); });
+
+    const scenarioPicker = document.getElementById('pmcheck-scenario-picker');
+    if (scenarioPicker) scenarioPicker.querySelectorAll('.checklist-pill').forEach(pill => pill.addEventListener('click', () => {
+      selectedPremarketScenarioId = selectedPremarketScenarioId === pill.dataset.scenario ? null : pill.dataset.scenario;
+      renderEntryPremarketCheck();
+    }));
+
+    document.getElementById('pmcheck-correctness-toggle').querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        selectedPremarketCorrectness = selectedPremarketCorrectness === btn.dataset.correctness ? null : btn.dataset.correctness;
+        renderEntryPremarketCheck();
+      });
+    });
+  }
+  document.getElementById('f-date').addEventListener('change', renderEntryPremarketCheck);
+  renderEntryPremarketCheck();
 
   document.getElementById('cancel-edit-btn').addEventListener('click', resetForm);
 
@@ -1941,6 +2043,7 @@
       rulesBroken: rulesBroken,
       brokenRules: rulesBroken ? [...selectedBrokenRules] : [],
       checklistChecked: [...selectedChecklistChecked],
+      premarketLink: selectedPremarketId ? { premarketId: selectedPremarketId, scenarioId: selectedPremarketScenarioId, correctness: selectedPremarketCorrectness } : null,
       emotions: document.getElementById('f-emotions').value.trim(),
       happened: document.getElementById('f-happened').value.trim(),
       good: document.getElementById('f-good').value.trim(),
@@ -1960,10 +2063,12 @@
     form.reset();
     dateInput.value = todayStr;
     selectedResult = null; editingId = null; rulesBroken = false; selectedBrokenRules = []; selectedChecklistChecked = [];
-    document.querySelectorAll('.result-toggle button').forEach(b => b.classList.remove('selected'));
+    selectedPremarketId = null; selectedPremarketScenarioId = null; selectedPremarketCorrectness = null;
+    document.querySelectorAll('#entry-result-toggle button').forEach(b => b.classList.remove('selected'));
     ruleToggle.classList.remove('active'); ruleToggle.querySelector('.box').textContent = '⚠';
     ruleTagsPicker.classList.remove('open');
     renderEntryChecklistPicker();
+    renderEntryPremarketCheck();
     document.getElementById('submit-btn').textContent = 'Save Entry';
     document.getElementById('cancel-edit-btn').style.display = 'none';
     setScreenshot(null);
@@ -1985,12 +2090,16 @@
     rulesBroken = !!e.rulesBroken;
     selectedBrokenRules = e.brokenRules ? [...e.brokenRules] : [];
     selectedChecklistChecked = e.checklistChecked ? [...e.checklistChecked] : [];
+    selectedPremarketId = e.premarketLink ? e.premarketLink.premarketId : null;
+    selectedPremarketScenarioId = e.premarketLink ? e.premarketLink.scenarioId : null;
+    selectedPremarketCorrectness = e.premarketLink ? e.premarketLink.correctness : null;
     ruleToggle.classList.toggle('active', rulesBroken);
     ruleToggle.querySelector('.box').textContent = rulesBroken ? '✓' : '⚠';
     ruleTagsPicker.classList.toggle('open', rulesBroken);
     renderRuleTagsPicker();
     renderEntryChecklistPicker();
-    document.querySelectorAll('.result-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.result === e.result));
+    renderEntryPremarketCheck();
+    document.querySelectorAll('#entry-result-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.result === e.result));
     setScreenshot(e.screenshot || null);
     document.getElementById('submit-btn').textContent = 'Update Entry';
     document.getElementById('cancel-edit-btn').style.display = 'inline-block';
@@ -3365,6 +3474,25 @@
   const pmDateInput = document.getElementById('pm-date');
   pmDateInput.value = todayStr;
 
+  function addScenarioRow(label, body) {
+    const id = 's_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const wrap = document.getElementById('pm-scenarios-list');
+    const row = document.createElement('div');
+    row.className = 'scenario-row';
+    row.dataset.scenarioId = id;
+    row.innerHTML = `
+      <div class="scenario-row-head">
+        <input type="text" class="scenario-label-input" placeholder="Scenario name, e.g. Bullish breakout" value="${escAttr(label || '')}">
+        <span class="rm" data-remove>✕</span>
+      </div>
+      <textarea class="scenario-body-input" placeholder="What would confirm this? What's your plan if it plays out?">${escapeHtml(body || '')}</textarea>
+    `;
+    row.querySelector('[data-remove]').addEventListener('click', () => row.remove());
+    wrap.appendChild(row);
+  }
+  document.getElementById('pm-add-scenario-btn').addEventListener('click', () => addScenarioRow());
+  addScenarioRow();
+
   const pmPasteZone = document.getElementById('pm-paste-zone');
   const pmPastePreview = document.getElementById('pm-paste-preview');
   const pmPastePlaceholder = document.getElementById('pm-paste-placeholder');
@@ -3408,13 +3536,19 @@
 
   pmForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const outlook = document.getElementById('pm-outlook').value.trim();
-    if (!outlook) { showToast('Write down what you expect to happen'); return; }
+    const overview = document.getElementById('pm-overview').value.trim();
+    const scenarios = [...document.querySelectorAll('#pm-scenarios-list .scenario-row')].map(row => ({
+      id: row.dataset.scenarioId,
+      label: row.querySelector('.scenario-label-input').value.trim(),
+      body: row.querySelector('.scenario-body-input').value.trim()
+    })).filter(s => s.label || s.body);
+    if (!overview && !scenarios.length) { showToast('Write an overview or add at least one scenario'); return; }
     const entry = {
       id: pmEditingId || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
       date: pmDateInput.value,
       levels: document.getElementById('pm-levels').value.trim(),
-      outlook,
+      outlook: overview,
+      scenarios,
       screenshot: pmCurrentScreenshot || null,
       createdAt: pmEditingId ? (premarketEntries.find(x => x.id === pmEditingId) || {}).createdAt || Date.now() : Date.now()
     };
@@ -3429,6 +3563,8 @@
     pmForm.reset();
     pmDateInput.value = todayStr;
     pmEditingId = null;
+    document.getElementById('pm-scenarios-list').innerHTML = '';
+    addScenarioRow();
     document.getElementById('pm-submit-btn').textContent = 'Save Premarket Note';
     document.getElementById('pm-cancel-edit-btn').style.display = 'none';
     setPmScreenshot(null);
@@ -3440,7 +3576,10 @@
     pmEditingId = id;
     pmDateInput.value = p.date;
     document.getElementById('pm-levels').value = p.levels || '';
-    document.getElementById('pm-outlook').value = p.outlook || '';
+    document.getElementById('pm-overview').value = p.outlook || '';
+    document.getElementById('pm-scenarios-list').innerHTML = '';
+    if (p.scenarios && p.scenarios.length) p.scenarios.forEach(s => addScenarioRow(s.label, s.body));
+    else addScenarioRow();
     setPmScreenshot(p.screenshot || null);
     document.getElementById('pm-submit-btn').textContent = 'Update Premarket Note';
     document.getElementById('pm-cancel-edit-btn').style.display = 'inline-block';
@@ -3448,12 +3587,15 @@
   }
 
   function deletePremarketEntry(id) {
-    if (!confirm('Delete this premarket note? This cannot be undone.')) return;
+    if (!confirm('Delete this premarket note? Trades already graded against it will keep their verdict, but the link will show as unavailable.')) return;
     premarketEntries = premarketEntries.filter(x => x.id !== id);
     savePremarketEntries();
     renderPremarketList();
   }
 
+  function gradingsFor(premarketId) {
+    return entries.filter(e => e.premarketLink && e.premarketLink.premarketId === premarketId);
+  }
   function renderPremarketList() {
     const list = document.getElementById('premarket-list');
     const sorted = [...premarketEntries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
@@ -3461,16 +3603,37 @@
       list.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>No premarket notes yet. Log what you expect before the next session opens.</p></div>`;
       return;
     }
-    list.innerHTML = sorted.map(p => `
+    list.innerHTML = sorted.map(p => {
+      const scenarios = p.scenarios || [];
+      const gradings = gradingsFor(p.id);
+      const scenarioHtml = scenarios.length ? `
+        <div class="entry-block">
+          <div class="k">Scenarios</div>
+          ${scenarios.map(s => `<div class="scenario-summary"><div class="st">${escapeHtml(s.label || 'Untitled scenario')}</div>${s.body ? `<div class="sb">${escapeHtml(s.body)}</div>` : ''}</div>`).join('')}
+        </div>` : '';
+      const gradingHtml = gradings.length ? `
+        <div class="entry-block">
+          <div class="k">Graded from ${gradings.length} trade${gradings.length === 1 ? '' : 's'}</div>
+          <div class="premarket-grading">${gradings.map(g => {
+            const scen = scenarios.find(s => s.id === g.premarketLink.scenarioId);
+            const cls = g.premarketLink.correctness === 'correct' ? 'win' : g.premarketLink.correctness === 'incorrect' ? 'loss' : 'breakeven';
+            const label = g.premarketLink.correctness ? g.premarketLink.correctness : 'ungraded';
+            return `<span class="badge ${cls}">${escapeHtml(label)}${scen ? ' · ' + escapeHtml(scen.label) : ''} (${fmtDateShort(g.date)})</span>`;
+          }).join('')}</div>
+        </div>` : '';
+      return `
       <div class="entry-card" data-id="${p.id}">
         <div class="entry-top" data-toggle="pm-${p.id}">
           <div class="entry-meta">
             <span class="entry-date">${fmtDate(p.date)}</span>
             ${p.levels ? `<span class="entry-symbol">${escapeHtml(p.levels)}</span>` : ''}
+            ${gradings.length ? `<span class="badge ${gradings.some(g => g.premarketLink.correctness === 'correct') ? 'win' : gradings.some(g => g.premarketLink.correctness === 'incorrect') ? 'loss' : 'breakeven'}">graded</span>` : ''}
           </div>
         </div>
         <div class="entry-body" id="body-pm-${p.id}">
-          ${block('Outlook', p.outlook)}
+          ${block('Overview', p.outlook)}
+          ${scenarioHtml}
+          ${gradingHtml}
           ${p.screenshot ? `<div class="entry-block"><div class="k">Screenshot</div><img class="entry-screenshot-thumb" src="${p.screenshot}" data-full="${p.screenshot}"></div>` : ''}
           <div class="entry-actions">
             <button class="btn ghost small" data-pmedit="${p.id}">Edit</button>
@@ -3478,7 +3641,7 @@
           </div>
         </div>
       </div>
-    `).join('');
+    `; }).join('');
     list.querySelectorAll('[data-toggle]').forEach(el => el.addEventListener('click', () => document.getElementById('body-' + el.dataset.toggle).classList.toggle('open')));
     list.querySelectorAll('[data-pmedit]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); loadPremarketIntoForm(el.dataset.pmedit); }));
     list.querySelectorAll('[data-pmdelete]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); deletePremarketEntry(el.dataset.pmdelete); }));
