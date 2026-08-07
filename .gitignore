@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.firebase/
 build/app.ico
 build/app.icns
 build/app.png

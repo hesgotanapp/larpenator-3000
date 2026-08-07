@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<title>Larpenator 3000</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Larpenator">
+<meta name="theme-color" content="#090909">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #090909; --surface: #111112; --surface-2: #161617; --surface-3: #1d1d1f;
+    --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.15);
+    --ink: #e9edf7; --ink-dim: #98a1b3; --ink-faint: #5c6370;
+    --green: #30d68a; --green-bg: rgba(48,214,138,0.1);
+    --red: #ef6a5f; --red-bg: rgba(239,106,95,0.1);
+    --amber: #f0954a; --amber-bg: rgba(240,149,74,0.13);
+    --accent: #30d68a; --accent-bg: rgba(48,214,138,0.1);
+    --font-body: 'Plus Jakarta Sans', sans-serif; --font-mono: 'JetBrains Mono', monospace;
+    --radius: 16px; --radius-sm: 10px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overscroll-behavior-y: none; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body);
+    font-size: 15px; -webkit-font-smoothing: antialiased; overflow: hidden;
+  }
+  input, textarea, select, button { font-family: inherit; font-size: 16px; color: inherit; }
+  a { color: inherit; }
+  ::selection { background: var(--accent); color: #06110d; }
+
+  #app { position: fixed; inset: 0; display: flex; flex-direction: column; }
+  #screens {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: calc(var(--safe-top) + 14px) 16px calc(78px + var(--safe-bottom)) 16px;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn .18s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  h1 { font-size: 24px; font-weight: 800; margin: 4px 0 4px; letter-spacing: -0.4px; }
+  .subtitle { color: var(--ink-faint); font-size: 13px; margin: 0 0 18px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .card h3 { font-size: 15px; font-weight: 700; margin: 0 0 10px; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 13px 14px; }
+  .stat .label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px; }
+  .stat .value { font-family: var(--font-mono); font-size: 21px; font-weight: 700; }
+  .stat .value.pos { color: var(--green); } .stat .value.neg { color: var(--red); }
+
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid var(--border); }
+  .row:last-child { border-bottom: none; }
+  .rowl { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .rowdate { font-family: var(--font-mono); font-size: 12px; color: var(--ink-dim); flex-shrink: 0; width: 46px; }
+  .badge { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; padding: 3px 7px; border-radius: 5px; font-weight: 700; flex-shrink: 0; }
+  .badge.win { background: var(--green-bg); color: var(--green); }
+  .badge.loss { background: var(--red-bg); color: var(--red); }
+  .badge.breakeven { background: var(--amber-bg); color: var(--amber); }
+  .pnl { font-family: var(--font-mono); font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .pnl.pos { color: var(--green); } .pnl.neg { color: var(--red); }
+  .sym { font-size: 13px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .empty { text-align: center; padding: 40px 16px; color: var(--ink-faint); font-size: 13.5px; }
+
+  input[type=text], input[type=number], input[type=date], input[type=email], input[type=password], textarea, select {
+    width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 12px 13px; color: var(--ink); outline: none; -webkit-appearance: none; appearance: none;
+  }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+  label { display: block; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--ink-faint); margin: 14px 0 6px; font-weight: 600; }
+  label:first-child { margin-top: 0; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 46px; padding: 0 20px; border-radius: 12px; border: none; background: var(--accent); color: #06110d; font-weight: 700; font-size: 14px; cursor: pointer; width: 100%; }
+  .btn:active { filter: brightness(0.92); }
+  .btn.ghost { background: var(--surface-2); color: var(--ink); border: 1px solid var(--border-strong); }
+  .btn.danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(239,106,95,0.3); }
+  .btn.small { min-height: 38px; width: auto; padding: 0 16px; font-size: 13px; }
+
+  .seg { display: flex; gap: 8px; }
+  .seg button { flex: 1; min-height: 46px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink-dim); font-weight: 700; font-size: 13px; }
+  .seg button.sel-win.on { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+  .seg button.sel-loss.on { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+  .seg button.sel-be.on { background: var(--amber-bg); border-color: var(--amber); color: var(--amber); }
+  .seg button.on:not(.sel-win):not(.sel-loss):not(.sel-be) { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 8px 13px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface-2); font-size: 13px; color: var(--ink-dim); }
+  .chip.on { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+
+  /* bottom tab bar */
+  #tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; display: flex;
+    background: rgba(13,13,14,0.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border); padding: 6px 6px calc(6px + var(--safe-bottom));
+    z-index: 20;
+  }
+  .tab-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 2px; background: none; border: none; color: var(--ink-faint); min-height: 48px;
+  }
+  .tab-btn svg { width: 23px; height: 23px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .tab-btn span { font-size: 10px; font-weight: 600; }
+  .tab-btn.active { color: var(--accent); }
+  #fab {
+    position: fixed; right: 18px; bottom: calc(70px + var(--safe-bottom)); z-index: 25;
+    width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--accent);
+    color: #06110d; font-size: 28px; font-weight: 400; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(48,214,138,0.35);
+  }
+  #fab:active { filter: brightness(0.92); }
+
+  /* sheet (modal) for new entry / new premarket note */
+  #sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
+  #sheet-backdrop.open { display: block; }
+  #sheet {
+    position: fixed; left: 0; right: 0; bottom: -100%; max-height: 88vh; background: var(--surface);
+    border-radius: 20px 20px 0 0; z-index: 41; transition: bottom .25s ease; display: flex; flex-direction: column;
+    border-top: 1px solid var(--border-strong);
+  }
+  #sheet.open { bottom: 0; }
+  #sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #sheet-head h2 { font-size: 16px; margin: 0; }
+  #sheet-close { background: none; border: none; color: var(--ink-faint); font-size: 22px; padding: 4px 8px; }
+  #sheet-body { padding: 4px 16px calc(24px + var(--safe-bottom)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  .more-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 4px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 600; }
+  .more-item .chev { color: var(--ink-faint); }
+
+  .cal-month-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-month-head button { background: var(--surface-2); border: 1px solid var(--border); color: var(--ink-dim); width: 34px; height: 34px; border-radius: 10px; font-size: 16px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-dow { font-family: var(--font-mono); font-size: 9px; text-align: center; color: var(--ink-faint); padding-bottom: 4px; }
+  .cal-cell { aspect-ratio: 1; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 10px; }
+  .cal-cell.empty { border-color: transparent; background: transparent; }
+  .cal-cell .d { color: var(--ink-faint); }
+  .cal-cell.pos { background: var(--green-bg); border-color: rgba(48,214,138,0.3); } .cal-cell.pos .d { color: var(--green); }
+  .cal-cell.neg { background: var(--red-bg); border-color: rgba(239,106,95,0.3); } .cal-cell.neg .d { color: var(--red); }
+
+  #auth-screen {
+    position: fixed; inset: 0; z-index: 50; background: var(--bg); display: flex; align-items: center; justify-content: center;
+    padding: 24px; padding-top: calc(24px + var(--safe-top));
+  }
+  .auth-box { width: 100%; max-width: 340px; }
+  .auth-brand { font-family: var(--font-mono); font-weight: 700; font-size: 20px; letter-spacing: 2px; text-align: center; margin-bottom: 6px; }
+  .auth-brand span { color: var(--accent); }
+  .auth-sub { text-align: center; color: var(--ink-faint); font-size: 13px; margin-bottom: 28px; line-height: 1.5; }
+  .auth-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+  #auth-error { color: var(--red); font-size: 12.5px; margin-top: 10px; text-align: center; min-height: 16px; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: calc(90px + var(--safe-bottom)); transform: translateX(-50%) translateY(10px);
+    background: var(--surface-3); border: 1px solid var(--border-strong); color: var(--ink); padding: 10px 18px;
+    border-radius: 12px; font-size: 13px; opacity: 0; pointer-events: none; transition: all .25s ease; z-index: 60;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-brand">LARPENATOR <span>3000</span></div>
+    <p class="auth-sub">Sign in with the same account you use on your desktop app to sync your journal.</p>
+    <label for="auth-email">Email</label>
+    <input type="email" id="auth-email" autocomplete="username">
+    <label for="auth-password">Password</label>
+    <input type="password" id="auth-password" autocomplete="current-password">
+    <div class="auth-actions">
+      <button class="btn" id="auth-signin-btn" type="button">Sign In</button>
+      <button class="btn ghost" id="auth-signup-btn" type="button">Create Account</button>
+    </div>
+    <div id="auth-error"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+  <div id="screens">
+
+    <section class="screen active" id="screen-dashboard">
+      <h1>Dashboard</h1>
+      <p class="subtitle">Your trading performance at a glance.</p>
+      <div class="stat-grid" id="dash-stats"></div>
+      <div class="card">
+        <h3>Current streak</h3>
+        <div id="dash-streak"></div>
+      </div>
+      <div class="card">
+        <h3>Recent entries</h3>
+        <div id="dash-recent"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-entries">
+      <h1>Entries</h1>
+      <p class="subtitle">Every logged trade.</p>
+      <input type="text" id="entries-search" placeholder="Search symbol, notes...">
+      <div class="card" style="margin-top:12px;" id="entries-list-card">
+        <div id="entries-list"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-premarket">
+      <h1>Premarket</h1>
+      <p class="subtitle">What you expect before the bell.</p>
+      <div class="card" id="premarket-list-card">
+        <div id="premarket-list"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-more">
+      <h1>More</h1>
+      <div class="card" style="padding: 6px 12px;">
+        <div class="more-item" data-goto="calendar"><span>Calendar</span><span class="chev">›</span></div>
+        <div class="more-item" data-goto="checklist"><span>Checklist</span><span class="chev">›</span></div>
+        <div class="more-item" data-goto="weekly"><span>Weekly Review</span><span class="chev">›</span></div>
+      </div>
+      <div class="card" style="padding: 6px 12px;">
+        <div class="more-item" id="more-signout"><span>Sign Out</span><span class="chev">›</span></div>
+      </div>
+      <p class="subtitle" style="text-align:center; margin-top:20px;">Signed in as <span id="more-email"></span></p>
+    </section>
+
+    <section class="screen" id="screen-calendar">
+      <h1>Calendar</h1>
+      <div class="cal-month-head">
+        <button id="cal-prev" type="button">‹</button>
+        <div id="cal-month-label" style="font-weight:700;"></div>
+        <button id="cal-next" type="button">›</button>
+      </div>
+      <div class="cal-grid" id="cal-dow-row"></div>
+      <div class="cal-grid" id="cal-grid" style="margin-top:4px;"></div>
+      <div class="card" id="cal-day-card" style="display:none; margin-top:14px;">
+        <h3 id="cal-day-title"></h3>
+        <div id="cal-day-entries"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-checklist">
+      <h1>Checklist</h1>
+      <p class="subtitle">Pre-trade checks, per setup type.</p>
+      <div class="seg" id="checklist-cat-toggle">
+        <button type="button" data-cat="continuation" class="on">Continuation</button>
+        <button type="button" data-cat="reversal">Reversal</button>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <div id="checklist-items"></div>
+        <div style="display:flex; gap:8px; margin-top:10px;">
+          <input type="text" id="checklist-input" placeholder="Add a check...">
+          <button class="btn small" id="checklist-add-btn" type="button">Add</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="screen-weekly">
+      <h1>Weekly Review</h1>
+      <div class="cal-month-head">
+        <button id="week-prev" type="button">‹</button>
+        <div id="week-label" style="font-weight:700; font-size:14px;"></div>
+        <button id="week-next" type="button">›</button>
+      </div>
+      <div class="stat-grid" id="week-stats"></div>
+      <label for="w-good">What went well</label>
+      <textarea id="w-good"></textarea>
+      <label for="w-bad">What went badly</label>
+      <textarea id="w-bad"></textarea>
+      <label for="w-focus">Focus for next week</label>
+      <textarea id="w-focus"></textarea>
+      <button class="btn" id="week-save-btn" type="button" style="margin-top:16px;">Save Weekly Review</button>
+    </section>
+
+  </div>
+
+  <button id="fab" type="button" aria-label="New entry">+</button>
+
+  <nav id="tabbar">
+    <button class="tab-btn active" data-tab="dashboard" type="button">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="tab-btn" data-tab="entries" type="button">
+      <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
+      <span>Entries</span>
+    </button>
+    <button class="tab-btn" data-tab="premarket" type="button">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="16" r="4"></circle><path d="M12 3v3"></path><path d="M4 21h16"></path></svg>
+      <span>Premarket</span>
+    </button>
+    <button class="tab-btn" data-tab="more" type="button">
+      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>
+      <span>More</span>
+    </button>
+  </nav>
+</div>
+
+<div id="sheet-backdrop"></div>
+<div id="sheet">
+  <div id="sheet-head"><h2 id="sheet-title">New Entry</h2><button id="sheet-close" type="button">✕</button></div>
+  <div id="sheet-body"></div>
+</div>
+
+<div id="toast"></div>
+
+<script src="vendor/firebase/firebase-app-compat.js"></script>
+<script src="vendor/firebase/firebase-auth-compat.js"></script>
+<script src="vendor/firebase/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="sync.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
