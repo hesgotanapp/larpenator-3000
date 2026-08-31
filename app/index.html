@@ -530,6 +530,8 @@
   .trade-row-pnl.win { color: var(--green); }
   .trade-row-pnl.loss { color: var(--red); }
   .trade-row-pnl.breakeven { color: var(--amber); }
+  .trade-row-export { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--ink-dim); font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: border-color var(--transition), color var(--transition); }
+  .trade-row-export:hover { border-color: var(--border-strong); color: var(--ink); }
 
   .trade-card-wrap { margin-bottom: 10px; max-width: 460px; }
   .trade-card { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 16 / 9; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border); background: var(--surface); background-size: cover; background-position: center; cursor: pointer; transition: border-color var(--transition); }
@@ -744,6 +746,12 @@
 
   .toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--surface-3); border: 1px solid var(--cyan); color: var(--ink); padding: 11px 20px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 12.5px; opacity: 0; pointer-events: none; transition: all .25s ease; z-index: 50; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .export-card-modal { position: fixed; inset: 0; background: rgba(5,5,6,0.92); display: none; align-items: center; justify-content: center; z-index: 200; padding: 40px; }
+  .export-card-modal.open { display: flex; animation: lbFade .18s ease; }
+  .export-card-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; max-height: 100%; }
+  #export-card-canvas { max-width: min(90vw, 420px); max-height: 70vh; width: auto; height: auto; border-radius: 20px; box-shadow: 0 30px 80px rgba(0,0,0,0.6); }
+  .export-card-btns { display: flex; gap: 10px; }
 
   /* ---------- Notes ---------- */
   .notes-layout { display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: 16px; align-items: start; }
@@ -1752,6 +1760,15 @@
 
 <div class="toast" id="toast"></div>
 <div class="lightbox" id="lightbox"><img id="lightbox-img"></div>
+<div class="export-card-modal" id="export-card-modal">
+  <div class="export-card-inner">
+    <canvas id="export-card-canvas"></canvas>
+    <div class="export-card-btns">
+      <button class="btn" id="export-download-btn" type="button">⬇ Download PNG</button>
+      <button class="btn ghost" id="export-close-btn" type="button">Close</button>
+    </div>
+  </div>
+</div>
 
 <style>
   .welcome-overlay { position: fixed; inset: 0; z-index: 300; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 24px; }
@@ -2314,19 +2331,27 @@
     localStorage.setItem('lvd_shared_bg_photos', JSON.stringify(photos));
     renderEntries();
   }
-  // one-time migration: fold any photos saved on individual entries (pre-shared-pool) into the shared pool
+  // migration: fold any photos saved on individual entries (pre-shared-pool) into the shared pool.
+  // Idempotent by design (no one-shot flag) so it self-heals if an earlier run's write never made it
+  // to disk (e.g. the app was force-closed right after migrating) — it just keeps checking for
+  // leftover legacy data on every launch until it's actually gone.
   function migrateLegacyBgPhotosOnce() {
-    if (localStorage.getItem('lvd_bg_photos_migrated')) return;
-    localStorage.setItem('lvd_bg_photos_migrated', '1');
-    if (getSharedBgPhotos().length) return;
-    const seen = new Set();
-    const merged = [];
-    entries.forEach(e => {
-      (e.bgPhotos || []).forEach(src => {
-        if (!seen.has(src)) { seen.add(src); merged.push(src); }
+    const hasLegacy = entries.some(e => e.bgPhotos && e.bgPhotos.length);
+    if (!hasLegacy) return;
+    if (!getSharedBgPhotos().length) {
+      const seen = new Set();
+      const merged = [];
+      entries.forEach(e => {
+        (e.bgPhotos || []).forEach(src => {
+          if (!seen.has(src)) { seen.add(src); merged.push(src); }
+        });
       });
-    });
-    if (merged.length) saveSharedBgPhotos(merged);
+      if (merged.length) saveSharedBgPhotos(merged);
+    }
+    // strip the now-unused legacy field so this becomes a no-op on future launches
+    let changed = false;
+    entries.forEach(e => { if (e.bgPhotos) { delete e.bgPhotos; changed = true; } });
+    if (changed) saveEntries();
   }
   const bgPhotoGrid = document.getElementById('bgphoto-grid');
   const bgPhotoInput = document.getElementById('bgphoto-input');
@@ -2384,9 +2409,143 @@
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     if (lightbox.classList.contains('open')) { lightbox.classList.remove('open'); return; }
+    if (exportModal.classList.contains('open')) { exportModal.classList.remove('open'); return; }
     const pop = document.getElementById('day-popover');
     if (pop.classList.contains('open')) pop.classList.remove('open');
   });
+
+  // ---------- export card (screenshottable / downloadable trade image) ----------
+  const exportModal = document.getElementById('export-card-modal');
+  const exportCanvas = document.getElementById('export-card-canvas');
+  let exportFilename = 'trade';
+  exportModal.addEventListener('click', (ev) => { if (ev.target === exportModal) exportModal.classList.remove('open'); });
+  document.getElementById('export-close-btn').addEventListener('click', () => exportModal.classList.remove('open'));
+  document.getElementById('export-download-btn').addEventListener('click', () => {
+    exportCanvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = exportFilename + '.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }, 'image/png');
+  });
+
+  function cssVar(name) {
+    return getComputedStyle(document.body).getPropertyValue(name).trim();
+  }
+
+  function openExportCard(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+    exportFilename = 'trade-' + (e.symbol ? e.symbol.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'entry') + '-' + e.date;
+    const photos = getSharedBgPhotos();
+    const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
+    const photoSrc = photos.length ? photos[idx] : null;
+    if (photoSrc) {
+      const img = new Image();
+      img.onload = () => { drawExportCard(e, img); };
+      img.onerror = () => { drawExportCard(e, null); };
+      img.src = photoSrc;
+    } else {
+      drawExportCard(e, null);
+    }
+    exportModal.classList.add('open');
+  }
+
+  function drawExportCard(e, img) {
+    const W = 1000, H = 1250;
+    exportCanvas.width = W; exportCanvas.height = H;
+    const ctx = exportCanvas.getContext('2d');
+
+    const surface = cssVar('--surface') || '#111112';
+    const ink = cssVar('--ink') || '#f5f5f6';
+    const inkDim = cssVar('--ink-dim') || '#9a9aa0';
+    const green = cssVar('--green') || '#30d68a';
+    const red = cssVar('--red') || '#ef6a5f';
+    const amber = cssVar('--amber') || '#f0954a';
+    const greenBg = cssVar('--green-bg') || 'rgba(48,214,138,0.14)';
+    const redBg = cssVar('--red-bg') || 'rgba(239,106,95,0.14)';
+    const amberBg = cssVar('--amber-bg') || 'rgba(240,149,74,0.14)';
+
+    // background
+    ctx.fillStyle = surface;
+    ctx.fillRect(0, 0, W, H);
+    if (img) {
+      const scale = Math.max(W / img.width, H / img.height);
+      const dw = img.width * scale, dh = img.height * scale;
+      ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, 'rgba(9,9,9,0.20)');
+      grad.addColorStop(0.55, 'rgba(9,9,9,0.62)');
+      grad.addColorStop(1, 'rgba(9,9,9,0.95)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // rounded-rect clip for the whole card
+    const R = 40;
+    ctx.save();
+    roundRectPath(ctx, 0, 0, W, H, R);
+    ctx.clip();
+
+    // symbol + date (top)
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = ink;
+    ctx.font = '800 46px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(e.symbol ? e.symbol.toUpperCase() : 'UNTITLED TRADE', 56, 96);
+    ctx.fillStyle = inkDim;
+    ctx.font = '500 24px "JetBrains Mono", monospace';
+    ctx.fillText(fmtDate(e.date), 56, 132);
+
+    // pnl pill
+    const pnlColor = e.result === 'win' ? green : e.result === 'loss' ? red : amber;
+    const pnlBg = e.result === 'win' ? greenBg : e.result === 'loss' ? redBg : amberBg;
+    const sign = e.result === 'win' ? '+' : e.result === 'loss' ? '-' : '';
+    const pnlText = sign + fmtMoney(Math.abs(e.pnl));
+    ctx.font = '800 76px "JetBrains Mono", monospace';
+    const pnlW = ctx.measureText(pnlText).width;
+    const pillPadX = 26, pillY = H - 340, pillH = 108;
+    ctx.fillStyle = pnlBg;
+    roundRectPath(ctx, 56, pillY, pnlW + pillPadX * 2, pillH, 18);
+    ctx.fill();
+    ctx.fillStyle = pnlColor;
+    ctx.fillText(pnlText, 56 + pillPadX, pillY + 78);
+
+    // result / setup
+    const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
+    ctx.font = '700 30px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = pnlColor;
+    ctx.fillText(resultLabel, 56, pillY + pillH + 46);
+    if (e.setupType) {
+      ctx.font = '600 24px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = inkDim;
+      ctx.fillText(e.setupType === 'reversal' ? 'Reversal' : 'Continuation', 56, pillY + pillH + 80);
+    }
+
+    // brand watermark
+    ctx.font = '800 22px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = ink;
+    ctx.fillText('LARPENATOR', 56, H - 52);
+    ctx.font = '800 22px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = green;
+    ctx.fillText('3000', 56 + ctx.measureText('LARPENATOR ').width, H - 52);
+
+    ctx.restore();
+  }
+
+  function roundRectPath(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -2728,6 +2887,7 @@
             <span class="badge ${e.result}">${resultLabel}</span>
             ${e.rulesBroken ? `<span class="rule-flag" title="Rules broken">⚠</span>` : ''}
             <span class="trade-row-pnl ${e.pnl >= 0 ? 'win' : 'loss'}">${fmtMoney(e.pnl)}</span>
+            <button class="trade-row-export" data-export="${e.id}" type="button" title="Export as image">⤢</button>
           </div>
         </div>`;
       }
@@ -2759,6 +2919,7 @@
             <button class="btn small" data-more="${e.id}" type="button">See more</button>
             <button class="btn ghost small" data-edit="${e.id}" type="button">Edit</button>
             <button class="btn ghost small" data-tradenote="${e.id}" type="button">Note ↗</button>
+            <button class="btn ghost small" data-export="${e.id}" type="button">⤢ Export</button>
             <button class="btn danger small" data-delete="${e.id}" type="button">Delete</button>
           </div>
         </div>
@@ -2797,6 +2958,7 @@
     list.querySelectorAll('[data-tradenote]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); openTradeNote(el.dataset.tradenote); }));
     list.querySelectorAll('[data-edit]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); loadEntryIntoForm(el.dataset.edit); }));
     list.querySelectorAll('[data-delete]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); deleteEntry(el.dataset.delete); }));
+    list.querySelectorAll('[data-export]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); openExportCard(el.dataset.export); }));
     list.querySelectorAll('.entry-screenshot-thumb').forEach(img => img.addEventListener('click', (ev) => { ev.stopPropagation(); openLightbox(img.dataset.full); }));
   }
 
