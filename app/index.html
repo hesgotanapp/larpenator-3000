@@ -531,8 +531,8 @@
   .trade-row-pnl.loss { color: var(--red); }
   .trade-row-pnl.breakeven { color: var(--amber); }
 
-  .trade-card-wrap { margin-bottom: 10px; }
-  .trade-card { position: relative; border-radius: 16px; overflow: hidden; height: 172px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border); background: var(--surface); background-size: cover; background-position: center; cursor: pointer; transition: border-color var(--transition); }
+  .trade-card-wrap { margin-bottom: 10px; max-width: 460px; }
+  .trade-card { position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 16 / 9; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border); background: var(--surface); background-size: cover; background-position: center; cursor: pointer; transition: border-color var(--transition); }
   .trade-card:hover { border-color: var(--border-strong); }
   .trade-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)); pointer-events: none; }
   .trade-card.no-photo::before { background: linear-gradient(180deg, rgba(9,9,9,0), rgba(9,9,9,0)); }
