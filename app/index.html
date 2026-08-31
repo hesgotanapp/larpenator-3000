@@ -2457,7 +2457,9 @@
   }
 
   function drawExportCard(e, img) {
-    const W = 1000, H = 1250;
+    // match the trade card's own 16:9 aspect ratio so a photo that fits the card
+    // in-app fits here too, instead of being cropped into a different shape
+    const W = 1600, H = 900;
     exportCanvas.width = W; exportCanvas.height = H;
     const ctx = exportCanvas.getContext('2d');
 
@@ -2487,52 +2489,57 @@
     }
 
     // rounded-rect clip for the whole card
-    const R = 40;
+    const R = 48;
     ctx.save();
     roundRectPath(ctx, 0, 0, W, H, R);
     ctx.clip();
 
-    // symbol + date (top)
+    const pad = 64;
+
+    // symbol + date (top-left)
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = ink;
-    ctx.font = '800 46px "Plus Jakarta Sans", sans-serif';
-    ctx.fillText(e.symbol ? e.symbol.toUpperCase() : 'UNTITLED TRADE', 56, 96);
+    ctx.font = '800 52px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(e.symbol ? e.symbol.toUpperCase() : 'UNTITLED TRADE', pad, pad + 46);
     ctx.fillStyle = inkDim;
-    ctx.font = '500 24px "JetBrains Mono", monospace';
-    ctx.fillText(fmtDate(e.date), 56, 132);
+    ctx.font = '500 26px "JetBrains Mono", monospace';
+    ctx.fillText(fmtDate(e.date), pad, pad + 86);
 
-    // pnl pill
+    // brand watermark (top-right)
+    ctx.font = '800 24px "Plus Jakarta Sans", sans-serif';
+    const brandW = ctx.measureText('LARPENATOR ').width + ctx.measureText('3000').width;
+    ctx.fillStyle = ink;
+    ctx.fillText('LARPENATOR', W - pad - brandW, pad + 34);
+    ctx.fillStyle = green;
+    ctx.fillText('3000', W - pad - brandW + ctx.measureText('LARPENATOR ').width, pad + 34);
+
+    // pnl pill (bottom-left)
     const pnlColor = e.result === 'win' ? green : e.result === 'loss' ? red : amber;
     const pnlBg = e.result === 'win' ? greenBg : e.result === 'loss' ? redBg : amberBg;
     const sign = e.result === 'win' ? '+' : e.result === 'loss' ? '-' : '';
     const pnlText = sign + fmtMoney(Math.abs(e.pnl));
-    ctx.font = '800 76px "JetBrains Mono", monospace';
+    ctx.font = '800 72px "JetBrains Mono", monospace';
     const pnlW = ctx.measureText(pnlText).width;
-    const pillPadX = 26, pillY = H - 340, pillH = 108;
+    const pillPadX = 26, pillH = 100;
+    const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
+    const hasSetup = !!e.setupType;
+    const bottomBlockH = pillH + 44 + (hasSetup ? 36 : 0);
+    const pillY = H - pad - bottomBlockH;
     ctx.fillStyle = pnlBg;
-    roundRectPath(ctx, 56, pillY, pnlW + pillPadX * 2, pillH, 18);
+    roundRectPath(ctx, pad, pillY, pnlW + pillPadX * 2, pillH, 18);
     ctx.fill();
     ctx.fillStyle = pnlColor;
-    ctx.fillText(pnlText, 56 + pillPadX, pillY + 78);
+    ctx.fillText(pnlText, pad + pillPadX, pillY + 72);
 
-    // result / setup
-    const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
-    ctx.font = '700 30px "Plus Jakarta Sans", sans-serif';
+    // result / setup, stacked underneath
+    ctx.font = '700 32px "Plus Jakarta Sans", sans-serif';
     ctx.fillStyle = pnlColor;
-    ctx.fillText(resultLabel, 56, pillY + pillH + 46);
-    if (e.setupType) {
-      ctx.font = '600 24px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(resultLabel, pad, pillY + pillH + 40);
+    if (hasSetup) {
+      ctx.font = '600 26px "Plus Jakarta Sans", sans-serif';
       ctx.fillStyle = inkDim;
-      ctx.fillText(e.setupType === 'reversal' ? 'Reversal' : 'Continuation', 56, pillY + pillH + 80);
+      ctx.fillText(e.setupType === 'reversal' ? 'Reversal' : 'Continuation', pad, pillY + pillH + 76);
     }
-
-    // brand watermark
-    ctx.font = '800 22px "Plus Jakarta Sans", sans-serif';
-    ctx.fillStyle = ink;
-    ctx.fillText('LARPENATOR', 56, H - 52);
-    ctx.font = '800 22px "Plus Jakarta Sans", sans-serif';
-    ctx.fillStyle = green;
-    ctx.fillText('3000', 56 + ctx.measureText('LARPENATOR ').width, H - 52);
 
     ctx.restore();
   }
