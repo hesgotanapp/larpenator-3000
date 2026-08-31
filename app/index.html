@@ -543,10 +543,15 @@
   .trade-card-collapse { background: rgba(22,22,24,0.7); border: 1px solid var(--border-strong); color: var(--ink-dim); width: 24px; height: 24px; border-radius: 50%; font-size: 12px; cursor: pointer; flex-shrink: 0; }
   .trade-card-collapse:hover { color: var(--ink); }
   .trade-card-body { padding: 4px 16px 8px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .trade-card-pnl-block { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
   .trade-card-pnl { display: inline-flex; font-family: var(--font-mono); font-size: 21px; font-weight: 700; padding: 4px 11px; border-radius: 9px; }
   .trade-card-pnl.win { background: var(--green-bg); color: var(--green); }
   .trade-card-pnl.loss { background: var(--red-bg); color: var(--red); }
   .trade-card-pnl.breakeven { background: var(--amber-bg); color: var(--amber); }
+  .trade-card-result { font-size: 12px; font-weight: 700; padding-left: 11px; }
+  .trade-card-result.win { color: var(--green); }
+  .trade-card-result.loss { color: var(--red); }
+  .trade-card-result.breakeven { color: var(--amber); }
   .trade-card-stats { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
   .trade-card-stat { display: flex; gap: 8px; font-size: 12px; }
   .trade-card-stat .k { color: var(--ink-dim); font-weight: 500; }
@@ -2712,9 +2717,11 @@
             <button class="trade-card-collapse" type="button" title="Collapse">▲</button>
           </div>
           <div class="trade-card-body">
-            <div class="trade-card-pnl ${e.result}">${fmtMoney(e.pnl)}</div>
+            <div class="trade-card-pnl-block">
+              <div class="trade-card-pnl ${e.result}">${e.result === 'win' ? '+' : e.result === 'loss' ? '-' : ''}${fmtMoney(Math.abs(e.pnl))}</div>
+              <div class="trade-card-result ${e.result}">${resultLabel}</div>
+            </div>
             <div class="trade-card-stats">
-              <div class="trade-card-stat"><span class="k">Result</span><span class="v">${resultLabel}</span></div>
               ${e.setupType ? `<div class="trade-card-stat"><span class="k">Setup</span><span class="v">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</span></div>` : ''}
               ${photos.length > 1 ? `<div class="trade-card-stat"><span class="k">Photo</span><span class="v">${idx + 1} / ${photos.length}</span></div>` : ''}
             </div>
