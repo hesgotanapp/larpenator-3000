@@ -1212,7 +1212,7 @@
 
           <div class="field full">
             <label>Background photos (optional)</label>
-            <p style="margin:0 0 10px; font-size:12.5px; color:var(--ink-faint);">Shown behind this trade's card in the Entries list — add a few and it cycles through them each time you open the app or view the card.</p>
+            <p style="margin:0 0 10px; font-size:12.5px; color:var(--ink-faint);">Shared across every trade's card in the Entries list — add a few and each entry cycles through them each time you open the app or view its card.</p>
             <div class="bgphoto-grid" id="bgphoto-grid"></div>
             <input type="file" id="bgphoto-input" accept="image/*" multiple style="display:none;">
             <button type="button" class="btn ghost small" id="bgphoto-add-btn" style="margin-top:8px;">+ Add photos</button>
@@ -1886,7 +1886,6 @@
   let editingId = null;
   let activeFilter = 'all';
   let currentScreenshot = null;
-  let currentBgPhotos = [];
   let rulesBroken = false;
   let selectedBrokenRules = [];
   let selectedChecklistChecked = [];
@@ -2306,18 +2305,46 @@
     return canvas.toDataURL('image/jpeg', 0.8);
   }
 
-  // ---------- background photos (entry trade-card) ----------
+  // ---------- background photos (shared across every entry's trade-card) ----------
+  function getSharedBgPhotos() {
+    try { return JSON.parse(localStorage.getItem('lvd_shared_bg_photos') || '[]'); } catch (err) { return []; }
+  }
+  function saveSharedBgPhotos(photos) {
+    localStorage.setItem('lvd_shared_bg_photos', JSON.stringify(photos));
+    renderEntries();
+  }
+  // one-time migration: fold any photos saved on individual entries (pre-shared-pool) into the shared pool
+  function migrateLegacyBgPhotosOnce() {
+    if (localStorage.getItem('lvd_bg_photos_migrated')) return;
+    localStorage.setItem('lvd_bg_photos_migrated', '1');
+    if (getSharedBgPhotos().length) return;
+    const seen = new Set();
+    const merged = [];
+    entries.forEach(e => {
+      (e.bgPhotos || []).forEach(src => {
+        if (!seen.has(src)) { seen.add(src); merged.push(src); }
+      });
+    });
+    if (merged.length) saveSharedBgPhotos(merged);
+  }
   const bgPhotoGrid = document.getElementById('bgphoto-grid');
   const bgPhotoInput = document.getElementById('bgphoto-input');
   document.getElementById('bgphoto-add-btn').addEventListener('click', () => bgPhotoInput.click());
   bgPhotoInput.addEventListener('change', (e) => {
     const files = [...e.target.files];
+    let pending = files.length;
+    if (!pending) return;
+    const photos = getSharedBgPhotos();
     files.forEach(file => {
-      if (file.type.indexOf('image') !== 0) return;
+      if (file.type.indexOf('image') !== 0) { pending--; return; }
       const img = new Image();
       const reader = new FileReader();
       reader.onload = () => {
-        img.onload = () => { currentBgPhotos.push(compressImage(img, 1000)); renderBgPhotoGrid(); };
+        img.onload = () => {
+          photos.push(compressImage(img, 1000));
+          pending--;
+          if (pending <= 0) { saveSharedBgPhotos(photos); renderBgPhotoGrid(); }
+        };
         img.src = reader.result;
       };
       reader.readAsDataURL(file);
@@ -2325,15 +2352,17 @@
     bgPhotoInput.value = '';
   });
   function renderBgPhotoGrid() {
-    bgPhotoGrid.innerHTML = currentBgPhotos.map((src, i) => `
+    const photos = getSharedBgPhotos();
+    bgPhotoGrid.innerHTML = photos.map((src, i) => `
       <div class="bgphoto-thumb"><img src="${src}"><span class="rm" data-i="${i}">✕</span></div>
     `).join('');
     bgPhotoGrid.querySelectorAll('.rm').forEach(rm => rm.addEventListener('click', () => {
-      currentBgPhotos.splice(parseInt(rm.dataset.i, 10), 1);
+      const p = getSharedBgPhotos();
+      p.splice(parseInt(rm.dataset.i, 10), 1);
+      saveSharedBgPhotos(p);
       renderBgPhotoGrid();
     }));
   }
-  function setBgPhotos(photos) { currentBgPhotos = photos ? [...photos] : []; renderBgPhotoGrid(); }
   function setScreenshot(dataUrl) {
     currentScreenshot = dataUrl;
     if (dataUrl) {
@@ -2378,7 +2407,6 @@
       bad: document.getElementById('f-bad').value.trim(),
       improve: document.getElementById('f-improve').value.trim(),
       screenshot: currentScreenshot || null,
-      bgPhotos: [...currentBgPhotos],
       bgPhotoIndex: editingId ? (entries.find(x => x.id === editingId) || {}).bgPhotoIndex || 0 : 0,
       createdAt: editingId ? (entries.find(x => x.id === editingId) || {}).createdAt || Date.now() : Date.now()
     };
@@ -2403,7 +2431,7 @@
     document.getElementById('submit-btn').textContent = 'Save Entry';
     document.getElementById('cancel-edit-btn').style.display = 'none';
     setScreenshot(null);
-    setBgPhotos([]);
+    renderBgPhotoGrid();
   }
 
   function loadEntryIntoForm(id) {
@@ -2435,7 +2463,7 @@
     renderEntryPremarketCheck();
     document.querySelectorAll('#entry-result-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.result === e.result));
     setScreenshot(e.screenshot || null);
-    setBgPhotos(e.bgPhotos || []);
+    renderBgPhotoGrid();
     document.getElementById('submit-btn').textContent = 'Update Entry';
     document.getElementById('cancel-edit-btn').style.display = 'inline-block';
     switchTab('new');
@@ -2702,7 +2730,7 @@
           </div>
         </div>`;
       }
-      const photos = e.bgPhotos || [];
+      const photos = getSharedBgPhotos();
       const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
       const bg = photos.length ? `style="background-image:linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)), url('${photos[idx]}')"` : '';
       const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
@@ -2719,10 +2747,9 @@
           <div class="trade-card-body">
             <div class="trade-card-pnl-block">
               <div class="trade-card-pnl ${e.result}">${e.result === 'win' ? '+' : e.result === 'loss' ? '-' : ''}${fmtMoney(Math.abs(e.pnl))}</div>
-              <div class="trade-card-result ${e.result}">${resultLabel}</div>
+              <div class="trade-card-result ${e.result}">${resultLabel}${e.setupType ? ` · ${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}` : ''}</div>
             </div>
             <div class="trade-card-stats">
-              ${e.setupType ? `<div class="trade-card-stat"><span class="k">Setup</span><span class="v">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</span></div>` : ''}
               ${photos.length > 1 ? `<div class="trade-card-stat"><span class="k">Photo</span><span class="v">${idx + 1} / ${photos.length}</span></div>` : ''}
             </div>
           </div>
@@ -2773,15 +2800,17 @@
 
   function advanceBgPhoto(id) {
     const e = entries.find(x => x.id === id);
-    if (!e || !e.bgPhotos || e.bgPhotos.length < 2) return;
-    e.bgPhotoIndex = ((e.bgPhotoIndex || 0) + 1) % e.bgPhotos.length;
+    const photos = getSharedBgPhotos();
+    if (!e || photos.length < 2) return;
+    e.bgPhotoIndex = ((e.bgPhotoIndex || 0) + 1) % photos.length;
     saveEntries();
   }
   function advanceAllBgPhotosOnLaunch() {
     let changed = false;
+    const photos = getSharedBgPhotos();
     entries.forEach(e => {
-      if (e.bgPhotos && e.bgPhotos.length > 1) {
-        e.bgPhotoIndex = ((e.bgPhotoIndex || 0) + 1) % e.bgPhotos.length;
+      if (photos.length > 1) {
+        e.bgPhotoIndex = ((e.bgPhotoIndex || 0) + 1) % photos.length;
         changed = true;
       }
     });
@@ -5473,7 +5502,9 @@
   }
 
   // ---------- init ----------
+  migrateLegacyBgPhotosOnce();
   advanceAllBgPhotosOnLaunch();
+  renderBgPhotoGrid();
   renderDashboard();
   renderBtRuleTagsPicker();
   renderBacktestStats();
