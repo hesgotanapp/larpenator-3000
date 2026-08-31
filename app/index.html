@@ -519,29 +519,43 @@
   .bgphoto-thumb .rm { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(9,9,9,0.75); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; }
   .bgphoto-thumb .rm:hover { background: var(--red); }
 
-  /* Entries tab trade card (Obsidyn-style), scoped to #entries-list only */
-  .trade-card { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 14px; min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border); background: var(--surface); background-size: cover; background-position: center; transition: border-color var(--transition); }
+  /* Entries tab: compact row by default, click to expand into an Obsidyn-style card */
+  .trade-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); margin-bottom: 6px; cursor: pointer; transition: border-color var(--transition), background var(--transition); }
+  .trade-row:hover { border-color: var(--border-strong); background: var(--surface-2); }
+  .trade-row-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .trade-row-date { font-family: var(--font-mono); font-size: 12px; color: var(--ink-dim); width: 62px; flex-shrink: 0; }
+  .trade-row-symbol { font-size: 13.5px; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .trade-row-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .trade-row-pnl { font-family: var(--font-mono); font-weight: 700; font-size: 13.5px; }
+  .trade-row-pnl.win { color: var(--green); }
+  .trade-row-pnl.loss { color: var(--red); }
+  .trade-row-pnl.breakeven { color: var(--amber); }
+
+  .trade-card-wrap { margin-bottom: 10px; }
+  .trade-card { position: relative; border-radius: 16px; overflow: hidden; height: 172px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border); background: var(--surface); background-size: cover; background-position: center; cursor: pointer; transition: border-color var(--transition); }
   .trade-card:hover { border-color: var(--border-strong); }
-  .trade-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(9,9,9,0.1), rgba(9,9,9,0.55) 55%, rgba(9,9,9,0.92)); pointer-events: none; }
+  .trade-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)); pointer-events: none; }
   .trade-card.no-photo::before { background: linear-gradient(180deg, rgba(9,9,9,0), rgba(9,9,9,0)); }
   .trade-card-top, .trade-card-body, .trade-card-actions { position: relative; z-index: 1; }
-  .trade-card-top { padding: 16px 18px 0; display: flex; justify-content: space-between; align-items: flex-start; }
-  .trade-card-symbol { font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -0.2px; }
-  .trade-card-date { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-dim); margin-top: 2px; }
-  .trade-card-body { padding: 10px 18px 14px; }
-  .trade-card-pnl { display: inline-flex; font-family: var(--font-mono); font-size: 26px; font-weight: 700; padding: 6px 14px; border-radius: 10px; margin-bottom: 12px; }
+  .trade-card-top { padding: 12px 16px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+  .trade-card-symbol { font-size: 15px; font-weight: 800; color: var(--ink); letter-spacing: -0.2px; }
+  .trade-card-date { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); margin-top: 1px; }
+  .trade-card-collapse { background: rgba(22,22,24,0.7); border: 1px solid var(--border-strong); color: var(--ink-dim); width: 24px; height: 24px; border-radius: 50%; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+  .trade-card-collapse:hover { color: var(--ink); }
+  .trade-card-body { padding: 4px 16px 8px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .trade-card-pnl { display: inline-flex; font-family: var(--font-mono); font-size: 21px; font-weight: 700; padding: 4px 11px; border-radius: 9px; }
   .trade-card-pnl.win { background: var(--green-bg); color: var(--green); }
   .trade-card-pnl.loss { background: var(--red-bg); color: var(--red); }
   .trade-card-pnl.breakeven { background: var(--amber-bg); color: var(--amber); }
-  .trade-card-stats { display: flex; flex-direction: column; gap: 4px; max-width: 240px; }
-  .trade-card-stat { display: flex; justify-content: space-between; font-size: 13px; }
+  .trade-card-stats { display: flex; flex-direction: column; gap: 2px; align-items: flex-end; }
+  .trade-card-stat { display: flex; gap: 8px; font-size: 12px; }
   .trade-card-stat .k { color: var(--ink-dim); font-weight: 500; }
   .trade-card-stat .v { color: var(--ink); font-weight: 700; font-family: var(--font-mono); }
-  .trade-card-actions { display: flex; gap: 8px; padding: 0 18px 16px; }
+  .trade-card-actions { display: flex; gap: 6px; padding: 0 16px 12px; }
   .trade-card-actions .btn { background: rgba(22,22,24,0.75); backdrop-filter: blur(6px); border: 1px solid var(--border-strong); color: var(--ink); box-shadow: none; }
   .trade-card-actions .btn:hover { background: rgba(30,30,33,0.85); }
   .trade-card-actions .btn.danger { color: var(--red); border-color: rgba(239,106,95,0.35); }
-  .trade-card-more { display: none; padding: 4px 18px 18px; position: relative; z-index: 1; }
+  .trade-card-more { display: none; padding: 14px 18px 18px; border: 1px solid var(--border); border-top: none; border-radius: 0 0 16px 16px; margin-top: -1px; background: var(--surface); }
   .trade-card-more.open { display: block; }
   .trade-card-more .entry-block .v { color: var(--ink); }
 
@@ -2628,6 +2642,7 @@
 
   // ---------- entries list ----------
   let entriesQuery = '', entriesFrom = '', entriesTo = '';
+  let expandedTradeIds = new Set();
   document.getElementById('entries-search').addEventListener('input', (e) => { entriesQuery = e.target.value.trim(); renderEntries(); });
   document.getElementById('entries-from').addEventListener('change', (e) => { entriesFrom = e.target.value; renderEntries(); });
   document.getElementById('entries-to').addEventListener('change', (e) => { entriesTo = e.target.value; renderEntries(); });
@@ -2667,31 +2682,49 @@
     if (shown.length === 0) { list.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>${entriesQuery || entriesFrom || entriesTo ? 'Nothing matches your search or date range.' : 'No entries here yet.'}</p></div>`; return; }
 
     list.innerHTML = shown.map(e => {
+      if (!expandedTradeIds.has(e.id)) {
+        const resultLabel = e.result === 'breakeven' ? 'BE' : e.result === 'win' ? 'Win' : 'Loss';
+        return `
+        <div class="trade-row" data-row="${e.id}">
+          <div class="trade-row-left">
+            <span class="trade-row-date">${fmtDateShort(e.date)}</span>
+            <span class="trade-row-symbol">${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</span>
+          </div>
+          <div class="trade-row-right">
+            <span class="badge ${e.result}">${resultLabel}</span>
+            ${e.rulesBroken ? `<span class="rule-flag" title="Rules broken">⚠</span>` : ''}
+            <span class="trade-row-pnl ${e.pnl >= 0 ? 'win' : 'loss'}">${fmtMoney(e.pnl)}</span>
+          </div>
+        </div>`;
+      }
       const photos = e.bgPhotos || [];
       const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
-      const bg = photos.length ? `style="background-image:linear-gradient(180deg, rgba(9,9,9,0.1), rgba(9,9,9,0.55) 55%, rgba(9,9,9,0.92)), url('${photos[idx]}')"` : '';
+      const bg = photos.length ? `style="background-image:linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)), url('${photos[idx]}')"` : '';
       const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
       return `
-      <div class="trade-card ${photos.length ? '' : 'no-photo'}" data-id="${e.id}" ${bg}>
-        <div class="trade-card-top">
-          <div>
-            <div class="trade-card-symbol">${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</div>
-            <div class="trade-card-date">${fmtDate(e.date)}${e.rulesBroken ? ' · <span class="rule-flag" title="Rules broken">⚠</span>' : ''}</div>
+      <div class="trade-card-wrap" data-wrap="${e.id}">
+        <div class="trade-card ${photos.length ? '' : 'no-photo'}" data-id="${e.id}" ${bg}>
+          <div class="trade-card-top" data-collapse="${e.id}">
+            <div>
+              <div class="trade-card-symbol">${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</div>
+              <div class="trade-card-date">${fmtDate(e.date)}${e.rulesBroken ? ' · <span class="rule-flag" title="Rules broken">⚠</span>' : ''}</div>
+            </div>
+            <button class="trade-card-collapse" type="button" title="Collapse">▲</button>
           </div>
-        </div>
-        <div class="trade-card-body">
-          <div class="trade-card-pnl ${e.result}">${fmtMoney(e.pnl)}</div>
-          <div class="trade-card-stats">
-            <div class="trade-card-stat"><span class="k">Result</span><span class="v">${resultLabel}</span></div>
-            ${e.setupType ? `<div class="trade-card-stat"><span class="k">Setup</span><span class="v">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</span></div>` : ''}
-            ${photos.length > 1 ? `<div class="trade-card-stat"><span class="k">Photo</span><span class="v">${idx + 1} / ${photos.length}</span></div>` : ''}
+          <div class="trade-card-body">
+            <div class="trade-card-pnl ${e.result}">${fmtMoney(e.pnl)}</div>
+            <div class="trade-card-stats">
+              <div class="trade-card-stat"><span class="k">Result</span><span class="v">${resultLabel}</span></div>
+              ${e.setupType ? `<div class="trade-card-stat"><span class="k">Setup</span><span class="v">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</span></div>` : ''}
+              ${photos.length > 1 ? `<div class="trade-card-stat"><span class="k">Photo</span><span class="v">${idx + 1} / ${photos.length}</span></div>` : ''}
+            </div>
           </div>
-        </div>
-        <div class="trade-card-actions">
-          <button class="btn small" data-more="${e.id}" type="button">See more</button>
-          <button class="btn ghost small" data-edit="${e.id}" type="button">Edit</button>
-          <button class="btn ghost small" data-tradenote="${e.id}" type="button">Note ↗</button>
-          <button class="btn danger small" data-delete="${e.id}" type="button">Delete</button>
+          <div class="trade-card-actions">
+            <button class="btn small" data-more="${e.id}" type="button">See more</button>
+            <button class="btn ghost small" data-edit="${e.id}" type="button">Edit</button>
+            <button class="btn ghost small" data-tradenote="${e.id}" type="button">Note ↗</button>
+            <button class="btn danger small" data-delete="${e.id}" type="button">Delete</button>
+          </div>
         </div>
         <div class="trade-card-more" id="more-${e.id}">
           ${e.brokenRules && e.brokenRules.length ? block('Rules broken', e.brokenRules.join(', ')) : ''}
@@ -2706,6 +2739,16 @@
       </div>
     `; }).join('');
 
+    list.querySelectorAll('[data-row]').forEach(el => el.addEventListener('click', () => {
+      expandedTradeIds.add(el.dataset.row);
+      advanceBgPhoto(el.dataset.row);
+      renderEntries();
+    }));
+    list.querySelectorAll('[data-collapse]').forEach(el => el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      expandedTradeIds.delete(el.dataset.collapse);
+      renderEntries();
+    }));
     list.querySelectorAll('[data-more]').forEach(el => el.addEventListener('click', (ev) => {
       ev.stopPropagation();
       const id = el.dataset.more;
