@@ -513,6 +513,38 @@
   .entry-actions { display: flex; gap: 8px; margin-top: 14px; }
   .entry-screenshot-thumb { max-width: 220px; border-radius: 7px; border: 1px solid var(--border); cursor: zoom-in; display: block; margin-top: 6px; }
 
+  .bgphoto-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .bgphoto-thumb { position: relative; width: 72px; height: 72px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); flex-shrink: 0; }
+  .bgphoto-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .bgphoto-thumb .rm { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(9,9,9,0.75); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; }
+  .bgphoto-thumb .rm:hover { background: var(--red); }
+
+  /* Entries tab trade card (Obsidyn-style), scoped to #entries-list only */
+  .trade-card { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 14px; min-height: 220px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--border); background: var(--surface); background-size: cover; background-position: center; transition: border-color var(--transition); }
+  .trade-card:hover { border-color: var(--border-strong); }
+  .trade-card::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(9,9,9,0.1), rgba(9,9,9,0.55) 55%, rgba(9,9,9,0.92)); pointer-events: none; }
+  .trade-card.no-photo::before { background: linear-gradient(180deg, rgba(9,9,9,0), rgba(9,9,9,0)); }
+  .trade-card-top, .trade-card-body, .trade-card-actions { position: relative; z-index: 1; }
+  .trade-card-top { padding: 16px 18px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+  .trade-card-symbol { font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -0.2px; }
+  .trade-card-date { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-dim); margin-top: 2px; }
+  .trade-card-body { padding: 10px 18px 14px; }
+  .trade-card-pnl { display: inline-flex; font-family: var(--font-mono); font-size: 26px; font-weight: 700; padding: 6px 14px; border-radius: 10px; margin-bottom: 12px; }
+  .trade-card-pnl.win { background: var(--green-bg); color: var(--green); }
+  .trade-card-pnl.loss { background: var(--red-bg); color: var(--red); }
+  .trade-card-pnl.breakeven { background: var(--amber-bg); color: var(--amber); }
+  .trade-card-stats { display: flex; flex-direction: column; gap: 4px; max-width: 240px; }
+  .trade-card-stat { display: flex; justify-content: space-between; font-size: 13px; }
+  .trade-card-stat .k { color: var(--ink-dim); font-weight: 500; }
+  .trade-card-stat .v { color: var(--ink); font-weight: 700; font-family: var(--font-mono); }
+  .trade-card-actions { display: flex; gap: 8px; padding: 0 18px 16px; }
+  .trade-card-actions .btn { background: rgba(22,22,24,0.75); backdrop-filter: blur(6px); border: 1px solid var(--border-strong); color: var(--ink); box-shadow: none; }
+  .trade-card-actions .btn:hover { background: rgba(30,30,33,0.85); }
+  .trade-card-actions .btn.danger { color: var(--red); border-color: rgba(239,106,95,0.35); }
+  .trade-card-more { display: none; padding: 4px 18px 18px; position: relative; z-index: 1; }
+  .trade-card-more.open { display: block; }
+  .trade-card-more .entry-block .v { color: var(--ink); }
+
   .empty-state { text-align: center; padding: 46px 20px; color: var(--ink-faint); }
   .empty-state .glyph { font-size: 30px; margin-bottom: 10px; }
   .empty-state p { font-size: 14px; font-weight: 500; margin: 0; }
@@ -1157,6 +1189,14 @@
               <br>
               <button type="button" class="remove-shot" id="remove-screenshot" style="display:none;">Remove image</button>
             </div>
+          </div>
+
+          <div class="field full">
+            <label>Background photos (optional)</label>
+            <p style="margin:0 0 10px; font-size:12.5px; color:var(--ink-faint);">Shown behind this trade's card in the Entries list — add a few and it cycles through them each time you open the app or view the card.</p>
+            <div class="bgphoto-grid" id="bgphoto-grid"></div>
+            <input type="file" id="bgphoto-input" accept="image/*" multiple style="display:none;">
+            <button type="button" class="btn ghost small" id="bgphoto-add-btn" style="margin-top:8px;">+ Add photos</button>
           </div>
         </div>
 
@@ -1827,6 +1867,7 @@
   let editingId = null;
   let activeFilter = 'all';
   let currentScreenshot = null;
+  let currentBgPhotos = [];
   let rulesBroken = false;
   let selectedBrokenRules = [];
   let selectedChecklistChecked = [];
@@ -2236,15 +2277,44 @@
   });
   removeShotBtn.addEventListener('click', (e) => { e.stopPropagation(); setScreenshot(null); });
 
-  function compressImage(img) {
-    const maxW = 900;
+  function compressImage(img, maxW) {
+    maxW = maxW || 900;
     const scale = Math.min(1, maxW / img.width);
     const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
     const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    return canvas.toDataURL('image/jpeg', 0.82);
+    return canvas.toDataURL('image/jpeg', 0.8);
   }
+
+  // ---------- background photos (entry trade-card) ----------
+  const bgPhotoGrid = document.getElementById('bgphoto-grid');
+  const bgPhotoInput = document.getElementById('bgphoto-input');
+  document.getElementById('bgphoto-add-btn').addEventListener('click', () => bgPhotoInput.click());
+  bgPhotoInput.addEventListener('change', (e) => {
+    const files = [...e.target.files];
+    files.forEach(file => {
+      if (file.type.indexOf('image') !== 0) return;
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.onload = () => { currentBgPhotos.push(compressImage(img, 1000)); renderBgPhotoGrid(); };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+    bgPhotoInput.value = '';
+  });
+  function renderBgPhotoGrid() {
+    bgPhotoGrid.innerHTML = currentBgPhotos.map((src, i) => `
+      <div class="bgphoto-thumb"><img src="${src}"><span class="rm" data-i="${i}">✕</span></div>
+    `).join('');
+    bgPhotoGrid.querySelectorAll('.rm').forEach(rm => rm.addEventListener('click', () => {
+      currentBgPhotos.splice(parseInt(rm.dataset.i, 10), 1);
+      renderBgPhotoGrid();
+    }));
+  }
+  function setBgPhotos(photos) { currentBgPhotos = photos ? [...photos] : []; renderBgPhotoGrid(); }
   function setScreenshot(dataUrl) {
     currentScreenshot = dataUrl;
     if (dataUrl) {
@@ -2289,6 +2359,8 @@
       bad: document.getElementById('f-bad').value.trim(),
       improve: document.getElementById('f-improve').value.trim(),
       screenshot: currentScreenshot || null,
+      bgPhotos: [...currentBgPhotos],
+      bgPhotoIndex: editingId ? (entries.find(x => x.id === editingId) || {}).bgPhotoIndex || 0 : 0,
       createdAt: editingId ? (entries.find(x => x.id === editingId) || {}).createdAt || Date.now() : Date.now()
     };
     if (editingId) { entries = entries.map(x => x.id === editingId ? entry : x); showToast('Entry updated'); }
@@ -2312,6 +2384,7 @@
     document.getElementById('submit-btn').textContent = 'Save Entry';
     document.getElementById('cancel-edit-btn').style.display = 'none';
     setScreenshot(null);
+    setBgPhotos([]);
   }
 
   function loadEntryIntoForm(id) {
@@ -2343,6 +2416,7 @@
     renderEntryPremarketCheck();
     document.querySelectorAll('#entry-result-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.result === e.result));
     setScreenshot(e.screenshot || null);
+    setBgPhotos(e.bgPhotos || []);
     document.getElementById('submit-btn').textContent = 'Update Entry';
     document.getElementById('cancel-edit-btn').style.display = 'inline-block';
     switchTab('new');
@@ -2592,18 +2666,34 @@
     if (entriesTo) shown = shown.filter(e => e.date <= entriesTo);
     if (shown.length === 0) { list.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>${entriesQuery || entriesFrom || entriesTo ? 'Nothing matches your search or date range.' : 'No entries here yet.'}</p></div>`; return; }
 
-    list.innerHTML = shown.map(e => `
-      <div class="entry-card ${e.result}" data-id="${e.id}">
-        <div class="entry-top" data-toggle="${e.id}">
-          <div class="entry-meta">
-            <span class="entry-date">${fmtDate(e.date)}</span>
-            ${e.symbol ? `<span class="entry-symbol">${escapeHtml(e.symbol)}</span>` : ''}
-            <span class="badge ${e.result}">${e.result}</span>
-            ${e.rulesBroken ? `<span class="rule-flag" title="Rules broken">⚠</span>` : ''}
+    list.innerHTML = shown.map(e => {
+      const photos = e.bgPhotos || [];
+      const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
+      const bg = photos.length ? `style="background-image:linear-gradient(180deg, rgba(9,9,9,0.1), rgba(9,9,9,0.55) 55%, rgba(9,9,9,0.92)), url('${photos[idx]}')"` : '';
+      const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
+      return `
+      <div class="trade-card ${photos.length ? '' : 'no-photo'}" data-id="${e.id}" ${bg}>
+        <div class="trade-card-top">
+          <div>
+            <div class="trade-card-symbol">${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</div>
+            <div class="trade-card-date">${fmtDate(e.date)}${e.rulesBroken ? ' · <span class="rule-flag" title="Rules broken">⚠</span>' : ''}</div>
           </div>
-          <span class="entry-pnl ${e.pnl >= 0 ? 'win' : 'loss'}">${fmtMoney(e.pnl)}</span>
         </div>
-        <div class="entry-body" id="body-${e.id}">
+        <div class="trade-card-body">
+          <div class="trade-card-pnl ${e.result}">${fmtMoney(e.pnl)}</div>
+          <div class="trade-card-stats">
+            <div class="trade-card-stat"><span class="k">Result</span><span class="v">${resultLabel}</span></div>
+            ${e.setupType ? `<div class="trade-card-stat"><span class="k">Setup</span><span class="v">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</span></div>` : ''}
+            ${photos.length > 1 ? `<div class="trade-card-stat"><span class="k">Photo</span><span class="v">${idx + 1} / ${photos.length}</span></div>` : ''}
+          </div>
+        </div>
+        <div class="trade-card-actions">
+          <button class="btn small" data-more="${e.id}" type="button">See more</button>
+          <button class="btn ghost small" data-edit="${e.id}" type="button">Edit</button>
+          <button class="btn ghost small" data-tradenote="${e.id}" type="button">Note ↗</button>
+          <button class="btn danger small" data-delete="${e.id}" type="button">Delete</button>
+        </div>
+        <div class="trade-card-more" id="more-${e.id}">
           ${e.brokenRules && e.brokenRules.length ? block('Rules broken', e.brokenRules.join(', ')) : ''}
           ${e.checklistChecked && e.checklistChecked.length ? block('Pre-trade checklist confirmed', e.checklistChecked.join(', ')) : ''}
           ${block('Emotions', e.emotions)}
@@ -2611,21 +2701,41 @@
           ${block('What went well', e.good)}
           ${block('What went badly', e.bad)}
           ${block('Improvements', e.improve)}
-          ${e.screenshot ? `<div class="entry-block"><div class="k">Screenshot</div><img class="entry-screenshot-thumb" src="${e.screenshot}" data-full="${e.screenshot}"></div>` : ''}
-          <div class="entry-actions">
-            <button class="btn ghost small" data-edit="${e.id}">Edit</button>
-            <button class="btn ghost small" data-tradenote="${e.id}">Note ↗</button>
-            <button class="btn danger small" data-delete="${e.id}">Delete</button>
-          </div>
+          ${e.screenshot ? `<div class="entry-block"><div class="k">Trade screenshot</div><img class="entry-screenshot-thumb" src="${e.screenshot}" data-full="${e.screenshot}"></div>` : ''}
         </div>
       </div>
-    `).join('');
+    `; }).join('');
 
-    list.querySelectorAll('[data-toggle]').forEach(el => el.addEventListener('click', () => document.getElementById('body-' + el.dataset.toggle).classList.toggle('open')));
+    list.querySelectorAll('[data-more]').forEach(el => el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const id = el.dataset.more;
+      const panel = document.getElementById('more-' + id);
+      const opening = !panel.classList.contains('open');
+      panel.classList.toggle('open');
+      el.textContent = panel.classList.contains('open') ? 'See less' : 'See more';
+      if (opening) advanceBgPhoto(id);
+    }));
     list.querySelectorAll('[data-tradenote]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); openTradeNote(el.dataset.tradenote); }));
     list.querySelectorAll('[data-edit]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); loadEntryIntoForm(el.dataset.edit); }));
     list.querySelectorAll('[data-delete]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); deleteEntry(el.dataset.delete); }));
     list.querySelectorAll('.entry-screenshot-thumb').forEach(img => img.addEventListener('click', (ev) => { ev.stopPropagation(); openLightbox(img.dataset.full); }));
+  }
+
+  function advanceBgPhoto(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e || !e.bgPhotos || e.bgPhotos.length < 2) return;
+    e.bgPhotoIndex = ((e.bgPhotoIndex || 0) + 1) % e.bgPhotos.length;
+    saveEntries();
+  }
+  function advanceAllBgPhotosOnLaunch() {
+    let changed = false;
+    entries.forEach(e => {
+      if (e.bgPhotos && e.bgPhotos.length > 1) {
+        e.bgPhotoIndex = ((e.bgPhotoIndex || 0) + 1) % e.bgPhotos.length;
+        changed = true;
+      }
+    });
+    if (changed) saveEntries();
   }
 
   function block(label, value) {
@@ -5313,6 +5423,7 @@
   }
 
   // ---------- init ----------
+  advanceAllBgPhotosOnLaunch();
   renderDashboard();
   renderBtRuleTagsPicker();
   renderBacktestStats();
