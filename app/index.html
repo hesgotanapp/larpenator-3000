@@ -1227,6 +1227,14 @@
             <input type="file" id="bgphoto-input" accept="image/*" multiple style="display:none;">
             <button type="button" class="btn ghost small" id="bgphoto-add-btn" style="margin-top:8px;">+ Add photos</button>
           </div>
+
+          <div class="field full">
+            <label>Losing trade background (optional)</label>
+            <p style="margin:0 0 10px; font-size:12.5px; color:var(--ink-faint);">A single image shown instead, only on cards for losing trades — overrides the shared photos above just for losses.</p>
+            <div class="bgphoto-grid" id="lossbgphoto-grid"></div>
+            <input type="file" id="lossbgphoto-input" accept="image/*" style="display:none;">
+            <button type="button" class="btn ghost small" id="lossbgphoto-add-btn" style="margin-top:8px;">+ Set image</button>
+          </div>
         </div>
 
         <div class="form-actions">
@@ -2388,8 +2396,44 @@
       p.splice(parseInt(rm.dataset.i, 10), 1);
       saveSharedBgPhotos(p);
       renderBgPhotoGrid();
+    renderLossBgPhotoGrid();
     }));
   }
+
+  // ---------- loss-specific background photo (overrides the shared pool for losing trades only) ----------
+  function getLossBgPhoto() {
+    return localStorage.getItem('lvd_loss_bg_photo') || null;
+  }
+  function saveLossBgPhoto(dataUrl) {
+    if (dataUrl) localStorage.setItem('lvd_loss_bg_photo', dataUrl);
+    else localStorage.removeItem('lvd_loss_bg_photo');
+    renderEntries();
+  }
+  const lossBgPhotoGrid = document.getElementById('lossbgphoto-grid');
+  const lossBgPhotoInput = document.getElementById('lossbgphoto-input');
+  document.getElementById('lossbgphoto-add-btn').addEventListener('click', () => lossBgPhotoInput.click());
+  lossBgPhotoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file || file.type.indexOf('image') !== 0) return;
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => {
+      img.onload = () => {
+        saveLossBgPhoto(compressImage(img, 1000));
+        renderLossBgPhotoGrid();
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+    lossBgPhotoInput.value = '';
+  });
+  function renderLossBgPhotoGrid() {
+    const photo = getLossBgPhoto();
+    lossBgPhotoGrid.innerHTML = photo ? `<div class="bgphoto-thumb"><img src="${photo}"><span class="rm" data-i="0">✕</span></div>` : '';
+    const rm = lossBgPhotoGrid.querySelector('.rm');
+    if (rm) rm.addEventListener('click', () => { saveLossBgPhoto(null); renderLossBgPhotoGrid(); });
+  }
+
   function setScreenshot(dataUrl) {
     currentScreenshot = dataUrl;
     if (dataUrl) {
@@ -2443,9 +2487,10 @@
     const e = entries.find(x => x.id === id);
     if (!e) return;
     exportFilename = 'trade-' + (e.symbol ? e.symbol.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'entry') + '-' + e.date;
+    const lossPhoto = e.result === 'loss' ? getLossBgPhoto() : null;
     const photos = getSharedBgPhotos();
     const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
-    const photoSrc = photos.length ? photos[idx] : null;
+    const photoSrc = lossPhoto || (photos.length ? photos[idx] : null);
     if (photoSrc) {
       const img = new Image();
       img.onload = () => { drawExportCard(e, img); };
@@ -2603,6 +2648,7 @@
     document.getElementById('cancel-edit-btn').style.display = 'none';
     setScreenshot(null);
     renderBgPhotoGrid();
+    renderLossBgPhotoGrid();
   }
 
   function loadEntryIntoForm(id) {
@@ -2635,6 +2681,7 @@
     document.querySelectorAll('#entry-result-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.result === e.result));
     setScreenshot(e.screenshot || null);
     renderBgPhotoGrid();
+    renderLossBgPhotoGrid();
     document.getElementById('submit-btn').textContent = 'Update Entry';
     document.getElementById('cancel-edit-btn').style.display = 'inline-block';
     switchTab('new');
@@ -3030,13 +3077,15 @@
           </div>
         </div>`;
       }
+      const lossPhoto = e.result === 'loss' ? getLossBgPhoto() : null;
       const photos = getSharedBgPhotos();
       const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
-      const bg = photos.length ? `style="background-image:linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)), url('${photos[idx]}')"` : '';
+      const activePhoto = lossPhoto || (photos.length ? photos[idx] : null);
+      const bg = activePhoto ? `style="background-image:linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)), url('${activePhoto}')"` : '';
       const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
       return `
       <div class="trade-card-wrap" data-wrap="${e.id}">
-        <div class="trade-card ${photos.length ? '' : 'no-photo'}" data-id="${e.id}" ${bg}>
+        <div class="trade-card ${activePhoto ? '' : 'no-photo'}" data-id="${e.id}" ${bg}>
           ${tradeChartSVG(e)}
           <div class="trade-card-top" data-collapse="${e.id}">
             <div>
@@ -3052,7 +3101,7 @@
               ${e.setupType ? `<div class="trade-card-setup">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</div>` : ''}
             </div>
             <div class="trade-card-stats">
-              ${photos.length > 1 ? `<div class="trade-card-stat"><span class="k">Photo</span><span class="v">${idx + 1} / ${photos.length}</span></div>` : ''}
+              ${!lossPhoto && photos.length > 1 ? `<div class="trade-card-stat"><span class="k">Photo</span><span class="v">${idx + 1} / ${photos.length}</span></div>` : ''}
             </div>
           </div>
           <div class="trade-card-actions">
@@ -5809,6 +5858,7 @@
   migrateLegacyBgPhotosOnce();
   advanceAllBgPhotosOnLaunch();
   renderBgPhotoGrid();
+  renderLossBgPhotoGrid();
   renderDashboard();
   renderBtRuleTagsPicker();
   renderBacktestStats();
