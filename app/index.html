@@ -233,7 +233,8 @@
   .mini-bar .seg-loss { background: var(--red); height: 100%; }
 
   /* ---------- Focus rule + milestone + streak ---------- */
-  .banner-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .banner-row { display: grid; grid-template-columns: 1fr 1fr 200px; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 980px) { .banner-row { grid-template-columns: 1fr 1fr; } .banner-row .streak-flame-card { grid-column: 1 / -1; } }
   .banner-row .card { min-width: 0; }
   .card {
     background: var(--surface);
@@ -269,24 +270,13 @@
   @keyframes pipIn { from { transform: scale(0); } to { transform: scale(1); } }
   .streak-pip:hover { transform: translateY(-2px); }
 
-  /* ---------- activity panel: contribution calendar + streak flame ---------- */
-  .activity-card { display: grid; grid-template-columns: 1fr 220px; gap: 22px; align-items: stretch; margin-bottom: 20px; }
-  .activity-card .card-head { margin-bottom: 16px; }
-  .contrib-wrap { overflow-x: auto; padding-bottom: 4px; }
-  .contrib-grid { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 11px); gap: 3px; width: max-content; }
-  .contrib-cell { width: 11px; height: 11px; border-radius: 3px; background: var(--surface-3); transition: transform .1s ease; cursor: default; }
-  .contrib-cell:hover { transform: scale(1.35); }
-  .contrib-legend { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 11px; color: var(--ink-faint); }
-  .contrib-legend .contrib-cell { cursor: default; }
-  .contrib-legend .contrib-cell:hover { transform: none; }
-
-  .streak-flame-panel {
-    background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-    padding: 20px; text-align: center; position: relative; overflow: hidden;
+  /* ---------- streak flame card ---------- */
+  .streak-flame-card {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    text-align: center; position: relative; overflow: hidden; min-width: 0;
   }
-  .streak-flame-panel .glow-bg { position: absolute; inset: -20%; border-radius: 50%; filter: blur(30px); opacity: 0.35; pointer-events: none; }
-  .streak-flame-svg { position: relative; z-index: 1; filter: drop-shadow(0 0 14px var(--streak-glow, transparent)); }
+  .streak-flame-card .glow-bg { position: absolute; inset: -20%; border-radius: 50%; filter: blur(28px); opacity: 0.35; pointer-events: none; }
+  .streak-flame-svg { position: relative; z-index: 1; filter: drop-shadow(0 0 12px var(--streak-glow, transparent)); }
   .streak-flame-svg.animated path { animation: flameFlicker 2.2s ease-in-out infinite; transform-origin: 50% 100%; }
   @keyframes flameFlicker {
     0%, 100% { transform: scale(1) skewX(0deg); }
@@ -295,13 +285,9 @@
     75% { transform: scale(1.01, 0.99) skewX(0.4deg); }
   }
   @media (prefers-reduced-motion: reduce) { .streak-flame-svg.animated path { animation: none; } }
-  .streak-flame-count { position: relative; z-index: 1; font-family: var(--font-mono); font-weight: 800; font-size: 30px; line-height: 1; }
-  .streak-flame-cap { position: relative; z-index: 1; font-size: 11px; color: var(--ink-faint); letter-spacing: 0.6px; font-weight: 600; }
-  .streak-flame-best { position: relative; z-index: 1; font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
-
-  @media (max-width: 860px) {
-    .activity-card { grid-template-columns: 1fr; }
-  }
+  .streak-flame-count { position: relative; z-index: 1; font-family: var(--font-mono); font-weight: 800; font-size: 26px; line-height: 1; }
+  .streak-flame-cap { position: relative; z-index: 1; font-size: 10.5px; color: var(--ink-faint); letter-spacing: 0.6px; font-weight: 600; }
+  .streak-flame-best { position: relative; z-index: 1; font-size: 10.5px; color: var(--ink-faint); margin-top: 1px; }
   .streak-pip.win { background: var(--green); opacity: 0.9; }
   .streak-pip.loss { background: var(--red); opacity: 0.9; }
   .streak-pip.breakeven { background: var(--amber); opacity: 0.85; }
@@ -1020,23 +1006,6 @@
 
       <div class="stat-row" id="dash-stats"></div>
 
-      <div class="card activity-card" id="activity-card">
-        <div style="min-width:0;">
-          <div class="card-head"><div class="card-eyebrow"><span class="dot"></span>Trading activity</div></div>
-          <div class="contrib-wrap"><div class="contrib-grid" id="contrib-grid"></div></div>
-          <div class="contrib-legend">
-            <span>Less</span>
-            <div class="contrib-cell" style="background:var(--surface-3);"></div>
-            <div class="contrib-cell" style="background:rgba(48,214,138,0.28);"></div>
-            <div class="contrib-cell" style="background:rgba(48,214,138,0.55);"></div>
-            <div class="contrib-cell" style="background:#30d68a;"></div>
-            <div class="contrib-cell" style="background:#ef6a5f;"></div>
-            <span>More / Loss day</span>
-          </div>
-        </div>
-        <div class="streak-flame-panel" id="streak-flame-panel"></div>
-      </div>
-
       <div class="card algo-pnl-card" id="algo-pnl-card" style="display:none; margin-bottom:22px;">
         <div class="cal-card-head"><h3>Algo daily P&amp;L</h3></div>
         <div class="algo-pnl-form">
@@ -1089,6 +1058,8 @@
             <button class="btn small cyan" id="milestone-save-btn" style="grid-column:1/-1;">Save goal</button>
           </div>
         </div>
+
+        <div class="card streak-flame-card" id="streak-flame-panel"></div>
       </div>
 
       <div class="card" style="margin-bottom:22px;">
@@ -2964,41 +2935,7 @@
     return { bestWin, bestLoss };
   }
 
-  // ---------- contribution calendar + streak flame ----------
-  function renderContributionCalendar(list) {
-    const grid = document.getElementById('contrib-grid');
-    if (!grid) return;
-    const byDay = {};
-    list.forEach(e => { byDay[e.date] = (byDay[e.date] || 0) + (e.pnl || 0); });
-    const weeks = 52;
-    const today = new Date(todayStr + 'T00:00:00');
-    const start = new Date(today);
-    start.setDate(start.getDate() - (weeks * 7 - 1));
-    start.setDate(start.getDate() - start.getDay()); // snap back to the Sunday that starts the week
-    let html = '';
-    for (let i = 0; i < weeks * 7; i++) {
-      const d = new Date(start);
-      d.setDate(d.getDate() + i);
-      if (d > today) { html += `<div class="contrib-cell" style="background:transparent;"></div>`; continue; }
-      const ds = toDateStr(d);
-      const pnl = byDay[ds];
-      let color = 'var(--surface-3)';
-      let title = fmtDateShort(ds) + ' — no trades';
-      if (pnl !== undefined) {
-        if (pnl < 0) color = '#ef6a5f';
-        else if (pnl === 0) color = 'var(--amber)';
-        else if (pnl < 100) color = 'rgba(48,214,138,0.28)';
-        else if (pnl < 400) color = 'rgba(48,214,138,0.55)';
-        else color = '#30d68a';
-        title = fmtDateShort(ds) + ' — ' + fmtMoney(pnl);
-      }
-      html += `<div class="contrib-cell" style="background:${color};" title="${title}"></div>`;
-    }
-    grid.innerHTML = html;
-    const wrap = grid.parentElement;
-    requestAnimationFrame(() => { wrap.scrollLeft = wrap.scrollWidth; });
-  }
-
+  // ---------- streak flame ----------
   function renderStreakFlamePanel(streak, runs) {
     const panel = document.getElementById('streak-flame-panel');
     if (!panel) return;
@@ -3012,11 +2949,11 @@
     const core = isWin ? '#eafff5' : isLoss ? '#fff0ee' : '#fff5e8';
     const count = streak.count;
     const intensity = Math.min(count, 8) / 8;
-    const scale = 0.6 + intensity * 0.85;
-    const w = Math.round(46 * scale), h = Math.round(62 * scale);
+    const scale = 0.55 + intensity * 0.62;
+    const w = Math.round(40 * scale), h = Math.round(54 * scale);
     panel.style.setProperty('--streak-glow', base);
     panel.innerHTML = `
-      <div class="glow-bg" style="background:radial-gradient(circle, ${base}, transparent 70%); width:150px; height:150px; left:50%; top:36%; transform:translate(-50%,-50%);"></div>
+      <div class="glow-bg" style="background:radial-gradient(circle, ${base}, transparent 70%); width:110px; height:110px; left:50%; top:38%; transform:translate(-50%,-50%);"></div>
       <svg class="streak-flame-svg animated" width="${w}" height="${h}" viewBox="0 0 40 54" style="opacity:${(0.6 + intensity * 0.4).toFixed(2)}">
         <defs>
           <linearGradient id="streakFlameOuter" x1="0" y1="1" x2="0" y2="0">
@@ -3095,7 +3032,6 @@
 
     runCountUps(document.getElementById('dash-stats'));
     renderFocus();
-    renderContributionCalendar(activeList);
     renderStreakFlamePanel(streak, runs);
 
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === dashboardMode));
