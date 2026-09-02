@@ -1326,7 +1326,10 @@
     <section class="section" id="section-weekly">
       <div class="page-head dash-head">
         <div><h1>Weekly Review</h1><p>Step back once a week and review the bigger picture.</p></div>
-        <button class="btn ghost small" id="week-print-btn" type="button">Print report</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn ghost small" id="week-recap-btn" type="button">⤢ Export recap</button>
+          <button class="btn ghost small" id="week-print-btn" type="button">Print report</button>
+        </div>
       </div>
       <div class="week-nav">
         <div class="week-label" id="week-label"></div>
@@ -2593,6 +2596,185 @@
     ctx.restore();
   }
 
+  function openWeeklyRecapExport() {
+    const weekStartStr = toDateStr(reviewWeekStart);
+    const weekEnd = new Date(reviewWeekStart); weekEnd.setDate(weekEnd.getDate() + 6);
+    const weekEndStr = toDateStr(weekEnd);
+    const weekEntries = entries.filter(e => e.date >= weekStartStr && e.date <= weekEndStr).sort((a, b) => a.date.localeCompare(b.date));
+    if (!weekEntries.length) { showToast('No entries logged this week yet'); return; }
+    const s = computeStats(weekEntries);
+    const streak = currentStreakFor(weekEntries);
+    const best = weekEntries.reduce((a, b) => (b.pnl || 0) > (a.pnl || 0) ? b : a, weekEntries[0]);
+    const weekData = {
+      label: `${fmtDateShort(weekStartStr)} – ${fmtDateShort(weekEndStr)}`,
+      totalPnl: s.totalPnl,
+      winRate: s.winRate,
+      tradeCount: weekEntries.length,
+      streak,
+      best
+    };
+    exportFilename = 'weekly-recap-' + weekStartStr;
+    const photos = getSharedBgPhotos();
+    const photoSrc = photos.length ? photos[weekEntries.length % photos.length] : null;
+    if (photoSrc) {
+      const img = new Image();
+      img.onload = () => { drawWeeklyRecapCard(weekData, img); };
+      img.onerror = () => { drawWeeklyRecapCard(weekData, null); };
+      img.src = photoSrc;
+    } else {
+      drawWeeklyRecapCard(weekData, null);
+    }
+    exportModal.classList.add('open');
+  }
+
+  function drawWeeklyRecapCard(week, img) {
+    // portrait "story" format — a summary card, not tied to the 16:9 trade-card shape
+    const W = 1080, H = 1350;
+    exportCanvas.width = W; exportCanvas.height = H;
+    const ctx = exportCanvas.getContext('2d');
+
+    const surface = cssVar('--surface') || '#111112';
+    const ink = cssVar('--ink') || '#f5f5f6';
+    const inkDim = cssVar('--ink-dim') || '#9a9aa0';
+    const inkFaint = cssVar('--ink-faint') || '#6b6b70';
+    const green = cssVar('--green') || '#30d68a';
+    const red = cssVar('--red') || '#ef6a5f';
+    const greenBg = cssVar('--green-bg') || 'rgba(48,214,138,0.14)';
+    const redBg = cssVar('--red-bg') || 'rgba(239,106,95,0.14)';
+
+    const isWin = week.totalPnl >= 0;
+    const heroColor = isWin ? green : red;
+    const heroBg = isWin ? greenBg : redBg;
+
+    // ---- background ----
+    ctx.fillStyle = surface;
+    ctx.fillRect(0, 0, W, H);
+    if (img) {
+      const scale = Math.max(W / img.width, H / img.height);
+      const dw = img.width * scale, dh = img.height * scale;
+      ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, 'rgba(9,9,9,0.55)');
+      grad.addColorStop(0.45, 'rgba(9,9,9,0.72)');
+      grad.addColorStop(1, 'rgba(9,9,9,0.97)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      // no photo: an ambient accent-colored glow, matching the app's own corner-glow look
+      const rg = ctx.createRadialGradient(W * 0.5, H * 0.06, 0, W * 0.5, H * 0.06, W * 0.95);
+      rg.addColorStop(0, hexToRgba(heroColor, 0.22));
+      rg.addColorStop(1, 'rgba(9,9,9,0)');
+      ctx.fillStyle = rg;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    const R = 48;
+    ctx.save();
+    roundRectPath(ctx, 0, 0, W, H, R);
+    ctx.clip();
+
+    const pad = 68;
+
+    // ---- header ----
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = '700 24px "JetBrains Mono", monospace';
+    ctx.fillStyle = heroColor;
+    ctx.fillText(('WEEK OF ' + week.label).toUpperCase(), pad, pad + 8);
+    ctx.font = '800 54px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = ink;
+    ctx.fillText('Your week, wrapped', pad, pad + 74);
+
+    // brand watermark (top-right)
+    ctx.font = '800 26px "Plus Jakarta Sans", sans-serif';
+    const brandW = ctx.measureText('LARPENATOR ').width + ctx.measureText('3000').width;
+    ctx.fillStyle = ink;
+    ctx.fillText('LARPENATOR', W - pad - brandW, pad + 10);
+    ctx.fillStyle = green;
+    ctx.fillText('3000', W - pad - brandW + ctx.measureText('LARPENATOR ').width, pad + 10);
+
+    // ---- hero P&L pill (same translucent-box treatment as the trade cards) ----
+    const sign = week.totalPnl > 0 ? '+' : week.totalPnl < 0 ? '-' : '';
+    const pnlText = sign + fmtMoney(Math.abs(week.totalPnl));
+    ctx.font = '800 128px "JetBrains Mono", monospace';
+    const pnlW = ctx.measureText(pnlText).width;
+    const heroPadX = 44, heroPadY = 36;
+    const heroBoxW = pnlW + heroPadX * 2, heroBoxH = 128 + heroPadY * 2 - 24;
+    const heroY = pad + 150;
+    ctx.save();
+    ctx.shadowColor = hexToRgba(heroColor, 0.35);
+    ctx.shadowBlur = 40;
+    ctx.fillStyle = heroBg;
+    roundRectPath(ctx, pad, heroY, heroBoxW, heroBoxH, 28);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = heroColor;
+    ctx.fillText(pnlText, pad + heroPadX, heroY + heroBoxH - heroPadY + 6);
+    ctx.font = '700 30px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = inkDim;
+    ctx.fillText('Net P&L this week', pad, heroY + heroBoxH + 50);
+
+    // ---- three mini stat pills ----
+    const statsY = heroY + heroBoxH + 96;
+    const statW = (W - pad * 2 - 24 * 2) / 3;
+    const statH = 148;
+    const stats = [
+      { v: week.winRate + '%', k: 'Win rate', color: ink },
+      { v: String(week.tradeCount), k: 'Trades logged', color: ink },
+      { v: week.streak ? (week.streak.kind === 'win' ? '🔥 ' : '') + week.streak.count : '—', k: week.streak ? (week.streak.kind === 'win' ? 'Win streak' : week.streak.kind === 'loss' ? 'Loss streak' : 'Streak') : 'Streak', color: week.streak && week.streak.kind === 'win' ? green : week.streak && week.streak.kind === 'loss' ? red : ink }
+    ];
+    stats.forEach((st, i) => {
+      const x = pad + i * (statW + 24);
+      ctx.fillStyle = 'rgba(255,255,255,0.055)';
+      roundRectPath(ctx, x, statsY, statW, statH, 20);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+      ctx.lineWidth = 1.5;
+      roundRectPath(ctx, x, statsY, statW, statH, 20);
+      ctx.stroke();
+      ctx.font = '800 46px "JetBrains Mono", monospace';
+      ctx.fillStyle = st.color;
+      ctx.fillText(st.v, x + 24, statsY + 66);
+      ctx.font = '600 21px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = inkFaint;
+      ctx.fillText(st.k.toUpperCase(), x + 24, statsY + 108);
+    });
+
+    // ---- best trade callout ----
+    const calloutY = statsY + statH + 40;
+    const calloutH = 150;
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    roundRectPath(ctx, pad, calloutY, W - pad * 2, calloutH, 22);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+    ctx.lineWidth = 1.5;
+    roundRectPath(ctx, pad, calloutY, W - pad * 2, calloutH, 22);
+    ctx.stroke();
+    ctx.font = '600 21px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = inkFaint;
+    ctx.fillText('BEST TRADE', pad + 32, calloutY + 42);
+    ctx.font = '800 40px "Plus Jakarta Sans", sans-serif';
+    ctx.fillStyle = ink;
+    ctx.fillText(week.best.symbol ? week.best.symbol.toUpperCase() : 'Untitled trade', pad + 32, calloutY + 96);
+    const bestSign = (week.best.pnl || 0) >= 0 ? '+' : '-';
+    const bestText = bestSign + fmtMoney(Math.abs(week.best.pnl || 0));
+    ctx.font = '800 44px "JetBrains Mono", monospace';
+    const bestColor = (week.best.pnl || 0) >= 0 ? green : red;
+    const bestW = ctx.measureText(bestText).width;
+    ctx.fillStyle = bestColor;
+    ctx.fillText(bestText, W - pad - 32 - bestW, calloutY + 96);
+
+    ctx.restore();
+  }
+
+  function hexToRgba(hex, alpha) {
+    if (!hex || hex[0] !== '#') return hex;
+    const h = hex.slice(1);
+    const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+    const num = parseInt(full, 16);
+    const r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
   function roundRectPath(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -3572,6 +3754,7 @@
   }
 
   document.getElementById('week-print-btn').addEventListener('click', () => window.print());
+  document.getElementById('week-recap-btn').addEventListener('click', () => openWeeklyRecapExport());
   document.getElementById('cal-perf-print-btn').addEventListener('click', () => window.print());
 
   document.getElementById('week-save-btn').addEventListener('click', () => {
