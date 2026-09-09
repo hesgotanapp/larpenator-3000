@@ -130,27 +130,42 @@ function wireUpdater() {
 }
 
 // Watches ~/Desktop/Larpenator Backgrounds/{Wins,Losses} — dropping an image
-// into either folder reads it, hands it to the renderer to compress and add
-// to the matching background-photo pool, then moves the file into that
-// folder's "Imported" subfolder so it isn't re-processed on the next launch.
+// into either folder reads it and hands it to the renderer to compress and
+// add to the matching background-photo pool. Windows' Controlled Folder
+// Access silently blocks unsigned/dev apps from writing (including renaming
+// or deleting) inside the Desktop, so already-imported files are tracked in
+// a small list under userData instead of being moved out of the way — the
+// original files are left alone and never touched.
 const IMAGE_EXTS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif']);
 const MIME_BY_EXT = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' };
 const pendingBgFiles = new Set();
 
+function processedBgFilesPath() {
+  return path.join(app.getPath('userData'), 'bg-import-processed.json');
+}
+function loadProcessedBgFiles() {
+  try { return new Set(JSON.parse(fs.readFileSync(processedBgFilesPath(), 'utf8'))); }
+  catch (e) { return new Set(); }
+}
+function saveProcessedBgFiles(set) {
+  try { fs.writeFileSync(processedBgFilesPath(), JSON.stringify([...set])); } catch (e) { /* non-fatal */ }
+}
+let processedBgFiles = null; // lazy-loaded on first use
+
 function ensureBgWatchFolders() {
   const root = path.join(app.getPath('desktop'), 'Larpenator Backgrounds');
-  const dirs = {
-    root,
-    win: path.join(root, 'Wins'),
-    winImported: path.join(root, 'Wins', 'Imported'),
-    loss: path.join(root, 'Losses'),
-    lossImported: path.join(root, 'Losses', 'Imported')
-  };
+  const dirs = { root, win: path.join(root, 'Wins'), loss: path.join(root, 'Losses') };
   Object.values(dirs).forEach(d => { try { fs.mkdirSync(d, { recursive: true }); } catch (e) { /* already exists or no permission — non-fatal */ } });
   return dirs;
 }
 
-function importBgFile(filePath, kind, importedDir) {
+// key on path + size + mtime so an edited/replaced file re-imports, but a
+// stable untouched file is only ever picked up once
+function bgFileKey(filePath, stats) {
+  return `${filePath}|${stats.size}|${Math.floor(stats.mtimeMs)}`;
+}
+
+function importBgFile(filePath, kind) {
   if (pendingBgFiles.has(filePath)) return;
   pendingBgFiles.add(filePath);
   let lastSize = -1;
@@ -160,9 +175,14 @@ function importBgFile(filePath, kind, importedDir) {
       if (!stats.isFile()) { pendingBgFiles.delete(filePath); return; }
       if (stats.size > 0 && stats.size === lastSize) {
         // size stable across two checks — the copy/write has finished
+        if (!processedBgFiles) processedBgFiles = loadProcessedBgFiles();
+        const key = bgFileKey(filePath, stats);
+        if (processedBgFiles.has(key)) { pendingBgFiles.delete(filePath); return; }
         fs.readFile(filePath, (readErr, buf) => {
           pendingBgFiles.delete(filePath);
           if (readErr) return;
+          processedBgFiles.add(key);
+          saveProcessedBgFiles(processedBgFiles);
           const ext = path.extname(filePath).toLowerCase();
           const mime = MIME_BY_EXT[ext] || 'image/jpeg';
           const dataUrl = `data:${mime};base64,${buf.toString('base64')}`;
@@ -171,7 +191,6 @@ function importBgFile(filePath, kind, importedDir) {
               `window.__lvdImportBgPhoto && window.__lvdImportBgPhoto(${JSON.stringify(kind)}, ${JSON.stringify(dataUrl)})`
             ).catch(() => {});
           }
-          fs.rename(filePath, path.join(importedDir, path.basename(filePath)), () => {});
         });
       } else {
         lastSize = stats.size;
@@ -182,17 +201,17 @@ function importBgFile(filePath, kind, importedDir) {
   poll();
 }
 
-function watchBgFolder(dir, importedDir, kind) {
+function watchBgFolder(dir, kind) {
   try {
     fs.watch(dir, (eventType, filename) => {
       if (!filename) return;
       const full = path.join(dir, filename);
-      if (path.dirname(full) !== dir) return; // ignore events bubbling from the Imported subfolder
+      if (path.dirname(full) !== dir) return;
       const ext = path.extname(filename).toLowerCase();
       if (!IMAGE_EXTS.has(ext)) return;
       fs.stat(full, (err, stats) => {
         if (err || !stats.isFile()) return;
-        importBgFile(full, kind, importedDir);
+        importBgFile(full, kind);
       });
     });
   } catch (e) { /* folder missing or watch unsupported — non-fatal */ }
@@ -200,8 +219,8 @@ function watchBgFolder(dir, importedDir, kind) {
 
 function wireBgFolderWatchers() {
   const dirs = ensureBgWatchFolders();
-  watchBgFolder(dirs.win, dirs.winImported, 'win');
-  watchBgFolder(dirs.loss, dirs.lossImported, 'loss');
+  watchBgFolder(dirs.win, 'win');
+  watchBgFolder(dirs.loss, 'loss');
 }
 
 function registerAppProtocol() {
