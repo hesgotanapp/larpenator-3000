@@ -64,8 +64,10 @@
 
   // ---------- helpers ----------
   function fmtMoney(n) { n = n || 0; const sign = n < 0 ? '-' : ''; return `${sign}$${Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
+  function fmtMoneyShort(n) { n = n || 0; const sign = n < 0 ? '-' : '+'; const a = Math.abs(n); return sign + '$' + (a >= 1000 ? (a / 1000).toFixed(1) + 'k' : Math.round(a)); }
   function toDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
   function fmtDateShort(dateStr) { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+  function fmtDate(dateStr) { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }); }
   function startOfWeek(d) { const dt = new Date(d); dt.setDate(dt.getDate() - dt.getDay()); dt.setHours(0, 0, 0, 0); return dt; }
   function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str == null ? '' : String(str); return div.innerHTML; }
   function newId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
@@ -74,8 +76,15 @@
     const losses = list.filter(e => e.result === 'loss').length;
     const be = list.filter(e => e.result === 'breakeven').length;
     const totalPnl = list.reduce((s, e) => s + (e.pnl || 0), 0);
-    const winRate = list.length ? Math.round((wins / list.length) * 100) : 0;
-    return { wins, losses, be, totalPnl, winRate };
+    const decisive = wins + losses;
+    const winRate = decisive ? Math.round((wins / decisive) * 100) : 0;
+    const grossWin = list.filter(e => (e.pnl || 0) > 0).reduce((s, e) => s + e.pnl, 0);
+    const grossLoss = Math.abs(list.filter(e => (e.pnl || 0) < 0).reduce((s, e) => s + e.pnl, 0));
+    const profitFactor = grossLoss > 0 ? grossWin / grossLoss : (grossWin > 0 ? Infinity : 0);
+    const avgWin = wins ? list.filter(e => e.result === 'win').reduce((s, e) => s + (e.pnl || 0), 0) / wins : 0;
+    const avgLoss = losses ? list.filter(e => e.result === 'loss').reduce((s, e) => s + (e.pnl || 0), 0) / losses : 0;
+    const rulesBrokenCount = list.filter(e => e.rulesBroken).length;
+    return { wins, losses, be, totalPnl, winRate, grossWin, grossLoss, profitFactor, avgWin, avgLoss, rulesBrokenCount };
   }
   function currentStreak(list) {
     const sorted = [...list].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
@@ -85,6 +94,66 @@
     let count = 0;
     for (const e of decisive) { if (e.result === kind) count++; else break; }
     return { kind, count };
+  }
+  function longestStreaks(list) {
+    const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+    let bestWin = 0, bestLoss = 0, run = 0, kind = null;
+    for (const e of sorted) {
+      if (e.result === 'breakeven') continue;
+      if (e.result === kind) run++; else { kind = e.result; run = 1; }
+      if (kind === 'win') bestWin = Math.max(bestWin, run); else bestLoss = Math.max(bestLoss, run);
+    }
+    return { bestWin, bestLoss };
+  }
+  function compressImage(img, maxW) {
+    maxW = maxW || 900;
+    const scale = Math.min(1, maxW / img.width);
+    const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(img, 0, 0, w, h);
+    return c.toDataURL('image/jpeg', 0.8);
+  }
+  function getSharedBgPhotos() { try { return JSON.parse(localStorage.getItem('lvd_shared_bg_photos') || '[]'); } catch (e) { return []; } }
+  function getLossBgPhotos() { try { return JSON.parse(localStorage.getItem('lvd_loss_bg_photos') || '[]'); } catch (e) { return []; } }
+  function photosForEntry(e) {
+    if (e.result === 'loss') { const l = getLossBgPhotos(); if (l.length) return l; }
+    return getSharedBgPhotos();
+  }
+
+  // ---------- decorative trade line chart (mirrors desktop tradeChartSVG) ----------
+  function hashSeed(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mulberry32(seed) {
+    let a = seed;
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function tradeChartSVG(e) {
+    const rng = mulberry32(hashSeed(e.id));
+    const n = 22;
+    const drift = e.result === 'win' ? 0.62 : e.result === 'loss' ? -0.62 : 0.02;
+    let v = 0.45 + (rng() - 0.5) * 0.15;
+    const raw = [v];
+    for (let i = 1; i < n; i++) { v = Math.max(0.04, Math.min(0.96, v + (rng() - 0.5) * 0.34 + drift / n)); raw.push(v); }
+    const lo = Math.min(...raw), hi = Math.max(...raw), range = Math.max(0.001, hi - lo);
+    const norm = raw.map(x => (x - lo) / range);
+    const W = 176, H = 126, padX = 12, padY = 20;
+    const pts = norm.map((val, i) => [padX + (i / (n - 1)) * (W - padX * 2), padY + (1 - val) * (H - padY * 2)]);
+    const buyRange = pts.slice(0, Math.ceil(n * 0.6));
+    let buyIdx = 0; buyRange.forEach((p, i) => { if (p[1] > buyRange[buyIdx][1]) buyIdx = i; });
+    const sellSlice = pts.slice(buyIdx + 1);
+    let sellIdx = buyIdx + 1;
+    if (sellSlice.length) { let b = 0; sellSlice.forEach((p, i) => { if (p[1] < sellSlice[b][1]) b = i; }); sellIdx = Math.min(buyIdx + 1 + b, n - 1); }
+    const uid = 'g' + hashSeed(e.id).toString(36);
+    const mk = (pt, label, color) => `<g transform="translate(${pt[0]},${pt[1] - 13})"><rect x="-7" y="-7" width="14" height="14" rx="4" fill="${color}" transform="rotate(45)"></rect><text x="0" y="3" text-anchor="middle" font-family="'Plus Jakarta Sans',sans-serif" font-size="8" font-weight="800" fill="#0a0a0b">${label}</text></g>`;
+    return `<svg class="tcard-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><filter id="${uid}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="rgba(255,255,255,0.92)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" filter="url(#${uid})"/>
+      ${mk(pts[buyIdx], 'B', '#30d68a')}${mk(pts[sellIdx], 'S', '#ef6a5f')}</svg>`;
   }
   let toastTimer;
   function showToast(msg) {
@@ -147,57 +216,150 @@
     else openEntryForm();
   });
 
-  // ---------- Dashboard ----------
+  // ---------- Dashboard (Terminal layout) ----------
+  function drawEquitySpark(canvas, list) {
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cssW = canvas.clientWidth || 330, cssH = canvas.clientHeight || 52;
+    canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+    const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+    if (sorted.length < 2) return;
+    let cum = 0; const series = [0];
+    sorted.forEach(e => { cum += e.pnl || 0; series.push(cum); });
+    const lo = Math.min(...series), hi = Math.max(...series), rng = (hi - lo) || 1;
+    const pad = 4;
+    const pts = series.map((v, i) => [(i / (series.length - 1)) * cssW, pad + (1 - (v - lo) / rng) * (cssH - pad * 2)]);
+    const up = series[series.length - 1] >= 0;
+    const col = up ? '#30d68a' : '#ef6a5f';
+    const grad = ctx.createLinearGradient(0, 0, 0, cssH);
+    grad.addColorStop(0, up ? 'rgba(48,214,138,0.22)' : 'rgba(239,106,95,0.22)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.moveTo(pts[0][0], cssH);
+    pts.forEach(p => ctx.lineTo(p[0], p[1]));
+    ctx.lineTo(pts[pts.length - 1][0], cssH); ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.beginPath();
+    pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+    ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    ctx.shadowColor = up ? 'rgba(48,214,138,0.5)' : 'rgba(239,106,95,0.5)'; ctx.shadowBlur = 6;
+    ctx.stroke(); ctx.shadowBlur = 0;
+    const last = pts[pts.length - 1];
+    ctx.beginPath(); ctx.arc(last[0], last[1], 3, 0, 7); ctx.fillStyle = col; ctx.fill();
+  }
+  function flameSVG(kind) {
+    const base = kind === 'win' ? '#30d68a' : kind === 'loss' ? '#ef6a5f' : '#f0954a';
+    return `<svg class="flame" viewBox="0 0 40 54"><path d="M20 2C15 10 8 14 8 26a12 12 0 0 0 24 0c0-5-2.5-8.5-5-11 1 3-1 6-1 6s1-4-2-8c-1.5-2-3-4.5-4-11Z" fill="${base}"/></svg>`;
+  }
   function renderDashboard() {
     const s = computeStats(entries);
     const todayEntries = entries.filter(e => e.date === todayStr);
     const todayPnl = todayEntries.reduce((sum, e) => sum + (e.pnl || 0), 0);
-    document.getElementById('dash-stats').innerHTML = `
-      <div class="stat"><div class="label">Total P&amp;L</div><div class="value ${s.totalPnl >= 0 ? 'pos' : 'neg'}">${fmtMoney(s.totalPnl)}</div></div>
-      <div class="stat"><div class="label">Today's P&amp;L</div><div class="value ${todayPnl >= 0 ? 'pos' : 'neg'}">${fmtMoney(todayPnl)}</div></div>
-      <div class="stat"><div class="label">Win rate</div><div class="value">${s.winRate}%</div></div>
-      <div class="stat"><div class="label">Entries</div><div class="value">${entries.length}</div></div>
-    `;
+
+    const total = document.getElementById('dash-total');
+    total.textContent = (s.totalPnl >= 0 ? '+' : '') + fmtMoney(s.totalPnl);
+    total.className = 'term-big ' + (s.totalPnl >= 0 ? 'pos' : 'neg');
+    document.getElementById('dash-meta').innerHTML =
+      `${entries.length} entries · ${s.wins}W ${s.losses}L ${s.be}BE · today <span class="${todayPnl >= 0 ? 'pos' : 'neg'}">${(todayPnl >= 0 ? '+' : '') + fmtMoneyShort(todayPnl).replace('+', '')}</span>`;
+    drawEquitySpark(document.getElementById('dash-spark'), entries);
+
+    document.getElementById('dash-strip').innerHTML = `
+      <div class="c"><div class="k">Win rate</div><div class="v">${s.winRate}%</div></div>
+      <div class="c"><div class="k">Profit factor</div><div class="v">${isFinite(s.profitFactor) ? s.profitFactor.toFixed(2) : '∞'}</div></div>
+      <div class="c"><div class="k">Today</div><div class="v ${todayPnl >= 0 ? 'pos' : 'neg'}">${fmtMoneyShort(todayPnl)}</div></div>`;
+    document.getElementById('dash-row2').innerHTML = `
+      <div class="b"><div class="k">Avg win</div><div class="v pos">${fmtMoneyShort(s.avgWin)}</div></div>
+      <div class="b"><div class="k">Avg loss</div><div class="v neg">${fmtMoneyShort(s.avgLoss)}</div></div>`;
+
     const streak = currentStreak(entries);
-    const streakHtml = streak
-      ? `<div style="font-family:var(--font-mono); font-size:34px; font-weight:700; color:${streak.kind === 'win' ? 'var(--green)' : streak.kind === 'loss' ? 'var(--red)' : 'var(--amber)'};">${streak.count}${streak.kind === 'win' ? 'W' : streak.kind === 'loss' ? 'L' : 'BE'}</div>`
-      : `<div class="empty">No trades yet.</div>`;
-    document.getElementById('dash-streak').innerHTML = streakHtml;
-    const recent = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 8);
-    document.getElementById('dash-recent').innerHTML = recent.length ? recent.map(entryRow).join('') : `<div class="empty">No entries logged yet.</div>`;
-    bindEntryRows(document.getElementById('dash-recent'));
+    const runs = longestStreaks(entries);
+    const streakEl = document.getElementById('dash-streak');
+    if (streak) {
+      const glow = streak.kind === 'win' ? '#30d68a' : streak.kind === 'loss' ? '#ef6a5f' : '#f0954a';
+      streakEl.style.setProperty('--streak-glow', glow);
+      const last7 = [...entries].filter(e => e.result !== 'breakeven').sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 7).reverse();
+      const pips = last7.map(e => e.result === 'win' ? '◆' : '◇').join('');
+      streakEl.innerHTML = `${flameSVG(streak.kind)}
+        <div class="txt"><b style="color:${glow};">${streak.count}${streak.kind === 'win' ? 'W' : streak.kind === 'loss' ? 'L' : 'BE'}</b><span>streak · best ${runs.bestWin}W · worst ${runs.bestLoss}L</span></div>
+        <div class="pips">${pips}</div>`;
+    } else {
+      streakEl.innerHTML = `<div class="txt"><span>No trades yet</span></div>`;
+    }
+
+    const recent = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 6);
+    const rec = document.getElementById('dash-recent');
+    rec.innerHTML = recent.length ? recent.map(e => `
+      <div class="li" data-id="${e.id}">
+        <span class="l"><span>${fmtDateShort(e.date)}</span><span class="term-bd ${e.result}">${e.result === 'breakeven' ? 'BE' : e.result === 'win' ? 'W' : 'L'}</span><span class="sym">${escapeHtml(e.symbol || 'Untitled')}</span></span>
+        <span class="p ${e.pnl >= 0 ? 'pos' : 'neg'}">${(e.pnl >= 0 ? '+' : '') + fmtMoney(e.pnl)}</span>
+      </div>`).join('') : `<div class="empty">No entries yet — tap + to log one.</div>`;
+    rec.querySelectorAll('.li[data-id]').forEach(r => r.addEventListener('click', () => openEntryForm(r.dataset.id)));
   }
 
-  function entryRow(e) {
-    return `<div class="row" data-id="${e.id}">
-      <div class="rowl">
-        <span class="rowdate">${fmtDateShort(e.date)}</span>
-        <span class="badge ${e.result}">${e.result === 'breakeven' ? 'BE' : e.result}</span>
-        <span class="sym">${escapeHtml(e.symbol || '')}</span>
-      </div>
-      <span class="pnl ${e.pnl >= 0 ? 'pos' : 'neg'}">${fmtMoney(e.pnl)}</span>
-    </div>`;
-  }
-  function bindEntryRows(container) {
-    container.querySelectorAll('.row[data-id]').forEach(row => {
-      row.addEventListener('click', () => openEntryForm(row.dataset.id));
-    });
-  }
-
-  // ---------- Entries ----------
+  // ---------- Entries (expandable trade cards, mirrors desktop) ----------
   let entriesQuery = '';
+  const expandedEntryIds = new Set();
   document.getElementById('entries-search').addEventListener('input', (e) => {
     entriesQuery = e.target.value.trim().toLowerCase();
     renderEntriesList();
   });
+  function entryCardHTML(e) {
+    if (!expandedEntryIds.has(e.id)) {
+      return `<div class="tcard-wrap"><div class="tcard-row" data-open="${e.id}">
+        <span class="l"><span class="d">${fmtDateShort(e.date)}</span><span class="s">${escapeHtml(e.symbol || 'Untitled trade')}</span></span>
+        <span style="display:flex; align-items:center; gap:8px;"><span class="term-bd ${e.result}">${e.result === 'breakeven' ? 'BE' : e.result === 'win' ? 'W' : 'L'}</span><span class="p ${e.pnl >= 0 ? 'pos' : 'neg'}">${(e.pnl >= 0 ? '+' : '') + fmtMoney(e.pnl)}</span></span>
+      </div></div>`;
+    }
+    const photos = photosForEntry(e);
+    const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
+    const bg = photos.length ? `style="background-image:linear-gradient(180deg,rgba(9,9,9,0.15),rgba(9,9,9,0.6) 60%,rgba(9,9,9,0.94)),url('${photos[idx]}')"` : '';
+    const rl = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
+    const sign = e.result === 'win' ? '+' : e.result === 'loss' ? '-' : '';
+    const blk = (k, v) => v ? `<div class="blk"><div class="bk">${k}</div><div class="bv">${escapeHtml(v)}</div></div>` : '';
+    return `<div class="tcard-wrap" data-wrap="${e.id}">
+      <div class="tcard ${photos.length ? '' : 'no-photo'}" ${bg}>
+        ${tradeChartSVG(e)}
+        <div class="tcard-top">
+          <div><div class="tcard-sym">${escapeHtml(e.symbol || 'Untitled trade')}</div><div class="tcard-date">${fmtDate(e.date)}${e.rulesBroken ? ' · ⚠' : ''}</div></div>
+          <button class="tcard-collapse" data-collapse="${e.id}" type="button">▲</button>
+        </div>
+        <div class="tcard-body">
+          <div class="tcard-pnl ${e.result}">${sign}${fmtMoney(Math.abs(e.pnl))}</div>
+          <div class="tcard-result ${e.result}">${rl}</div>
+          ${e.setupType ? `<div class="tcard-setup">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</div>` : ''}
+        </div>
+        <div class="tcard-actions">
+          <button data-more="${e.id}" type="button">See more</button>
+          <button data-edit="${e.id}" type="button">Edit</button>
+        </div>
+      </div>
+      <div class="tcard-more" id="mmore-${e.id}">
+        ${e.brokenRules && e.brokenRules.length ? blk('Rules broken', e.brokenRules.join(', ')) : ''}
+        ${e.checklistChecked && e.checklistChecked.length ? blk('Checklist confirmed', e.checklistChecked.join(', ')) : ''}
+        ${blk('Emotions', e.emotions)}${blk('What happened', e.happened)}
+        ${blk('What went well', e.good)}${blk('What went badly', e.bad)}${blk('Improvements', e.improve)}
+        ${e.screenshot ? `<div class="blk"><div class="bk">Screenshot</div><img class="shot" src="${e.screenshot}"></div>` : ''}
+      </div>
+    </div>`;
+  }
   function renderEntriesList() {
     let shown = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
-    if (entriesQuery) {
-      shown = shown.filter(e => [e.date, e.symbol, e.emotions, e.happened].join(' ').toLowerCase().includes(entriesQuery));
-    }
+    if (entriesQuery) shown = shown.filter(e => [e.date, e.symbol, e.emotions, e.happened, e.good, e.bad, e.improve].join(' ').toLowerCase().includes(entriesQuery));
     const list = document.getElementById('entries-list');
-    list.innerHTML = shown.length ? shown.map(entryRow).join('') : `<div class="empty">${entriesQuery ? 'Nothing matches.' : 'No entries yet — tap + to log one.'}</div>`;
-    bindEntryRows(list);
+    list.innerHTML = shown.length ? shown.map(entryCardHTML).join('') : `<div class="empty">${entriesQuery ? 'Nothing matches.' : 'No entries yet — tap + to log one.'}</div>`;
+    bindEntryCards(list);
+  }
+  function bindEntryCards(container) {
+    container.querySelectorAll('[data-open]').forEach(el => el.addEventListener('click', () => { expandedEntryIds.add(el.dataset.open); renderEntriesList(); }));
+    container.querySelectorAll('[data-collapse]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); expandedEntryIds.delete(el.dataset.collapse); renderEntriesList(); }));
+    container.querySelectorAll('[data-more]').forEach(el => el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const panel = document.getElementById('mmore-' + el.dataset.more);
+      panel.classList.toggle('open');
+      el.textContent = panel.classList.contains('open') ? 'See less' : 'See more';
+    }));
+    container.querySelectorAll('[data-edit]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); openEntryForm(el.dataset.edit); }));
   }
 
   function openEntryForm(id) {
@@ -223,6 +385,9 @@
       <div class="chip-row" id="f-checklist" style="margin-top:10px;"></div>
       <label>Emotions</label><textarea id="f-emotions">${escapeHtml(e ? e.emotions : '')}</textarea>
       <label>What happened</label><textarea id="f-happened">${escapeHtml(e ? e.happened : '')}</textarea>
+      <label>Screenshot</label>
+      <div id="f-shot-mount"></div>
+      <input type="file" id="f-shot-input" accept="image/*" style="display:none;">
       <div style="display:flex; gap:10px; margin-top:18px;">
         <button class="btn" id="f-save" type="button">${e ? 'Update' : 'Save'} Entry</button>
         ${e ? '<button class="btn danger" id="f-delete" type="button">Delete</button>' : ''}
@@ -231,6 +396,27 @@
     let selectedResult = e ? e.result : null;
     let selectedSetup = setupType;
     let selectedChecks = [...checked];
+    let currentShot = e ? (e.screenshot || null) : null;
+    function renderShot() {
+      const mount = document.getElementById('f-shot-mount');
+      if (currentShot) {
+        mount.innerHTML = `<div class="shot-preview"><img src="${currentShot}"><button class="rm" id="f-shot-rm" type="button">Remove</button></div>`;
+        document.getElementById('f-shot-rm').addEventListener('click', () => { currentShot = null; renderShot(); });
+      } else {
+        mount.innerHTML = `<div class="shot-zone" id="f-shot-add">Tap to add a screenshot</div>`;
+        document.getElementById('f-shot-add').addEventListener('click', () => document.getElementById('f-shot-input').click());
+      }
+    }
+    document.getElementById('f-shot-input').addEventListener('change', (ev) => {
+      const file = ev.target.files[0];
+      if (!file || file.type.indexOf('image') !== 0) return;
+      const img = new Image();
+      const reader = new FileReader();
+      reader.onload = () => { img.onload = () => { currentShot = compressImage(img, 1200); renderShot(); }; img.src = reader.result; };
+      reader.readAsDataURL(file);
+      ev.target.value = '';
+    });
+    renderShot();
     document.querySelectorAll('#f-result button').forEach(b => b.addEventListener('click', () => {
       selectedResult = b.dataset.r;
       document.querySelectorAll('#f-result button').forEach(x => x.classList.toggle('on', x === b));
@@ -272,7 +458,8 @@
         emotions: document.getElementById('f-emotions').value.trim(),
         happened: document.getElementById('f-happened').value.trim(),
         good: e ? e.good : '', bad: e ? e.bad : '', improve: e ? e.improve : '',
-        screenshot: e ? e.screenshot : null,
+        screenshot: currentShot,
+        bgPhotoIndex: e ? (e.bgPhotoIndex || 0) : 0,
         createdAt: e ? e.createdAt : Date.now(),
         updatedAt: Date.now()
       };
@@ -282,7 +469,7 @@
       LvdSync.pushCollection('entries');
       closeSheet();
       showToast(editingEntryId ? 'Entry updated' : 'Entry saved');
-      renderDashboard(); renderEntriesList();
+      renderDashboard(); renderEntriesList(); renderCalendar();
     });
     const delBtn = document.getElementById('f-delete');
     if (delBtn) delBtn.addEventListener('click', () => {
@@ -290,9 +477,10 @@
       entries = entries.filter(x => x.id !== editingEntryId);
       persistEntries();
       LvdSync.pushCollection('entries');
+      expandedEntryIds.delete(editingEntryId);
       closeSheet();
       showToast('Entry deleted');
-      renderDashboard(); renderEntriesList();
+      renderDashboard(); renderEntriesList(); renderCalendar();
     });
   }
 
@@ -381,31 +569,38 @@
   document.getElementById('cal-next').addEventListener('click', () => { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); });
   function renderCalendar() {
     document.getElementById('cal-month-label').textContent = MONTH_NAMES[calMonth] + ' ' + calYear;
-    document.getElementById('cal-dow-row').innerHTML = ['S','M','T','W','T','F','S'].map(d => `<div class="cal-dow">${d}</div>`).join('');
+    document.getElementById('cal-dow-row').innerHTML = ['S','M','T','W','T','F','S'].map(d => `<span class="cal-dow">${d}</span>`).join('');
     const byDate = {};
     entries.forEach(e => { byDate[e.date] = byDate[e.date] || []; byDate[e.date].push(e); });
     const firstDay = new Date(calYear, calMonth, 1).getDay();
     const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
     let html = '';
-    for (let i = 0; i < firstDay; i++) html += `<div class="cal-cell empty"></div>`;
+    let monthPnl = 0, monthTrades = 0, monthWins = 0;
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-      const dayEntries = byDate[dateStr] || [];
-      const pnl = dayEntries.reduce((s, e) => s + (e.pnl || 0), 0);
-      const cls = !dayEntries.length ? '' : pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : '';
-      html += `<div class="cal-cell ${cls}" data-date="${dateStr}"><div class="d">${d}</div></div>`;
+      const de = byDate[dateStr] || [];
+      const pnl = de.reduce((s, e) => s + (e.pnl || 0), 0);
+      de.forEach(e => { monthPnl += (e.pnl || 0); monthTrades++; if (e.result === 'win') monthWins++; });
+      const cls = !de.length ? '' : pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : '';
+      const offset = d === 1 ? ` style="grid-column-start:${firstDay + 1}"` : '';
+      html += `<div class="cal-cell ${cls}"${offset} data-date="${dateStr}">${d}</div>`;
     }
     document.getElementById('cal-grid').innerHTML = html;
+    const wr = monthTrades ? Math.round((monthWins / monthTrades) * 100) : 0;
+    document.getElementById('cal-monthstat').innerHTML = `
+      <div class="ms"><div class="k">Month P&amp;L</div><div class="v ${monthPnl >= 0 ? 'pos' : 'neg'}">${fmtMoneyShort(monthPnl)}</div></div>
+      <div class="ms"><div class="k">Trades</div><div class="v">${monthTrades}</div></div>
+      <div class="ms"><div class="k">Win rate</div><div class="v">${wr}%</div></div>`;
     document.querySelectorAll('#cal-grid .cal-cell:not(.empty)').forEach(cell => {
       cell.addEventListener('click', () => {
-        const dateStr = cell.dataset.date;
-        const dayEntries = byDate[dateStr] || [];
-        const card = document.getElementById('cal-day-card');
-        if (!dayEntries.length) { card.style.display = 'none'; return; }
-        card.style.display = 'block';
-        document.getElementById('cal-day-title').textContent = fmtDateShort(dateStr);
-        document.getElementById('cal-day-entries').innerHTML = dayEntries.map(entryRow).join('');
-        bindEntryRows(document.getElementById('cal-day-entries'));
+        const de = byDate[cell.dataset.date] || [];
+        if (!de.length) return;
+        openSheet(fmtDate(cell.dataset.date), de.map(e => `
+          <div class="li" data-cal-id="${e.id}" style="display:flex; align-items:center; justify-content:space-between; padding:12px 2px; border-bottom:1px solid var(--border); font-family:var(--font-mono); font-size:12.5px;">
+            <span style="display:flex; gap:9px; align-items:center;"><span class="term-bd ${e.result}">${e.result === 'breakeven' ? 'BE' : e.result === 'win' ? 'W' : 'L'}</span>${escapeHtml(e.symbol || 'Untitled')}</span>
+            <span class="${e.pnl >= 0 ? 'pos' : 'neg'}" style="color:${e.pnl >= 0 ? 'var(--green)' : 'var(--red)'}; font-weight:700;">${(e.pnl >= 0 ? '+' : '') + fmtMoney(e.pnl)}</span>
+          </div>`).join(''));
+        document.querySelectorAll('#sheet-body [data-cal-id]').forEach(r => r.addEventListener('click', () => { closeSheet(); openEntryForm(r.dataset.calId); }));
       });
     });
   }
@@ -498,6 +693,14 @@
     syncRegistered = true;
     LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; persistEntries(); }, () => { renderDashboard(); renderEntriesList(); renderCalendar(); });
     LvdSync.registerCollection('premarketEntries', () => premarketEntries, (arr) => { premarketEntries = arr; persistPremarket(); }, renderPremarketScreen);
+    // background-photo pools (one small doc per photo, keyed on a hash of the data URL)
+    const photoDocId = (src) => 'p' + hashSeed(src).toString(36);
+    const poolSync = (coll, key) => LvdSync.registerCollection(coll,
+      () => { try { return JSON.parse(localStorage.getItem(key) || '[]').map((src, i) => ({ id: photoDocId(src), src, ord: i })); } catch (e) { return []; } },
+      (arr) => { const ord = [...arr].filter(x => x && x.src).sort((a, b) => (a.ord || 0) - (b.ord || 0)).map(x => x.src); localStorage.setItem(key, JSON.stringify(ord)); renderEntriesList(); },
+      renderEntriesList);
+    poolSync('sharedBgPhotos', 'lvd_shared_bg_photos');
+    poolSync('lossBgPhotos', 'lvd_loss_bg_photos');
     LvdSync.registerSettings(settingsSnapshot, applySettingsSnapshot, () => { renderChecklistScreen(); renderWeeklyScreen(); });
   }
 

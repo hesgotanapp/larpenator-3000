@@ -6217,6 +6217,27 @@
 
     LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; _localSaveEntries(); }, rerenderAfterRemoteSync);
     LvdSync.registerCollection('premarketEntries', () => premarketEntries, (arr) => { premarketEntries = arr; _localSavePremarket(); }, rerenderAfterRemoteSync);
+
+    // background-photo pools sync as their own per-item collections (one small doc
+    // per photo) so a card looks the same on every device without blowing the
+    // per-document size cap.
+    function photoDocId(src) { return 'p' + hashSeed(src).toString(36); }
+    function photoPoolSync(collName, getPool, savePool) {
+      LvdSync.registerCollection(collName,
+        () => getPool().map((src, i) => ({ id: photoDocId(src), src, ord: i })),
+        (arr) => {
+          const ordered = [...arr].filter(x => x && x.src).sort((a, b) => (a.ord || 0) - (b.ord || 0)).map(x => x.src);
+          const key = collName === 'lossBgPhotos' ? 'lvd_loss_bg_photos' : 'lvd_shared_bg_photos';
+          localStorage.setItem(key, JSON.stringify(ordered));
+          renderEntries();
+        },
+        renderEntries);
+    }
+    photoPoolSync('sharedBgPhotos', getSharedBgPhotos, saveSharedBgPhotos);
+    photoPoolSync('lossBgPhotos', getLossBgPhotos, saveLossBgPhotos);
+    const _sSaveShared = saveSharedBgPhotos; saveSharedBgPhotos = function (p) { _sSaveShared(p); LvdSync.pushCollection('sharedBgPhotos'); };
+    const _sSaveLoss = saveLossBgPhotos; saveLossBgPhotos = function (p) { _sSaveLoss(p); LvdSync.pushCollection('lossBgPhotos'); };
+
     LvdSync.registerSettings(settingsSnapshot, applySettingsSnapshot, rerenderAfterRemoteSync);
 
     const syncSignedOut = document.getElementById('sync-signed-out');

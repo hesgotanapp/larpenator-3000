@@ -173,6 +173,104 @@
     border-radius: 12px; font-size: 13px; opacity: 0; pointer-events: none; transition: all .25s ease; z-index: 60;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- Terminal dashboard ---------- */
+  .term-hero { padding: 6px 2px 10px; }
+  .term-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-faint); }
+  .term-big { font-family: var(--font-mono); font-size: 33px; font-weight: 700; letter-spacing: -1px; line-height: 1.05; margin-top: 3px; }
+  .term-big.pos { color: var(--green); } .term-big.neg { color: var(--red); }
+  .term-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-dim); margin-top: 5px; }
+  .term-meta .pos { color: var(--green); } .term-meta .neg { color: var(--red); }
+  .term-spark { width: 100%; height: 52px; display: block; margin-top: 10px; }
+  .term-strip { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; margin-bottom: 10px; }
+  .term-strip .c { padding: 10px 11px; border-right: 1px solid var(--border); }
+  .term-strip .c:last-child { border-right: none; }
+  .term-strip .k { font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-faint); }
+  .term-strip .v { font-family: var(--font-mono); font-size: 15px; font-weight: 700; margin-top: 3px; }
+  .term-strip .v.pos { color: var(--green); } .term-strip .v.neg { color: var(--red); }
+  .term-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .term-row2 .b { border: 1px solid var(--border); border-radius: 11px; padding: 10px 12px; }
+  .term-row2 .k { font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-faint); }
+  .term-row2 .v { font-family: var(--font-mono); font-size: 13px; font-weight: 700; margin-top: 4px; }
+  .term-row2 .v.pos { color: var(--green); } .term-row2 .v.neg { color: var(--red); }
+  .term-streak { display: flex; align-items: center; gap: 11px; border: 1px solid var(--border); border-radius: 11px; padding: 11px 13px; margin-bottom: 12px; }
+  .term-streak .flame { width: 22px; height: 28px; flex-shrink: 0; filter: drop-shadow(0 0 9px var(--streak-glow, transparent)); }
+  .term-streak .txt b { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
+  .term-streak .txt span { font-family: var(--font-mono); font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-faint); display: block; margin-top: 2px; }
+  .term-streak .pips { margin-left: auto; font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint); letter-spacing: 1px; }
+  .term-sec-h { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-faint); margin: 2px 2px 8px; }
+  .term-list .li { display: flex; align-items: center; justify-content: space-between; padding: 9px 2px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: 11.5px; }
+  .term-list .li:last-child { border-bottom: none; }
+  .term-list .li .l { display: flex; gap: 8px; align-items: center; color: var(--ink-dim); min-width: 0; }
+  .term-list .li .l .sym { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .term-list .li .p.pos { color: var(--green); } .term-list .li .p.neg { color: var(--red); }
+  .term-bd { font-size: 8px; padding: 2px 5px; border-radius: 4px; font-weight: 700; flex-shrink: 0; }
+  .term-bd.win { background: var(--green-bg); color: var(--green); }
+  .term-bd.loss { background: var(--red-bg); color: var(--red); }
+  .term-bd.breakeven { background: var(--amber-bg); color: var(--amber); }
+
+  /* ---------- entry trade cards (mirrors desktop) ---------- */
+  .tcard-wrap { margin-bottom: 10px; }
+  .tcard-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 13px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); }
+  .tcard-row .l { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .tcard-row .d { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); flex-shrink: 0; }
+  .tcard-row .s { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tcard-row .p { font-family: var(--font-mono); font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .tcard-row .p.pos { color: var(--green); } .tcard-row .p.neg { color: var(--red); }
+  .tcard {
+    position: relative; border-radius: 15px; overflow: hidden; aspect-ratio: 16 / 10;
+    display: flex; flex-direction: column; justify-content: space-between;
+    border: 1px solid var(--border); background: var(--surface); background-size: cover; background-position: center;
+  }
+  .tcard::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.62) 60%, rgba(9,9,9,0.95)); pointer-events: none; }
+  .tcard.no-photo::before { background: linear-gradient(180deg, rgba(9,9,9,0), rgba(9,9,9,0)); }
+  .tcard-chart { position: absolute; right: 10px; top: 8px; width: 44%; height: 42%; z-index: 1; pointer-events: none; }
+  .tcard-top, .tcard-body, .tcard-actions { position: relative; z-index: 2; }
+  .tcard-top { padding: 12px 14px 0; display: flex; justify-content: space-between; align-items: flex-start; }
+  .tcard-sym { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
+  .tcard-date { font-family: var(--font-mono); font-size: 10px; color: var(--ink-dim); margin-top: 1px; }
+  .tcard-collapse { background: rgba(22,22,24,0.7); border: 1px solid var(--border-strong); color: var(--ink-dim); width: 24px; height: 24px; border-radius: 50%; font-size: 12px; flex-shrink: 0; }
+  .tcard-body { padding: 3px 14px 6px; }
+  .tcard-pnl { display: inline-flex; font-family: var(--font-mono); font-size: 20px; font-weight: 700; padding: 4px 11px; border-radius: 9px; }
+  .tcard-pnl.win { background: var(--green-bg); color: var(--green); }
+  .tcard-pnl.loss { background: var(--red-bg); color: var(--red); }
+  .tcard-pnl.breakeven { background: var(--amber-bg); color: var(--amber); }
+  .tcard-result { font-size: 12px; font-weight: 700; padding-left: 11px; margin-top: 4px; }
+  .tcard-result.win { color: var(--green); } .tcard-result.loss { color: var(--red); } .tcard-result.breakeven { color: var(--amber); }
+  .tcard-setup { font-size: 10.5px; font-weight: 600; color: var(--ink-dim); padding-left: 11px; margin-top: 1px; }
+  .tcard-actions { display: flex; gap: 6px; padding: 0 14px 12px; }
+  .tcard-actions button { flex: 1; min-height: 34px; border-radius: 9px; border: 1px solid var(--border-strong); background: rgba(22,22,24,0.78); color: var(--ink); font-weight: 600; font-size: 12px; }
+  .tcard-more { display: none; padding: 12px 14px 14px; border: 1px solid var(--border); border-top: none; border-radius: 0 0 15px 15px; margin-top: -1px; background: var(--surface); }
+  .tcard-more.open { display: block; }
+  .tcard-more .blk { margin-bottom: 10px; }
+  .tcard-more .blk:last-child { margin-bottom: 0; }
+  .tcard-more .blk .bk { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 3px; }
+  .tcard-more .blk .bv { font-size: 12.5px; color: var(--ink-dim); line-height: 1.5; white-space: pre-wrap; }
+  .tcard-more img.shot { width: 100%; border-radius: 8px; margin-top: 4px; }
+
+  /* ---------- compact calendar ---------- */
+  .cal-legend { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-family: var(--font-mono); font-size: 8.5px; color: var(--ink-faint); }
+  .cal-legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+  .cal-monthstat { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .cal-monthstat .ms { border: 1px solid var(--border); border-radius: 10px; padding: 9px; text-align: center; }
+  .cal-monthstat .ms .k { font-family: var(--font-mono); font-size: 7.5px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--ink-faint); }
+  .cal-monthstat .ms .v { font-family: var(--font-mono); font-size: 14px; font-weight: 700; margin-top: 3px; }
+  .cal-monthstat .ms .v.pos { color: var(--green); } .cal-monthstat .ms .v.neg { color: var(--red); }
+  #screen-calendar .cal-grid { grid-auto-rows: 36px; }
+  #screen-calendar .cal-cell { height: 36px; aspect-ratio: auto; min-height: 0; align-self: stretch; }
+  #screen-calendar #cal-dow-row { grid-auto-rows: 16px; }
+
+  /* ---------- screenshot field in the entry sheet ---------- */
+  .shot-zone {
+    border: 1px dashed var(--border-strong); border-radius: 12px; padding: 16px; text-align: center;
+    color: var(--ink-faint); font-size: 12.5px; background: var(--surface-2);
+  }
+  .shot-preview { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+  .shot-preview img { width: 100%; display: block; }
+  .shot-preview .rm {
+    position: absolute; top: 8px; right: 8px; background: rgba(9,9,9,0.8); color: #fff; border: 1px solid var(--border-strong);
+    border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -202,26 +300,22 @@
   <div id="screens">
 
     <section class="screen active" id="screen-dashboard">
-      <h1>Dashboard</h1>
-      <p class="subtitle">Your trading performance at a glance.</p>
-      <div class="stat-grid" id="dash-stats"></div>
-      <div class="card">
-        <h3>Current streak</h3>
-        <div id="dash-streak"></div>
+      <div class="term-hero">
+        <div class="term-lbl">Total P&amp;L</div>
+        <div class="term-big" id="dash-total">$0.00</div>
+        <div class="term-meta" id="dash-meta"></div>
+        <canvas id="dash-spark" class="term-spark" width="330" height="52"></canvas>
       </div>
-      <div class="card">
-        <h3>Recent entries</h3>
-        <div id="dash-recent"></div>
-      </div>
+      <div class="term-strip" id="dash-strip"></div>
+      <div class="term-row2" id="dash-row2"></div>
+      <div class="term-streak" id="dash-streak"></div>
+      <div class="term-sec-h">Recent</div>
+      <div class="term-list" id="dash-recent"></div>
     </section>
 
     <section class="screen" id="screen-entries">
-      <h1>Entries</h1>
-      <p class="subtitle">Every logged trade.</p>
       <input type="text" id="entries-search" placeholder="Search symbol, notes...">
-      <div class="card" style="margin-top:12px;" id="entries-list-card">
-        <div id="entries-list"></div>
-      </div>
+      <div id="entries-list" style="margin-top:12px;"></div>
     </section>
 
     <section class="screen" id="screen-premarket">
@@ -246,18 +340,21 @@
     </section>
 
     <section class="screen" id="screen-calendar">
-      <h1>Calendar</h1>
       <div class="cal-month-head">
         <button id="cal-prev" type="button">‹</button>
-        <div id="cal-month-label" style="font-weight:700;"></div>
+        <div id="cal-month-label" style="font-weight:700; font-size:14px;"></div>
         <button id="cal-next" type="button">›</button>
       </div>
       <div class="cal-grid" id="cal-dow-row"></div>
-      <div class="cal-grid" id="cal-grid" style="margin-top:4px;"></div>
-      <div class="card" id="cal-day-card" style="display:none; margin-top:14px;">
-        <h3 id="cal-day-title"></h3>
-        <div id="cal-day-entries"></div>
+      <div class="cal-grid" id="cal-grid" style="margin-top:3px;"></div>
+      <div class="cal-legend">
+        <span>Loss</span>
+        <i style="background:var(--red-bg); border:1px solid rgba(239,106,95,0.3);"></i>
+        <i style="background:var(--surface-2); border:1px solid var(--border);"></i>
+        <i style="background:var(--green-bg); border:1px solid rgba(48,214,138,0.3);"></i>
+        <span>Win</span>
       </div>
+      <div class="cal-monthstat" id="cal-monthstat"></div>
     </section>
 
     <section class="screen" id="screen-checklist">
