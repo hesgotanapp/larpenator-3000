@@ -240,6 +240,51 @@
   .tcard-setup { font-size: 10.5px; font-weight: 600; color: var(--ink-dim); padding-left: 11px; margin-top: 1px; }
   .tcard-actions { display: flex; gap: 6px; padding: 0 14px 12px; }
   .tcard-actions button { flex: 1; min-height: 34px; border-radius: 9px; border: 1px solid var(--border-strong); background: rgba(22,22,24,0.78); color: var(--ink); font-weight: 600; font-size: 12px; }
+  .tcard-actions button.icon { flex: 0 0 40px; }
+
+  /* full-screen clean card — nothing in the way, made to screenshot */
+  #cleancard {
+    position: fixed; inset: 0; z-index: 90; background: rgba(5,5,6,0.96); display: none;
+    align-items: center; justify-content: center; padding: 24px;
+    padding-top: calc(24px + var(--safe-top)); padding-bottom: calc(24px + var(--safe-bottom));
+  }
+  #cleancard.open { display: flex; }
+  #cleancard .cc {
+    width: 100%; max-width: 420px; aspect-ratio: 4 / 5; border-radius: 22px; overflow: hidden;
+    position: relative; background: var(--surface); background-size: cover; background-position: center;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  }
+  #cleancard .cc::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(9,9,9,0.2), rgba(9,9,9,0.62) 55%, rgba(9,9,9,0.96)); }
+  #cleancard .cc.no-photo::before { background: linear-gradient(180deg, rgba(9,9,9,0.35), rgba(9,9,9,0.9)); }
+  #cleancard .cc .cc-chart { position: absolute; right: 14px; top: 12px; width: 46%; height: 34%; pointer-events: none; z-index: 1; }
+  #cleancard .cc-top, #cleancard .cc-bot { position: relative; z-index: 2; }
+  #cleancard .cc-top { padding: 24px 24px 0; }
+  #cleancard .cc-sym { font-size: 24px; font-weight: 800; letter-spacing: -0.3px; }
+  #cleancard .cc-date { font-family: var(--font-mono); font-size: 12px; color: var(--ink-dim); margin-top: 3px; }
+  #cleancard .cc-bot { padding: 0 24px 24px; }
+  #cleancard .cc-pnl { display: inline-flex; font-family: var(--font-mono); font-size: 40px; font-weight: 700; padding: 6px 16px; border-radius: 14px; }
+  #cleancard .cc-pnl.win { background: var(--green-bg); color: var(--green); }
+  #cleancard .cc-pnl.loss { background: var(--red-bg); color: var(--red); }
+  #cleancard .cc-pnl.breakeven { background: var(--amber-bg); color: var(--amber); }
+  #cleancard .cc-res { font-size: 16px; font-weight: 700; margin-top: 10px; }
+  #cleancard .cc-res.win { color: var(--green); } #cleancard .cc-res.loss { color: var(--red); } #cleancard .cc-res.breakeven { color: var(--amber); }
+  #cleancard .cc-setup { font-size: 12.5px; font-weight: 600; color: var(--ink-dim); margin-top: 2px; }
+  #cleancard .cc-brand { font-family: var(--font-mono); font-weight: 800; font-size: 12px; letter-spacing: 1px; margin-top: 14px; }
+  #cleancard .cc-brand span { color: var(--green); }
+  #cleancard .cc-hint { position: absolute; bottom: calc(6px + var(--safe-bottom)); left: 0; right: 0; text-align: center; font-size: 11px; color: var(--ink-faint); }
+
+  /* ---------- achievements ---------- */
+  .ach-card { border: 1px solid var(--border); border-radius: 15px; overflow: hidden; background: var(--surface); margin-bottom: 12px; }
+  .ach-img { width: 100%; display: block; aspect-ratio: 16 / 10; object-fit: cover; background: var(--surface-2); }
+  .ach-noimg { aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center; color: var(--ink-faint); font-size: 12px; background: var(--surface-2); }
+  .ach-body { padding: 13px 15px 14px; }
+  .ach-title { font-size: 15px; font-weight: 700; }
+  .ach-date { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--ink-faint); margin-top: 3px; }
+  .ach-desc { font-size: 12.5px; color: var(--ink-dim); line-height: 1.5; margin-top: 8px; }
+  .ach-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .ach-actions button { flex: 1; min-height: 34px; border-radius: 9px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--ink); font-weight: 600; font-size: 12px; }
+  .ach-actions button.danger { color: var(--red); border-color: rgba(239,106,95,0.3); background: var(--red-bg); }
   .tcard-more { display: none; padding: 12px 14px 14px; border: 1px solid var(--border); border-top: none; border-radius: 0 0 15px 15px; margin-top: -1px; background: var(--surface); }
   .tcard-more.open { display: block; }
   .tcard-more .blk { margin-bottom: 10px; }
@@ -330,6 +375,7 @@
       <h1>More</h1>
       <div class="card" style="padding: 6px 12px;">
         <div class="more-item" data-goto="calendar"><span>Calendar</span><span class="chev">›</span></div>
+        <div class="more-item" data-goto="achievements"><span>Achievements</span><span class="chev">›</span></div>
         <div class="more-item" data-goto="checklist"><span>Checklist</span><span class="chev">›</span></div>
         <div class="more-item" data-goto="weekly"><span>Weekly Review</span><span class="chev">›</span></div>
       </div>
@@ -337,6 +383,12 @@
         <div class="more-item" id="more-signout"><span>Sign Out</span><span class="chev">›</span></div>
       </div>
       <p class="subtitle" style="text-align:center; margin-top:20px;">Signed in as <span id="more-email"></span></p>
+    </section>
+
+    <section class="screen" id="screen-achievements">
+      <h1>Achievements</h1>
+      <p class="subtitle">Payouts, funded passes, milestones — the wins worth remembering.</p>
+      <div id="ach-list"></div>
     </section>
 
     <section class="screen" id="screen-calendar">
@@ -414,6 +466,7 @@
   </nav>
 </div>
 
+<div id="cleancard"><div class="cc" id="cleancard-body"></div><div class="cc-hint">Tap anywhere to close · screenshot with your phone</div></div>
 <div id="sheet-backdrop"></div>
 <div id="sheet">
   <div id="sheet-head"><h2 id="sheet-title">New Entry</h2><button id="sheet-close" type="button">✕</button></div>

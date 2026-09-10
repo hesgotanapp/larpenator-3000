@@ -6238,6 +6238,10 @@
     const _sSaveShared = saveSharedBgPhotos; saveSharedBgPhotos = function (p) { _sSaveShared(p); LvdSync.pushCollection('sharedBgPhotos'); };
     const _sSaveLoss = saveLossBgPhotos; saveLossBgPhotos = function (p) { _sSaveLoss(p); LvdSync.pushCollection('lossBgPhotos'); };
 
+    const _localSaveAch = saveAchievements;
+    saveAchievements = function () { _localSaveAch(); LvdSync.pushCollection('achievements'); };
+    LvdSync.registerCollection('achievements', () => achievements, (arr) => { achievements = arr; _localSaveAch(); if (document.querySelector('.section.active')?.id === 'section-achievements') renderAchievementsGallery(); }, () => { if (document.querySelector('.section.active')?.id === 'section-achievements') renderAchievementsGallery(); });
+
     LvdSync.registerSettings(settingsSnapshot, applySettingsSnapshot, rerenderAfterRemoteSync);
 
     const syncSignedOut = document.getElementById('sync-signed-out');

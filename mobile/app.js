@@ -15,11 +15,14 @@
     focusRules: 'lvd_focus_rules',
     focusIndex: 'lvd_focus_index',
     milestone: 'lvd_milestone',
-    algoPnl: 'lvd_algo_pnl'
+    algoPnl: 'lvd_algo_pnl',
+    achievements: 'lvd_achievements'
   };
 
   let entries = loadJSON(KEYS.entries, []);
   let premarketEntries = loadJSON(KEYS.premarket, []);
+  let achievements = loadJSON(KEYS.achievements, []);
+  function persistAchievements() { localStorage.setItem(KEYS.achievements, JSON.stringify(achievements)); }
   let rulebook = loadJSON(KEYS.rulebook, { entry: '', exit: '', risk: '', hours: '', notes: '' });
   let goals = loadJSON(KEYS.goals, []);
   let weeklyReviews = loadJSON(KEYS.weeklyReviews, {});
@@ -187,6 +190,7 @@
     if (name === 'calendar') renderCalendar();
     if (name === 'checklist') renderChecklistScreen();
     if (name === 'weekly') renderWeeklyScreen();
+    if (name === 'achievements') renderAchievements();
   }
   document.querySelectorAll('.more-item[data-goto]').forEach(el => {
     el.addEventListener('click', () => switchTab(el.dataset.goto));
@@ -206,13 +210,15 @@
     sheet.classList.remove('open');
     editingEntryId = null;
     editingPremarketId = null;
+    editingAchId = null;
   }
   document.getElementById('sheet-close').addEventListener('click', closeSheet);
   sheetBackdrop.addEventListener('click', closeSheet);
 
   document.getElementById('fab').addEventListener('click', () => {
-    const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
-    if (activeTab === 'premarket') openPremarketForm();
+    const active = document.querySelector('.screen.active').id.replace('screen-', '');
+    if (active === 'premarket') openPremarketForm();
+    else if (active === 'achievements') openAchievementForm();
     else openEntryForm();
   });
 
@@ -332,6 +338,7 @@
         <div class="tcard-actions">
           <button data-more="${e.id}" type="button">See more</button>
           <button data-edit="${e.id}" type="button">Edit</button>
+          <button class="icon" data-clean="${e.id}" type="button" title="Clean view">⤢</button>
         </div>
       </div>
       <div class="tcard-more" id="mmore-${e.id}">
@@ -360,6 +367,138 @@
       el.textContent = panel.classList.contains('open') ? 'See less' : 'See more';
     }));
     container.querySelectorAll('[data-edit]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); openEntryForm(el.dataset.edit); }));
+    container.querySelectorAll('[data-clean]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); showCleanCard(el.dataset.clean); }));
+  }
+
+  // ---------- clean, screenshottable card ----------
+  const cleanCardEl = document.getElementById('cleancard');
+  cleanCardEl.addEventListener('click', () => cleanCardEl.classList.remove('open'));
+  function showCleanCard(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+    const photos = photosForEntry(e);
+    const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
+    const cc = document.getElementById('cleancard-body');
+    cc.className = 'cc' + (photos.length ? '' : ' no-photo');
+    cc.style.backgroundImage = photos.length
+      ? `linear-gradient(180deg,rgba(9,9,9,0.2),rgba(9,9,9,0.62) 55%,rgba(9,9,9,0.96)),url('${photos[idx]}')` : '';
+    const rl = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
+    const sign = e.result === 'win' ? '+' : e.result === 'loss' ? '-' : '';
+    cc.innerHTML = `
+      ${tradeChartSVG(e).replace('class="tcard-chart"', 'class="cc-chart"')}
+      <div class="cc-top">
+        <div class="cc-sym">${escapeHtml(e.symbol || 'Untitled trade')}</div>
+        <div class="cc-date">${fmtDate(e.date)}</div>
+      </div>
+      <div class="cc-bot">
+        <div class="cc-pnl ${e.result}">${sign}${fmtMoney(Math.abs(e.pnl))}</div>
+        <div class="cc-res ${e.result}">${rl}</div>
+        ${e.setupType ? `<div class="cc-setup">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</div>` : ''}
+        <div class="cc-brand">LARPENATOR <span>3000</span></div>
+      </div>`;
+    cleanCardEl.classList.add('open');
+  }
+
+  // ---------- Achievements ----------
+  let editingAchId = null;
+  function renderAchievements() {
+    const list = document.getElementById('ach-list');
+    const sorted = [...achievements].sort((a, b) => (b.date || '').localeCompare(a.date || '') || b.createdAt - a.createdAt);
+    list.innerHTML = sorted.length ? sorted.map(a => `
+      <div class="ach-card" data-ach="${a.id}">
+        ${a.screenshot ? `<img class="ach-img" src="${a.screenshot}">` : `<div class="ach-noimg">No screenshot</div>`}
+        <div class="ach-body">
+          <div class="ach-title">${escapeHtml(a.title || 'Untitled')}</div>
+          <div class="ach-date">${a.date ? fmtDateShort(a.date) : ''}</div>
+          ${a.description ? `<div class="ach-desc">${escapeHtml(a.description)}</div>` : ''}
+          <div class="ach-actions">
+            <button data-ach-edit="${a.id}" type="button">Edit</button>
+            <button class="danger" data-ach-del="${a.id}" type="button">Delete</button>
+          </div>
+        </div>
+      </div>`).join('') : `<div class="empty">No achievements yet — tap + to add your first win.</div>`;
+    list.querySelectorAll('.ach-img').forEach(img => img.addEventListener('click', () => { const src = img.src; showImageFull(src); }));
+    list.querySelectorAll('[data-ach-edit]').forEach(el => el.addEventListener('click', () => openAchievementForm(el.dataset.achEdit)));
+    list.querySelectorAll('[data-ach-del]').forEach(el => el.addEventListener('click', () => {
+      if (!confirm('Delete this achievement?')) return;
+      achievements = achievements.filter(x => x.id !== el.dataset.achDel);
+      persistAchievements();
+      LvdSync.pushCollection('achievements');
+      renderAchievements();
+    }));
+  }
+  function showImageFull(src) {
+    const cc = document.getElementById('cleancard-body');
+    cc.className = 'cc no-photo';
+    cc.style.backgroundImage = '';
+    cc.style.aspectRatio = 'auto';
+    cc.innerHTML = `<img src="${src}" style="width:100%; display:block; border-radius:22px;">`;
+    cleanCardEl.classList.add('open');
+    setTimeout(() => { cc.style.aspectRatio = ''; }, 300);
+  }
+  function openAchievementForm(id) {
+    editingAchId = id || null;
+    const a = id ? achievements.find(x => x.id === id) : null;
+    openSheet(a ? 'Edit Achievement' : 'New Achievement', `
+      <label>Title</label><input type="text" id="ach-title" value="${escapeHtml(a ? a.title : '')}" placeholder="e.g. First payout, Passed the $50k eval">
+      <label>Date</label><input type="date" id="ach-date" value="${a ? a.date : todayStr}">
+      <label>Notes</label><textarea id="ach-desc">${escapeHtml(a ? a.description : '')}</textarea>
+      <label>Screenshot</label>
+      <div id="ach-shot-mount"></div>
+      <input type="file" id="ach-shot-input" accept="image/*" style="display:none;">
+      <div style="display:flex; gap:10px; margin-top:18px;">
+        <button class="btn" id="ach-save" type="button">${a ? 'Update' : 'Save'} Achievement</button>
+        ${a ? '<button class="btn danger" id="ach-del" type="button">Delete</button>' : ''}
+      </div>
+    `);
+    let shot = a ? (a.screenshot || null) : null;
+    function renderShot() {
+      const m = document.getElementById('ach-shot-mount');
+      if (shot) {
+        m.innerHTML = `<div class="shot-preview"><img src="${shot}"><button class="rm" id="ach-shot-rm" type="button">Remove</button></div>`;
+        document.getElementById('ach-shot-rm').addEventListener('click', () => { shot = null; renderShot(); });
+      } else {
+        m.innerHTML = `<div class="shot-zone" id="ach-shot-add">Tap to add a screenshot</div>`;
+        document.getElementById('ach-shot-add').addEventListener('click', () => document.getElementById('ach-shot-input').click());
+      }
+    }
+    document.getElementById('ach-shot-input').addEventListener('change', (ev) => {
+      const file = ev.target.files[0];
+      if (!file || file.type.indexOf('image') !== 0) return;
+      const img = new Image(); const rd = new FileReader();
+      rd.onload = () => { img.onload = () => { shot = compressImage(img, 1400); renderShot(); }; img.src = rd.result; };
+      rd.readAsDataURL(file); ev.target.value = '';
+    });
+    renderShot();
+    document.getElementById('ach-save').addEventListener('click', () => {
+      const title = document.getElementById('ach-title').value.trim();
+      if (!title) { showToast('Give it a title'); return; }
+      const item = {
+        id: editingAchId || newId(),
+        title, date: document.getElementById('ach-date').value || todayStr,
+        description: document.getElementById('ach-desc').value.trim(),
+        screenshot: shot,
+        createdAt: a ? a.createdAt : Date.now(),
+        updatedAt: Date.now()
+      };
+      if (editingAchId) achievements = achievements.map(x => x.id === editingAchId ? item : x);
+      else achievements.push(item);
+      persistAchievements();
+      LvdSync.pushCollection('achievements');
+      closeSheet();
+      showToast(editingAchId ? 'Achievement updated' : 'Achievement saved');
+      renderAchievements();
+    });
+    const del = document.getElementById('ach-del');
+    if (del) del.addEventListener('click', () => {
+      if (!confirm('Delete this achievement?')) return;
+      achievements = achievements.filter(x => x.id !== editingAchId);
+      persistAchievements();
+      LvdSync.pushCollection('achievements');
+      closeSheet();
+      showToast('Achievement deleted');
+      renderAchievements();
+    });
   }
 
   function openEntryForm(id) {
@@ -693,6 +832,7 @@
     syncRegistered = true;
     LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; persistEntries(); }, () => { renderDashboard(); renderEntriesList(); renderCalendar(); });
     LvdSync.registerCollection('premarketEntries', () => premarketEntries, (arr) => { premarketEntries = arr; persistPremarket(); }, renderPremarketScreen);
+    LvdSync.registerCollection('achievements', () => achievements, (arr) => { achievements = arr; persistAchievements(); }, renderAchievements);
     // background-photo pools (one small doc per photo, keyed on a hash of the data URL)
     const photoDocId = (src) => 'p' + hashSeed(src).toString(36);
     const poolSync = (coll, key) => LvdSync.registerCollection(coll,
