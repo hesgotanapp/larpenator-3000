@@ -992,6 +992,10 @@
     </div>
 
     <div class="nav-section-label">Manage</div>
+    <div class="nav-item" data-tab="monthly-report">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+      Monthly Report
+    </div>
     <div class="nav-item" data-tab="data">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><line x1="10" y1="12" x2="14" y2="12"></line></svg>
       Backup / Export
@@ -1205,6 +1209,15 @@
           </div>
 
           <div class="field full">
+            <label>Session</label>
+            <div class="result-toggle" id="entry-session-toggle">
+              <button type="button" class="sel-be" data-session="asia">Asia</button>
+              <button type="button" class="sel-be" data-session="london">London</button>
+              <button type="button" class="sel-be" data-session="ny">New York</button>
+            </div>
+          </div>
+
+          <div class="field full">
             <label>Discipline</label>
             <div class="rule-toggle" id="rule-toggle"><span class="box">⚠</span> I broke my trading rules today</div>
             <div class="rule-tags-picker" id="rule-tags-picker"></div>
@@ -1215,6 +1228,7 @@
             <div class="result-toggle" id="entry-setup-toggle" style="margin-bottom:10px;">
               <button type="button" class="sel-be" data-setup="continuation">Continuation setup</button>
               <button type="button" class="sel-be" data-setup="reversal">Reversal setup</button>
+              <button type="button" class="sel-be" data-setup="judas">Judas Swing setup</button>
             </div>
             <div class="checklist-progress" id="checklist-progress"></div>
             <div class="checklist-picker" id="entry-checklist-picker"></div>
@@ -1488,6 +1502,7 @@
       <div class="subnav" id="checklist-subnav">
         <div class="subnav-item active" data-checklistcat="continuation">Continuation setup</div>
         <div class="subnav-item" data-checklistcat="reversal">Reversal setup</div>
+        <div class="subnav-item" data-checklistcat="judas">Judas Swing setup</div>
       </div>
 
       <div class="card">
@@ -1744,6 +1759,39 @@
     </section>
 
     <!-- DATA -->
+    <!-- MONTHLY REPORT -->
+    <section class="section" id="section-monthly-report">
+      <div class="page-head"><h1>Monthly Report</h1><p>Your performance broken down by month.</p></div>
+
+      <div class="card" style="margin-bottom:22px;">
+        <div class="cal-card-head">
+          <h3 id="mr-title">This month</h3>
+          <div class="cal-nav-btns" id="mr-nav">
+            <button id="mr-prev" type="button">‹</button>
+            <button id="mr-today" type="button">•</button>
+            <button id="mr-next" type="button">›</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-row" id="mr-stats"></div>
+
+      <div class="card" style="margin-top:22px;">
+        <div class="cal-card-head"><h3>Equity curve</h3></div>
+        <div id="mr-equity-wrap"></div>
+      </div>
+
+      <div class="card" style="margin-top:22px;">
+        <div class="cal-card-head"><h3>By session</h3></div>
+        <div id="mr-session-breakdown"></div>
+      </div>
+
+      <div class="card" style="margin-top:22px;">
+        <div class="cal-card-head"><h3>By setup</h3></div>
+        <div id="mr-setup-breakdown"></div>
+      </div>
+    </section>
+
     <section class="section" id="section-data">
       <div class="page-head"><h1>Backup &amp; export</h1><p>Keep your data safe and portable.</p></div>
 
@@ -1760,12 +1808,20 @@
           <label>Accent color</label>
           <div class="accent-swatch-row" id="accent-swatches"></div>
         </div>
-        <div class="field">
+        <div class="field" style="margin-bottom:16px;">
           <label>Corner glow brightness</label>
           <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
             <input type="range" id="glow-intensity-slider" min="0" max="150" step="5">
             <span id="glow-intensity-value" style="font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); min-width:38px; text-align:right;"></span>
           </div>
+        </div>
+        <div class="field">
+          <label>Display scale</label>
+          <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
+            <input type="range" id="display-scale-slider" min="75" max="150" step="5">
+            <span id="display-scale-value" style="font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); min-width:38px; text-align:right;"></span>
+          </div>
+          <p style="font-size:12px; color:var(--ink-faint); margin:8px 0 0;">Zooms the whole app in or out. This device only — doesn't sync to the iPhone app.</p>
         </div>
       </div>
 
@@ -1873,10 +1929,15 @@
   const THEME_KEY = 'lvd_theme_mode';
   const ACCENT_KEY = 'lvd_theme_accent';
   const GLOW_KEY = 'lvd_glow_intensity';
+  const DISPLAY_SCALE_KEY = 'lvd_display_scale';
   let themeMode = localStorage.getItem(THEME_KEY) || 'dark';
   let customAccent = localStorage.getItem(ACCENT_KEY) || null;
   let glowIntensity = parseInt(localStorage.getItem(GLOW_KEY), 10);
   if (isNaN(glowIntensity) || glowIntensity < 0) glowIntensity = 100;
+  let displayScale = parseInt(localStorage.getItem(DISPLAY_SCALE_KEY), 10);
+  if (isNaN(displayScale) || displayScale < 50) displayScale = 100;
+  function applyDisplayScale() { document.documentElement.style.zoom = (displayScale / 100); }
+  applyDisplayScale();
   const ACCENT_PRESETS = [
     { name: 'Emerald', hex: '#30d68a' },
     { name: 'Azure', hex: '#3b9eff' },
@@ -1950,7 +2011,13 @@
       reversal: ['Clear reversal candle or pattern confirmed', 'Divergence or exhaustion signal present', 'Key level held or reclaimed', 'Volume confirms the reversal']
     };
   }
+  if (!checklistCategories.judas) checklistCategories.judas = [];
   let activeChecklistCat = 'continuation';
+
+  const SETUP_TYPE_LABELS = { continuation: 'Continuation', reversal: 'Reversal', judas: 'Judas Swing' };
+  function setupTypeLabel(t) { return SETUP_TYPE_LABELS[t] || t; }
+  const SESSION_LABELS = { asia: 'Asia', london: 'London', ny: 'New York' };
+  function sessionLabel(s) { return SESSION_LABELS[s] || s; }
 
   let achEditingId = null;
   let achCurrentScreenshot = null;
@@ -1967,6 +2034,7 @@
   let selectedBrokenRules = [];
   let selectedChecklistChecked = [];
   let selectedSetupType = null;
+  let selectedSession = null;
   let selectedPremarketId = null;
   let selectedPremarketScenarioId = null;
   let selectedPremarketCorrectness = null;
@@ -2066,6 +2134,7 @@
     if (name === 'achievements') renderAchievementsGallery();
     if (name === 'backtest') renderBacktestStats();
     if (name === 'notes') renderNotesSection();
+    if (name === 'monthly-report') renderMonthlyReport();
     if (name === 'data') renderAppearanceControls();
   }
   document.getElementById('dash-view-calendar').addEventListener('click', () => switchTab('calendar'));
@@ -2217,11 +2286,18 @@
     });
   });
 
+  document.querySelectorAll('#entry-session-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      selectedSession = selectedSession === btn.dataset.session ? null : btn.dataset.session;
+      document.querySelectorAll('#entry-session-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.session === selectedSession));
+    });
+  });
+
   function renderEntryChecklistPicker() {
     const picker = document.getElementById('entry-checklist-picker');
     const progress = document.getElementById('checklist-progress');
     if (!selectedSetupType) {
-      picker.innerHTML = `<span class="rtp-empty">Choose Continuation or Reversal above to see that setup's checklist.</span>`;
+      picker.innerHTML = `<span class="rtp-empty">Choose a setup above to see its checklist.</span>`;
       progress.textContent = '';
       return;
     }
@@ -2668,7 +2744,9 @@
     const pillPadX = 26, pillH = 100;
     const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
     const hasSetup = !!e.setupType;
-    const bottomBlockH = pillH + 44 + (hasSetup ? 36 : 0);
+    const hasSession = !!e.session;
+    const extraLineH = (hasSetup ? 36 : 0) + (hasSession ? 32 : 0);
+    const bottomBlockH = pillH + 44 + extraLineH;
     const pillY = H - pad - bottomBlockH;
     ctx.fillStyle = pnlBg;
     roundRectPath(ctx, pad, pillY, pnlW + pillPadX * 2, pillH, 18);
@@ -2676,14 +2754,21 @@
     ctx.fillStyle = pnlColor;
     ctx.fillText(pnlText, pad + pillPadX, pillY + 72);
 
-    // result / setup, stacked underneath
+    // result / setup / session, stacked underneath
     ctx.font = '700 32px "Plus Jakarta Sans", sans-serif';
     ctx.fillStyle = pnlColor;
     ctx.fillText(resultLabel, pad, pillY + pillH + 40);
+    let extraLineY = pillY + pillH + 76;
     if (hasSetup) {
       ctx.font = '600 26px "Plus Jakarta Sans", sans-serif';
       ctx.fillStyle = inkDim;
-      ctx.fillText(e.setupType === 'reversal' ? 'Reversal' : 'Continuation', pad, pillY + pillH + 76);
+      ctx.fillText(setupTypeLabel(e.setupType), pad, extraLineY);
+      extraLineY += 32;
+    }
+    if (hasSession) {
+      ctx.font = '600 26px "Plus Jakarta Sans", sans-serif';
+      ctx.fillStyle = inkDim;
+      ctx.fillText(sessionLabel(e.session) + ' session', pad, extraLineY);
     }
 
     ctx.restore();
@@ -2891,6 +2976,7 @@
       brokenRules: rulesBroken ? [...selectedBrokenRules] : [],
       checklistChecked: [...selectedChecklistChecked],
       setupType: selectedSetupType,
+      session: selectedSession,
       premarketLink: selectedPremarketId ? { premarketId: selectedPremarketId, scenarioId: selectedPremarketScenarioId, correctness: selectedPremarketCorrectness } : null,
       emotions: document.getElementById('f-emotions').value.trim(),
       happened: document.getElementById('f-happened').value.trim(),
@@ -2916,10 +3002,11 @@
   function resetForm() {
     form.reset();
     dateInput.value = todayStr;
-    selectedResult = null; editingId = null; rulesBroken = false; selectedBrokenRules = []; selectedChecklistChecked = []; selectedSetupType = null;
+    selectedResult = null; editingId = null; rulesBroken = false; selectedBrokenRules = []; selectedChecklistChecked = []; selectedSetupType = null; selectedSession = null;
     selectedPremarketId = null; selectedPremarketScenarioId = null; selectedPremarketCorrectness = null;
     document.querySelectorAll('#entry-result-toggle button').forEach(b => b.classList.remove('selected'));
     document.querySelectorAll('#entry-setup-toggle button').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('#entry-session-toggle button').forEach(b => b.classList.remove('selected'));
     ruleToggle.classList.remove('active'); ruleToggle.querySelector('.box').textContent = '⚠';
     ruleTagsPicker.classList.remove('open');
     renderEntryChecklistPicker();
@@ -2948,6 +3035,7 @@
     selectedBrokenRules = e.brokenRules ? [...e.brokenRules] : [];
     selectedChecklistChecked = e.checklistChecked ? [...e.checklistChecked] : [];
     selectedSetupType = e.setupType || null;
+    selectedSession = e.session || null;
     selectedPremarketId = e.premarketLink ? e.premarketLink.premarketId : null;
     selectedPremarketScenarioId = e.premarketLink ? e.premarketLink.scenarioId : null;
     selectedPremarketCorrectness = e.premarketLink ? e.premarketLink.correctness : null;
@@ -2956,6 +3044,7 @@
     ruleTagsPicker.classList.toggle('open', rulesBroken);
     renderRuleTagsPicker();
     document.querySelectorAll('#entry-setup-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.setup === selectedSetupType));
+    document.querySelectorAll('#entry-session-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.session === selectedSession));
     renderEntryChecklistPicker();
     renderEntryPremarketCheck();
     document.querySelectorAll('#entry-result-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.result === e.result));
@@ -3422,7 +3511,8 @@
             <div class="trade-card-pnl-block">
               <div class="trade-card-pnl ${e.result}">${e.result === 'win' ? '+' : e.result === 'loss' ? '-' : ''}${fmtMoney(Math.abs(e.pnl))}</div>
               <div class="trade-card-result ${e.result}">${resultLabel}</div>
-              ${e.setupType ? `<div class="trade-card-setup">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</div>` : ''}
+              ${e.setupType ? `<div class="trade-card-setup">${setupTypeLabel(e.setupType)}</div>` : ''}
+              ${e.session ? `<div class="trade-card-setup">${sessionLabel(e.session)} session</div>` : ''}
             </div>
             <div class="trade-card-stats">
               ${photos.length > 1 ? `<div class="trade-card-stat"><span class="k">Photo</span><span class="v">${idx + 1} / ${photos.length}</span></div>` : ''}
@@ -4004,6 +4094,84 @@
     }));
   }
 
+  // ---------- monthly report ----------
+  let mrYear = todayDate.getFullYear();
+  let mrMonth = todayDate.getMonth();
+  document.getElementById('mr-prev').addEventListener('click', () => { mrMonth--; if (mrMonth < 0) { mrMonth = 11; mrYear--; } renderMonthlyReport(); });
+  document.getElementById('mr-next').addEventListener('click', () => { mrMonth++; if (mrMonth > 11) { mrMonth = 0; mrYear++; } renderMonthlyReport(); });
+  document.getElementById('mr-today').addEventListener('click', () => { mrYear = todayDate.getFullYear(); mrMonth = todayDate.getMonth(); renderMonthlyReport(); });
+
+  function renderMonthlyReport() {
+    document.getElementById('mr-title').textContent = `${MONTH_NAMES[mrMonth]} ${mrYear}`;
+    const prefix = `${mrYear}-${String(mrMonth + 1).padStart(2, '0')}`;
+    const list = entries.filter(e => e.date && e.date.startsWith(prefix));
+    const s = computeStats(list);
+    const avgWin = s.wins ? list.filter(e => e.result === 'win').reduce((sum, e) => sum + (e.pnl || 0), 0) / s.wins : 0;
+    const avgLoss = s.losses ? list.filter(e => e.result === 'loss').reduce((sum, e) => sum + (e.pnl || 0), 0) / s.losses : 0;
+    const byPnl = [...list].sort((a, b) => (b.pnl || 0) - (a.pnl || 0));
+    const best = byPnl[0] || null;
+    const worst = byPnl.length ? byPnl[byPnl.length - 1] : null;
+
+    document.getElementById('mr-stats').innerHTML = list.length ? `
+      <div class="stat-card accent">
+        <div class="label">Total P&amp;L</div>
+        <div class="value ${s.totalPnl >= 0 ? 'pos' : 'neg'}">${fmtMoney(s.totalPnl)}</div>
+        <div class="sub">${list.length} entries · ${s.wins}W ${s.losses}L ${s.be}BE</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Win rate</div>
+        <div class="value">${s.winRate}%</div>
+        <div class="mini-bar"><div class="seg-win" style="width:${s.winRate}%"></div><div class="seg-loss" style="width:${100 - s.winRate}%"></div></div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Profit factor</div>
+        <div class="value">${isFinite(s.profitFactor) ? s.profitFactor.toFixed(2) : '∞'}</div>
+        <div class="sub">gross win vs loss</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Avg win / loss</div>
+        <div class="value" style="font-size:18px;"><span style="color:var(--green)">${fmtMoneyShort(avgWin)}</span> / <span style="color:var(--red)">${fmtMoneyShort(avgLoss)}</span></div>
+        <div class="sub">per trade</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Best trade</div>
+        <div class="value pos" style="font-size:18px;">${best ? fmtMoney(best.pnl) : '—'}</div>
+        <div class="sub">${best ? (best.symbol ? escapeHtml(best.symbol) : 'Untitled') + ' · ' + fmtDateShort(best.date) : 'no trades'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Worst trade</div>
+        <div class="value neg" style="font-size:18px;">${worst ? fmtMoney(worst.pnl) : '—'}</div>
+        <div class="sub">${worst ? (worst.symbol ? escapeHtml(worst.symbol) : 'Untitled') + ' · ' + fmtDateShort(worst.date) : 'no trades'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Rules broken</div>
+        <div class="value${s.rulesBrokenCount ? ' neg' : ''}">${s.rulesBrokenCount}</div>
+        <div class="sub">${Math.round((s.rulesBrokenCount / list.length) * 100)}% of trades</div>
+      </div>
+    ` : `<div class="empty-state"><div class="glyph">—</div><p>No entries logged in ${MONTH_NAMES[mrMonth]} ${mrYear}.</p></div>`;
+
+    renderEquity('mr-equity-wrap', null, list);
+    renderMrBreakdown('mr-session-breakdown', list, ['asia', 'london', 'ny'], sessionLabel, e => e.session);
+    renderMrBreakdown('mr-setup-breakdown', list, ['continuation', 'reversal', 'judas'], setupTypeLabel, e => e.setupType);
+  }
+
+  function renderMrBreakdown(elId, list, keys, labelFn, getKey) {
+    const el = document.getElementById(elId);
+    const rows = keys.map(k => {
+      const sub = list.filter(e => getKey(e) === k);
+      return { key: k, count: sub.length, pnl: sub.reduce((sum, e) => sum + (e.pnl || 0), 0) };
+    }).filter(r => r.count > 0);
+    if (!rows.length) { el.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>No tagged trades this month.</p></div>`; return; }
+    const maxCount = Math.max(1, ...rows.map(r => r.count));
+    el.innerHTML = rows.map(r => `
+      <div class="mistake-bar-row">
+        <div class="mistake-bar-label">${labelFn(r.key)}</div>
+        <div class="mistake-bar-track"><div class="mistake-bar-fill" style="width:${(r.count / maxCount) * 100}%"></div></div>
+        <div class="mistake-bar-count">${r.count} · ${fmtMoney(r.pnl)}</div>
+      </div>
+    `).join('');
+  }
+
   document.getElementById('mistake-tag-add').addEventListener('click', addMistakeTag);
   document.getElementById('mistake-tag-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addMistakeTag(); } });
   function addMistakeTag() {
@@ -4577,7 +4745,7 @@
     item.addEventListener('click', () => {
       activeChecklistCat = item.dataset.checklistcat;
       document.querySelectorAll('#checklist-subnav .subnav-item').forEach(i => i.classList.toggle('active', i.dataset.checklistcat === activeChecklistCat));
-      document.getElementById('checklist-manage-title').textContent = (activeChecklistCat === 'reversal' ? 'Reversal setup' : 'Continuation setup') + ' checklist';
+      document.getElementById('checklist-manage-title').textContent = setupTypeLabel(activeChecklistCat) + ' setup checklist';
       renderChecklistManage();
     });
   });
@@ -5745,6 +5913,9 @@
     const slider = document.getElementById('glow-intensity-slider');
     slider.value = glowIntensity;
     document.getElementById('glow-intensity-value').textContent = glowIntensity + '%';
+    const scaleSlider = document.getElementById('display-scale-slider');
+    scaleSlider.value = displayScale;
+    document.getElementById('display-scale-value').textContent = displayScale + '%';
   }
   document.querySelectorAll('#theme-toggle .mode-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -5759,6 +5930,12 @@
     localStorage.setItem(GLOW_KEY, String(glowIntensity));
     document.getElementById('glow-intensity-value').textContent = glowIntensity + '%';
     applyGlowIntensity();
+  });
+  document.getElementById('display-scale-slider').addEventListener('input', (e) => {
+    displayScale = parseInt(e.target.value, 10);
+    localStorage.setItem(DISPLAY_SCALE_KEY, String(displayScale));
+    document.getElementById('display-scale-value').textContent = displayScale + '%';
+    applyDisplayScale();
   });
 
   // ---------- import / export ----------
@@ -5847,8 +6024,9 @@
               imported.premarketEntries.forEach(p => { if (!existingPmIds.has(p.id)) premarketEntries.push(p); });
             }
             if (imported.checklistCategories && typeof imported.checklistCategories === 'object') {
-              ['continuation', 'reversal'].forEach(cat => {
+              ['continuation', 'reversal', 'judas'].forEach(cat => {
                 if (Array.isArray(imported.checklistCategories[cat])) {
+                  if (!checklistCategories[cat]) checklistCategories[cat] = [];
                   const existing = new Set(checklistCategories[cat]);
                   imported.checklistCategories[cat].forEach(c => { if (!existing.has(c)) checklistCategories[cat].push(c); });
                 }
@@ -5872,8 +6050,8 @@
             if (imported.milestone && typeof imported.milestone === 'object') milestone = imported.milestone;
             if (imported.notes && typeof imported.notes === 'object' && Array.isArray(imported.notes.notes)) notesStore = imported.notes;
             if (Array.isArray(imported.premarketEntries)) premarketEntries = imported.premarketEntries;
-            if (imported.checklistCategories && typeof imported.checklistCategories === 'object') checklistCategories = imported.checklistCategories;
-            else if (Array.isArray(imported.checklistItems)) checklistCategories = { continuation: imported.checklistItems, reversal: checklistCategories.reversal };
+            if (imported.checklistCategories && typeof imported.checklistCategories === 'object') { checklistCategories = imported.checklistCategories; if (!checklistCategories.judas) checklistCategories.judas = []; }
+            else if (Array.isArray(imported.checklistItems)) checklistCategories = { continuation: imported.checklistItems, reversal: checklistCategories.reversal, judas: checklistCategories.judas };
           }
 
           saveEntries();
@@ -6176,7 +6354,7 @@
       if (Array.isArray(s.goals)) goals = s.goals;
       if (s.weeklyReviews) weeklyReviews = s.weeklyReviews;
       if (Array.isArray(s.mistakeTags)) mistakeTags = s.mistakeTags;
-      if (s.checklistCategories) checklistCategories = s.checklistCategories;
+      if (s.checklistCategories) { checklistCategories = s.checklistCategories; if (!checklistCategories.judas) checklistCategories.judas = []; }
       if (Array.isArray(s.focusRules)) focusRules = s.focusRules;
       if (typeof s.focusIndex === 'number') focusIndex = s.focusIndex;
       if (s.milestone) milestone = s.milestone;

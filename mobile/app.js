@@ -4,6 +4,10 @@
     try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
     catch (e) { return fallback; }
   }
+  const SETUP_TYPE_LABELS = { continuation: 'Continuation', reversal: 'Reversal', judas: 'Judas Swing' };
+  function setupTypeLabel(t) { return SETUP_TYPE_LABELS[t] || t; }
+  const SESSION_LABELS = { asia: 'Asia', london: 'London', ny: 'New York' };
+  function sessionLabel(s) { return SESSION_LABELS[s] || s; }
   const KEYS = {
     entries: 'lvd_journal_entries',
     premarket: 'lvd_premarket_entries',
@@ -333,7 +337,8 @@
         <div class="tcard-body">
           <div class="tcard-pnl ${e.result}">${sign}${fmtMoney(Math.abs(e.pnl))}</div>
           <div class="tcard-result ${e.result}">${rl}</div>
-          ${e.setupType ? `<div class="tcard-setup">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</div>` : ''}
+          ${e.setupType ? `<div class="tcard-setup">${setupTypeLabel(e.setupType)}</div>` : ''}
+          ${e.session ? `<div class="tcard-setup">${sessionLabel(e.session)} session</div>` : ''}
         </div>
         <div class="tcard-actions">
           <button data-more="${e.id}" type="button">See more</button>
@@ -372,10 +377,48 @@
 
   // ---------- clean, screenshottable card ----------
   const cleanCardEl = document.getElementById('cleancard');
-  cleanCardEl.addEventListener('click', () => cleanCardEl.classList.remove('open'));
+  let cleanCardEntryId = null;
+  let ccTouchStartX = 0, ccTouchStartY = 0, ccSwiped = false;
+  cleanCardEl.addEventListener('touchstart', (ev) => {
+    const t = ev.touches[0];
+    ccTouchStartX = t.clientX; ccTouchStartY = t.clientY; ccSwiped = false;
+  }, { passive: true });
+  cleanCardEl.addEventListener('touchend', (ev) => {
+    if (!cleanCardEntryId) return;
+    const t = ev.changedTouches[0];
+    const dx = t.clientX - ccTouchStartX, dy = t.clientY - ccTouchStartY;
+    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      ccSwiped = true;
+      cycleCleanCardPhoto(dx < 0 ? 1 : -1);
+    }
+  });
+  cleanCardEl.addEventListener('click', () => {
+    if (ccSwiped) { ccSwiped = false; return; }
+    cleanCardEl.classList.remove('open');
+    cleanCardEntryId = null;
+  });
+  function cycleCleanCardPhoto(dir) {
+    const e = entries.find(x => x.id === cleanCardEntryId);
+    if (!e) return;
+    const photos = photosForEntry(e);
+    if (photos.length < 2) return;
+    setBgPhotoIndex(cleanCardEntryId, (e.bgPhotoIndex || 0) + dir);
+    showCleanCard(cleanCardEntryId);
+  }
+  function setBgPhotoIndex(id, index) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+    const photos = photosForEntry(e);
+    if (!photos.length) return;
+    e.bgPhotoIndex = ((index % photos.length) + photos.length) % photos.length;
+    persistEntries();
+    renderEntriesList();
+    try { if (window.LvdSync) LvdSync.pushCollection('entries'); } catch (err) { console.error(err); }
+  }
   function showCleanCard(id) {
     const e = entries.find(x => x.id === id);
     if (!e) return;
+    cleanCardEntryId = id;
     const photos = photosForEntry(e);
     const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
     const cc = document.getElementById('cleancard-body');
@@ -384,7 +427,10 @@
       ? `linear-gradient(180deg,rgba(9,9,9,0.2),rgba(9,9,9,0.62) 55%,rgba(9,9,9,0.96)),url('${photos[idx]}')` : '';
     const rl = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
     const sign = e.result === 'win' ? '+' : e.result === 'loss' ? '-' : '';
+    const dots = photos.length > 1
+      ? `<div class="cc-dots">${photos.map((_, i) => `<span class="${i === idx ? 'on' : ''}"></span>`).join('')}</div>` : '';
     cc.innerHTML = `
+      ${dots}
       ${tradeChartSVG(e).replace('class="tcard-chart"', 'class="cc-chart"')}
       <div class="cc-top">
         <div class="cc-sym">${escapeHtml(e.symbol || 'Untitled trade')}</div>
@@ -393,7 +439,8 @@
       <div class="cc-bot">
         <div class="cc-pnl ${e.result}">${sign}${fmtMoney(Math.abs(e.pnl))}</div>
         <div class="cc-res ${e.result}">${rl}</div>
-        ${e.setupType ? `<div class="cc-setup">${e.setupType === 'reversal' ? 'Reversal' : 'Continuation'}</div>` : ''}
+        ${e.setupType ? `<div class="cc-setup">${setupTypeLabel(e.setupType)}</div>` : ''}
+        ${e.session ? `<div class="cc-setup">${sessionLabel(e.session)} session</div>` : ''}
         <div class="cc-brand">LARPENATOR <span>3000</span></div>
       </div>`;
     cleanCardEl.classList.add('open');
@@ -428,6 +475,7 @@
     }));
   }
   function showImageFull(src) {
+    cleanCardEntryId = null;
     const cc = document.getElementById('cleancard-body');
     cc.className = 'cc no-photo';
     cc.style.backgroundImage = '';
