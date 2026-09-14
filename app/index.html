@@ -472,7 +472,14 @@
     .card, .stats-strip, .entry-card, .stat-card, .mistake-bar-track { break-inside: avoid; border-color: #ddd !important; box-shadow: none !important; background: #fff !important; }
     .stats-strip { background: #ddd !important; }
     .stats-strip .stat { background: #fff !important; }
-    .printable { --ink: #111; --ink-dim: #555; --ink-faint: #888; }
+    .printable {
+      --ink: #14161c; --ink-dim: #565d6d; --ink-faint: #878e9e;
+      --green: #16a35f; --green-dim: #a9dcc3;
+      --red: #d9483c; --red-dim: #f0c3bf;
+      --amber: #b8690a; --amber-dim: #f0d3ab;
+      --border: rgba(20,25,40,0.09); --border-strong: rgba(20,25,40,0.17);
+      --surface: #fff;
+    }
     .printable svg line { stroke: rgba(0,0,0,0.15) !important; }
     .mistake-bar-fill { background: #16a35f !important; }
   }
@@ -482,7 +489,15 @@
   .doc-preview-modal.open { display: flex; animation: lbFade .18s ease; }
   .doc-preview-inner { background: #fff; width: 100%; max-width: 900px; border-radius: 12px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.5); }
   .doc-preview-toolbar { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 20px; background: #f0f0f0; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 1; }
-  .doc-preview-page { padding: 30px 36px 50px; color: #111; --ink: #111; --ink-dim: #555; --ink-faint: #888; }
+  .doc-preview-page {
+    padding: 30px 36px 50px; color: #14161c;
+    --ink: #14161c; --ink-dim: #565d6d; --ink-faint: #878e9e;
+    --green: #16a35f; --green-dim: #a9dcc3;
+    --red: #d9483c; --red-dim: #f0c3bf;
+    --amber: #b8690a; --amber-dim: #f0d3ab;
+    --border: rgba(20,25,40,0.09); --border-strong: rgba(20,25,40,0.17);
+    --surface: #fff;
+  }
   .doc-preview-page .card, .doc-preview-page .stats-strip, .doc-preview-page .entry-card, .doc-preview-page .stat-card, .doc-preview-page .mistake-bar-track { border-color: #ddd; box-shadow: none; background: #fff; }
   .doc-preview-page .stats-strip { background: #ddd; }
   .doc-preview-page .stats-strip .stat { background: #fff; }
@@ -3931,7 +3946,14 @@
     const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xAt(i).toFixed(1)} ${yAt(p.cum).toFixed(1)}`).join(' ');
     const areaPath = `${linePath} L ${xAt(points.length - 1).toFixed(1)} ${zeroY.toFixed(1)} L ${xAt(0).toFixed(1)} ${zeroY.toFixed(1)} Z`;
     const finalVal = values[values.length - 1];
-    const lineColor = finalVal >= 0 ? '#30d68a' : '#ef6a5f';
+    const cs = getComputedStyle(wrap);
+    const posColor = (cs.getPropertyValue('--green') || '#30d68a').trim();
+    const negColor = (cs.getPropertyValue('--red') || '#ef6a5f').trim();
+    const gridColor = (cs.getPropertyValue('--border') || 'rgba(255,255,255,0.07)').trim();
+    const zeroLineColor = (cs.getPropertyValue('--border-strong') || 'rgba(255,255,255,0.14)').trim();
+    const hoverLineColor = (cs.getPropertyValue('--ink-faint') || '#5c6370').trim();
+    const surfaceColor = (cs.getPropertyValue('--surface') || '#0a0a0c').trim();
+    const lineColor = finalVal >= 0 ? posColor : negColor;
     const lastX = xAt(points.length - 1), lastY = yAt(finalVal);
     const gradId = 'eqGrad-' + wrapId;
 
@@ -3942,13 +3964,13 @@
           <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.32"/>
           <stop offset="100%" stop-color="${lineColor}" stop-opacity="0"/>
         </linearGradient></defs>
-        ${[0.25, 0.5, 0.75].map(f => { const gy = padT + plotH * f; return `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${width - padR}" y2="${gy.toFixed(1)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`; }).join('')}
-        <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${width - padR}" y2="${zeroY.toFixed(1)}" stroke="#2a2c31" stroke-width="1" stroke-dasharray="4 4"/>
+        ${[0.25, 0.5, 0.75].map(f => { const gy = padT + plotH * f; return `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${width - padR}" y2="${gy.toFixed(1)}" stroke="${gridColor}" stroke-width="1"/>`; }).join('')}
+        <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${width - padR}" y2="${zeroY.toFixed(1)}" stroke="${zeroLineColor}" stroke-width="1" stroke-dasharray="4 4"/>
         <path d="${areaPath}" fill="url(#${gradId})" stroke="none"/>
         <path d="${linePath}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
         <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="4.5" fill="${lineColor}"/>
-        <line class="eq-hover-line" x1="0" y1="${padT}" x2="0" y2="${height - padB}" stroke="#5c5e66" stroke-width="1" stroke-dasharray="3 3" style="display:none;"/>
-        <circle class="eq-hover-dot" r="5" fill="${lineColor}" stroke="#0a0a0c" stroke-width="1.5" style="display:none;"/>
+        <line class="eq-hover-line" x1="0" y1="${padT}" x2="0" y2="${height - padB}" stroke="${hoverLineColor}" stroke-width="1" stroke-dasharray="3 3" style="display:none;"/>
+        <circle class="eq-hover-dot" r="5" fill="${lineColor}" stroke="${surfaceColor}" stroke-width="1.5" style="display:none;"/>
         <rect class="eq-hover-zone" x="0" y="0" width="${width}" height="${height}" fill="transparent"/>
       </svg>
       <div class="equity-caption"><span>${fmtDate(points[0].date)}</span><span>${fmtDate(points[points.length - 1].date)}</span></div>
@@ -4138,7 +4160,30 @@
   document.getElementById('mr-next').addEventListener('click', () => { mrMonth++; if (mrMonth > 11) { mrMonth = 0; mrYear++; } renderMonthlyReport(); });
   document.getElementById('mr-today').addEventListener('click', () => { mrYear = todayDate.getFullYear(); mrMonth = todayDate.getMonth(); renderMonthlyReport(); });
   document.getElementById('mr-print-btn').addEventListener('click', () => window.print());
-  document.getElementById('mr-view-btn').addEventListener('click', () => openDocPreview('mr-printable'));
+  document.getElementById('mr-view-btn').addEventListener('click', () => {
+    openDocPreview('mr-printable');
+    // re-render the equity chart inside the cloned document so it picks up
+    // the print-safe muted colors instead of the dark-theme neon it was
+    // originally drawn with (colors are baked into the SVG at draw time).
+    const clonedWrap = document.querySelector('#doc-preview-page [id="mr-equity-wrap"]');
+    if (clonedWrap) { clonedWrap.id = 'doc-mr-equity-wrap'; renderEquity('doc-mr-equity-wrap', null, mrMonthList()); }
+  });
+
+  function mrMonthList() {
+    const prefix = `${mrYear}-${String(mrMonth + 1).padStart(2, '0')}`;
+    return entries.filter(e => e.date && e.date.startsWith(prefix));
+  }
+
+  // the real OS print dialog applies @media print styles to the live DOM
+  // (not a clone), so re-draw the equity chart right before printing too.
+  window.addEventListener('beforeprint', () => {
+    if (document.getElementById('section-monthly-report').classList.contains('active')) {
+      renderEquity('mr-equity-wrap', null, mrMonthList());
+    }
+  });
+  window.addEventListener('afterprint', () => {
+    if (document.getElementById('section-monthly-report').classList.contains('active')) renderMonthlyReport();
+  });
 
   const docPreviewModal = document.getElementById('doc-preview-modal');
   function openDocPreview(printableId) {
@@ -4152,8 +4197,7 @@
   function renderMonthlyReport() {
     document.getElementById('mr-title').textContent = `${MONTH_NAMES[mrMonth]} ${mrYear}`;
     document.getElementById('mr-print-label').textContent = `${MONTH_NAMES[mrMonth]} ${mrYear}`;
-    const prefix = `${mrYear}-${String(mrMonth + 1).padStart(2, '0')}`;
-    const list = entries.filter(e => e.date && e.date.startsWith(prefix));
+    const list = mrMonthList();
     const s = computeStats(list);
     const avgWin = s.wins ? list.filter(e => e.result === 'win').reduce((sum, e) => sum + (e.pnl || 0), 0) / s.wins : 0;
     const avgLoss = s.losses ? list.filter(e => e.result === 'loss').reduce((sum, e) => sum + (e.pnl || 0), 0) / s.losses : 0;
