@@ -469,9 +469,12 @@
     .print-header { display: block; margin-bottom: 18px; }
     .print-header h1 { font-size: 20px; margin: 0 0 3px; color: #111; }
     .print-header p { font-size: 12px; color: #555; margin: 0; }
-    .card, .stats-strip, .entry-card { break-inside: avoid; border-color: #ddd !important; box-shadow: none !important; background: #fff !important; }
+    .card, .stats-strip, .entry-card, .stat-card, .mistake-bar-track { break-inside: avoid; border-color: #ddd !important; box-shadow: none !important; background: #fff !important; }
     .stats-strip { background: #ddd !important; }
     .stats-strip .stat { background: #fff !important; }
+    .printable { --ink: #111; --ink-dim: #555; --ink-faint: #888; }
+    .printable svg line { stroke: rgba(0,0,0,0.15) !important; }
+    .mistake-bar-fill { background: #16a35f !important; }
   }
 
   .pnl-input-wrap { position: relative; }
@@ -1758,10 +1761,14 @@
       </div>
     </section>
 
-    <!-- DATA -->
     <!-- MONTHLY REPORT -->
     <section class="section" id="section-monthly-report">
-      <div class="page-head"><h1>Monthly Report</h1><p>Your performance broken down by month.</p></div>
+      <div class="page-head dash-head">
+        <div><h1>Monthly Report</h1><p>Your performance broken down by month.</p></div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn ghost small" id="mr-print-btn" type="button">Print report</button>
+        </div>
+      </div>
 
       <div class="card" style="margin-bottom:22px;">
         <div class="cal-card-head">
@@ -1774,21 +1781,25 @@
         </div>
       </div>
 
-      <div class="stat-row" id="mr-stats"></div>
+      <div class="printable" id="mr-printable">
+        <div class="print-header"><h1>Larpenator 3000 — Monthly Report</h1><p id="mr-print-label"></p></div>
 
-      <div class="card" style="margin-top:22px;">
-        <div class="cal-card-head"><h3>Equity curve</h3></div>
-        <div id="mr-equity-wrap"></div>
-      </div>
+        <div class="stat-row" id="mr-stats"></div>
 
-      <div class="card" style="margin-top:22px;">
-        <div class="cal-card-head"><h3>By session</h3></div>
-        <div id="mr-session-breakdown"></div>
-      </div>
+        <div class="card" style="margin-top:22px;">
+          <div class="cal-card-head"><h3>Equity curve</h3></div>
+          <div id="mr-equity-wrap"></div>
+        </div>
 
-      <div class="card" style="margin-top:22px;">
-        <div class="cal-card-head"><h3>By setup</h3></div>
-        <div id="mr-setup-breakdown"></div>
+        <div class="card" style="margin-top:22px;">
+          <div class="cal-card-head"><h3>By session</h3></div>
+          <div id="mr-session-breakdown"></div>
+        </div>
+
+        <div class="card" style="margin-top:22px;">
+          <div class="cal-card-head"><h3>By setup</h3></div>
+          <div id="mr-setup-breakdown"></div>
+        </div>
       </div>
     </section>
 
@@ -4100,9 +4111,11 @@
   document.getElementById('mr-prev').addEventListener('click', () => { mrMonth--; if (mrMonth < 0) { mrMonth = 11; mrYear--; } renderMonthlyReport(); });
   document.getElementById('mr-next').addEventListener('click', () => { mrMonth++; if (mrMonth > 11) { mrMonth = 0; mrYear++; } renderMonthlyReport(); });
   document.getElementById('mr-today').addEventListener('click', () => { mrYear = todayDate.getFullYear(); mrMonth = todayDate.getMonth(); renderMonthlyReport(); });
+  document.getElementById('mr-print-btn').addEventListener('click', () => window.print());
 
   function renderMonthlyReport() {
     document.getElementById('mr-title').textContent = `${MONTH_NAMES[mrMonth]} ${mrYear}`;
+    document.getElementById('mr-print-label').textContent = `${MONTH_NAMES[mrMonth]} ${mrYear}`;
     const prefix = `${mrYear}-${String(mrMonth + 1).padStart(2, '0')}`;
     const list = entries.filter(e => e.date && e.date.startsWith(prefix));
     const s = computeStats(list);
