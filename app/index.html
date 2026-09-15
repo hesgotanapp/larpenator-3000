@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect x='1' y='1' width='38' height='38' rx='10' fill='%23111112'/><line x1='20' y1='6.5' x2='20' y2='33.5' stroke='%2330d68a' stroke-width='2.8' stroke-linecap='round'/><rect x='14' y='13' width='12' height='14.5' rx='2.8' fill='%2330d68a'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #090909;
@@ -506,6 +506,37 @@
   .doc-preview-page .print-header { display: block; margin-bottom: 18px; }
   .doc-preview-page .print-header h1 { font-size: 20px; margin: 0 0 3px; color: #111; }
   .doc-preview-page .print-header p { font-size: 12px; color: #555; margin: 0; }
+
+  /* ---------- Monthly Report document ("Accent Report") — print + doc-preview ---------- */
+  .mr-doc { background: #fbf9f4; color: #241f17; font-family: 'Work Sans', sans-serif; padding: 6px 4px 20px; }
+  .mr-doc .mrd-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .mr-doc .mrd-head h1 { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 600; margin: 0; letter-spacing: -0.3px; }
+  .mr-doc .mrd-period { font-family: var(--font-mono); font-size: 12px; color: #8c8168; text-align: right; line-height: 1.5; }
+  .mr-doc .mrd-rule { height: 3px; background: #3b7a56; border-radius: 2px; margin: 14px 0 26px; width: 64px; }
+  .mr-doc .mrd-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 26px; margin-bottom: 30px; }
+  .mr-doc .mrd-stats .full { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px; padding-top: 18px; border-top: 1px solid rgba(36,31,23,0.12); }
+  .mr-doc .mrd-stat .k { font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; color: #8c8168; margin-bottom: 8px; }
+  .mr-doc .mrd-stat .v { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 600; }
+  .mr-doc .mrd-stat .v.accent { color: #3b7a56; }
+  .mr-doc .mrd-stat .sub { font-size: 11.5px; color: #8c8168; margin-top: 6px; }
+  .mr-doc .mrd-card { margin-top: 28px; }
+  .mr-doc .mrd-card h3 { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600; margin: 0 0 16px; }
+  .mr-doc .mrd-eq-svg { display: block; width: 100%; height: auto; }
+  .mr-doc .mrd-eq-caption { display: flex; justify-content: space-between; font-size: 11px; color: #8c8168; font-family: var(--font-mono); margin-top: 6px; }
+  .mr-doc .mrd-groups { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 28px; }
+  .mr-doc .mrd-groups h3 { font-family: 'Fraunces', serif; font-size: 15px; font-weight: 600; margin: 0 0 14px; }
+  .mr-doc .mrd-empty { font-size: 12.5px; color: #8c8168; }
+  .mr-doc .mrd-bar-row { display: flex; align-items: center; gap: 14px; }
+  .mr-doc .mrd-bar-row + .mrd-bar-row { margin-top: 11px; }
+  .mr-doc .mrd-bar-label { flex: 0 0 100px; font-size: 13px; }
+  .mr-doc .mrd-bar-track { flex: 1 1 auto; min-width: 30px; height: 8px; border-radius: 4px; background: rgba(59,122,86,0.1); overflow: hidden; }
+  .mr-doc .mrd-bar-fill { height: 100%; border-radius: 4px; background: #3b7a56; min-width: 3px; }
+  .mr-doc .mrd-bar-count { flex: 0 0 auto; white-space: nowrap; text-align: right; font-family: var(--font-mono); font-size: 12px; color: #52483a; }
+  @media (max-width: 640px) {
+    .mr-doc .mrd-stats, .mr-doc .mrd-stats .full { grid-template-columns: repeat(2, 1fr); }
+    .mr-doc .mrd-groups { grid-template-columns: 1fr; }
+  }
+  @media print { .mr-doc { background: #fbf9f4 !important; } .mr-doc .mrd-card, .mr-doc .mrd-stat { break-inside: avoid; } }
 
   .pnl-input-wrap { position: relative; }
   .pnl-input-wrap input { padding-left: 26px; font-family: var(--font-mono); }
@@ -4161,12 +4192,8 @@
   document.getElementById('mr-today').addEventListener('click', () => { mrYear = todayDate.getFullYear(); mrMonth = todayDate.getMonth(); renderMonthlyReport(); });
   document.getElementById('mr-print-btn').addEventListener('click', () => window.print());
   document.getElementById('mr-view-btn').addEventListener('click', () => {
-    openDocPreview('mr-printable');
-    // re-render the equity chart inside the cloned document so it picks up
-    // the print-safe muted colors instead of the dark-theme neon it was
-    // originally drawn with (colors are baked into the SVG at draw time).
-    const clonedWrap = document.querySelector('#doc-preview-page [id="mr-equity-wrap"]');
-    if (clonedWrap) { clonedWrap.id = 'doc-mr-equity-wrap'; renderEquity('doc-mr-equity-wrap', null, mrMonthList()); }
+    document.getElementById('doc-preview-page').innerHTML = buildMrDocHTML(mrMonthList(), `${MONTH_NAMES[mrMonth]} ${mrYear}`);
+    docPreviewModal.classList.add('open');
   });
 
   function mrMonthList() {
@@ -4174,11 +4201,12 @@
     return entries.filter(e => e.date && e.date.startsWith(prefix));
   }
 
-  // the real OS print dialog applies @media print styles to the live DOM
-  // (not a clone), so re-draw the equity chart right before printing too.
+  // the real OS print dialog prints the live DOM, so swap #mr-printable to
+  // the same document markup the "View document" preview uses right before
+  // printing, then restore the normal dashboard-style view after.
   window.addEventListener('beforeprint', () => {
     if (document.getElementById('section-monthly-report').classList.contains('active')) {
-      renderEquity('mr-equity-wrap', null, mrMonthList());
+      document.getElementById('mr-printable').innerHTML = buildMrDocHTML(mrMonthList(), `${MONTH_NAMES[mrMonth]} ${mrYear}`);
     }
   });
   window.addEventListener('afterprint', () => {
@@ -4186,13 +4214,113 @@
   });
 
   const docPreviewModal = document.getElementById('doc-preview-modal');
-  function openDocPreview(printableId) {
-    document.getElementById('doc-preview-page').innerHTML = document.getElementById(printableId).innerHTML;
-    docPreviewModal.classList.add('open');
-  }
   document.getElementById('doc-preview-close').addEventListener('click', () => docPreviewModal.classList.remove('open'));
   document.getElementById('doc-preview-print').addEventListener('click', () => window.print());
   docPreviewModal.addEventListener('click', (ev) => { if (ev.target === docPreviewModal) docPreviewModal.classList.remove('open'); });
+
+  // ---------- Monthly Report document ("Accent Report" style) ----------
+  function fmtMoneyParen(n) { return n < 0 ? `(${fmtMoney(Math.abs(n))})` : fmtMoney(n); }
+
+  function mrComputeSummary(list) {
+    const s = computeStats(list);
+    const avgWin = s.wins ? list.filter(e => e.result === 'win').reduce((sum, e) => sum + (e.pnl || 0), 0) / s.wins : 0;
+    const avgLoss = s.losses ? list.filter(e => e.result === 'loss').reduce((sum, e) => sum + (e.pnl || 0), 0) / s.losses : 0;
+    const byPnl = [...list].sort((a, b) => (b.pnl || 0) - (a.pnl || 0));
+    return { s, avgWin, avgLoss, best: byPnl[0] || null, worst: byPnl.length ? byPnl[byPnl.length - 1] : null };
+  }
+
+  function buildMrDocEquitySVG(list) {
+    const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt);
+    let cum = 0;
+    const points = sorted.map(e => { cum += e.pnl || 0; return cum; });
+    const maxV = Math.max(0, ...points), minV = Math.min(0, ...points);
+    const range = (maxV - minV) || 1;
+    const W = 600, H = 140, padL = 20, padR = 20, padT = 15, padB = 15;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const xStep = points.length > 1 ? plotW / (points.length - 1) : 0;
+    const xAt = i => padL + (points.length > 1 ? i * xStep : plotW / 2);
+    const yAt = v => padT + plotH - ((v - minV) / range) * plotH;
+    const zeroY = yAt(0);
+    const linePts = points.map((v, i) => `${xAt(i).toFixed(1)},${yAt(v).toFixed(1)}`).join(' ');
+    const areaPts = `${linePts} ${xAt(points.length - 1).toFixed(1)},${(H - padB).toFixed(1)} ${xAt(0).toFixed(1)},${(H - padB).toFixed(1)}`;
+    const lastX = xAt(points.length - 1), lastY = yAt(points[points.length - 1]);
+    const svg = `
+      <svg class="mrd-eq-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${W - padR}" y2="${zeroY.toFixed(1)}" stroke="rgba(36,31,23,0.1)" stroke-width="1"/>
+        <defs><linearGradient id="mrdGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b7a56" stop-opacity="0.3"/><stop offset="100%" stop-color="#3b7a56" stop-opacity="0"/></linearGradient></defs>
+        <polygon points="${areaPts}" fill="url(#mrdGrad)"/>
+        <polyline points="${linePts}" fill="none" stroke="#3b7a56" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="4" fill="#3b7a56"/>
+      </svg>`;
+    return { svg, capL: fmtDate(sorted[0].date), capR: fmtDate(sorted[sorted.length - 1].date) };
+  }
+
+  function mrDocBarRows(list, keys, labelFn, getKey) {
+    const rows = keys.map(k => {
+      const sub = list.filter(e => getKey(e) === k);
+      return { key: k, count: sub.length, pnl: sub.reduce((sum, e) => sum + (e.pnl || 0), 0) };
+    }).filter(r => r.count > 0);
+    if (!rows.length) return `<div class="mrd-empty">No tagged trades this month.</div>`;
+    const maxCount = Math.max(1, ...rows.map(r => r.count));
+    return rows.map(r => `
+      <div class="mrd-bar-row">
+        <div class="mrd-bar-label">${labelFn(r.key)}</div>
+        <div class="mrd-bar-track"><div class="mrd-bar-fill" style="width:${(r.count / maxCount) * 100}%"></div></div>
+        <div class="mrd-bar-count">${r.count} · ${fmtMoneyParen(r.pnl)}</div>
+      </div>
+    `).join('');
+  }
+
+  function buildMrDocHTML(list, monthLabel) {
+    const head = `
+      <div class="mrd-head">
+        <h1>Monthly Report</h1>
+        <div class="mrd-period">${escapeHtml(monthLabel.toUpperCase())}<br>LARPENATOR 3000</div>
+      </div>
+      <div class="mrd-rule"></div>`;
+    if (!list.length) {
+      return `<div class="mr-doc">${head}<div class="mrd-empty">No entries logged in ${escapeHtml(monthLabel)}.</div></div>`;
+    }
+    const { s, avgWin, avgLoss, best, worst } = mrComputeSummary(list);
+    const eq = buildMrDocEquitySVG(list);
+    const sessionAgg = ['asia', 'london', 'ny']
+      .map(k => ({ k, count: list.filter(e => e.session === k).length, pnl: list.filter(e => e.session === k).reduce((sum, e) => sum + (e.pnl || 0), 0) }))
+      .filter(r => r.count > 0);
+    const bestSession = sessionAgg.length ? sessionAgg.reduce((a, b) => (b.pnl > a.pnl ? b : a)) : null;
+
+    return `<div class="mr-doc">
+      ${head}
+      <div class="mrd-stats">
+        <div class="mrd-stat"><div class="k">Net P&amp;L</div><div class="v${s.totalPnl >= 0 ? ' accent' : ''}">${fmtMoneyParen(s.totalPnl)}</div><div class="sub">${s.wins}W · ${s.losses}L · ${s.be}BE</div></div>
+        <div class="mrd-stat"><div class="k">Win rate</div><div class="v">${s.winRate}%</div><div class="sub">of ${s.wins + s.losses} decisive trades</div></div>
+        <div class="mrd-stat"><div class="k">Profit factor</div><div class="v">${isFinite(s.profitFactor) ? s.profitFactor.toFixed(2) : '∞'}</div><div class="sub">gross win vs. loss</div></div>
+        <div class="mrd-stat"><div class="k">Rules broken</div><div class="v">${s.rulesBrokenCount}</div><div class="sub">${Math.round((s.rulesBrokenCount / list.length) * 100)}% of trades</div></div>
+        <div class="full">
+          <div class="mrd-stat"><div class="k">Avg win / loss</div><div class="v" style="font-size:19px;"><span class="accent">${fmtMoney(avgWin)}</span> / ${fmtMoneyParen(avgLoss)}</div></div>
+          <div class="mrd-stat"><div class="k">Best trade</div><div class="v accent" style="font-size:19px;">${best ? fmtMoney(best.pnl) : '—'}</div><div class="sub">${best ? (best.symbol ? escapeHtml(best.symbol) : 'Untitled') + ' · ' + fmtDateShort(best.date) : ''}</div></div>
+          <div class="mrd-stat"><div class="k">Worst trade</div><div class="v" style="font-size:19px;">${worst ? fmtMoneyParen(worst.pnl) : '—'}</div><div class="sub">${worst ? (worst.symbol ? escapeHtml(worst.symbol) : 'Untitled') + ' · ' + fmtDateShort(worst.date) : ''}</div></div>
+          <div class="mrd-stat"><div class="k">Best session</div><div class="v" style="font-size:19px;">${bestSession ? sessionLabel(bestSession.k) : '—'}</div><div class="sub">${bestSession ? fmtMoney(bestSession.pnl) + ' across ' + bestSession.count : ''}</div></div>
+        </div>
+      </div>
+
+      <div class="mrd-card">
+        <h3>Equity curve</h3>
+        ${eq.svg}
+        <div class="mrd-eq-caption"><span>${eq.capL}</span><span>${eq.capR}</span></div>
+      </div>
+
+      <div class="mrd-groups">
+        <div>
+          <h3>By session</h3>
+          ${mrDocBarRows(list, ['asia', 'london', 'ny'], sessionLabel, e => e.session)}
+        </div>
+        <div>
+          <h3>By setup</h3>
+          ${mrDocBarRows(list, ['continuation', 'reversal', 'judas'], setupTypeLabel, e => e.setupType)}
+        </div>
+      </div>
+    </div>`;
+  }
 
   function renderMonthlyReport() {
     document.getElementById('mr-title').textContent = `${MONTH_NAMES[mrMonth]} ${mrYear}`;
