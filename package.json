@@ -53,7 +53,8 @@
       "category": "Office"
     },
     "publish": {
-      "provider": "github"
+      "provider": "github",
+      "draft": false
     }
   }
 }
