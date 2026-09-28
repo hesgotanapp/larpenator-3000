@@ -1477,13 +1477,20 @@
   .dash-big.pos, .dash-big.neg { animation: heroGlow 3.6s ease-in-out infinite alternate; }
   @keyframes heroGlow { from { text-shadow: 0 0 0 transparent; } to { text-shadow: 0 0 22px color-mix(in srgb, currentColor 38%, transparent); } }
   /* light sweeps across the goal bar and the edge bars */
-  .milestone-fill::before, .edge-track i::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent); transform: translateX(-120%); pointer-events: none; }
+  .milestone-fill::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent); transform: translateX(-120%); pointer-events: none; }
   .milestone-fill::before { animation: barSweep 5s 2.2s ease-in-out infinite; }
-  .edge-track i { position: relative; overflow: hidden; }
-  .edge-track i::after { animation: barSweep 6.5s 2.6s ease-in-out infinite; }
-  .edge-row:nth-child(2) .edge-track i::after { animation-delay: 2.8s; }
-  .edge-row:nth-child(3) .edge-track i::after { animation-delay: 3s; }
-  .edge-row:nth-child(n+4) .edge-track i::after { animation-delay: 3.2s; }
+  /* edge bars: grow in, then keep moving - light runs the full track, the green part glows, its tip flickers, P&L breathes */
+  .edge-track { position: relative; }
+  .edge-track::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 35%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.34), transparent); transform: translateX(-120%); pointer-events: none; animation: edgeSweep 3.6s 1s ease-in-out infinite; animation-delay: calc(1s + var(--er, 0) * .3s); }
+  @keyframes edgeSweep { 0% { transform: translateX(-120%); } 55%, 100% { transform: translateX(300%); } }
+  .edge-track i { position: relative; overflow: hidden; transform-origin: left; animation: edgeGrow .9s cubic-bezier(.2,.8,.2,1) both, edgeGlow 2.6s .9s ease-in-out infinite alternate; animation-delay: calc(var(--er, 0) * .07s), calc(.9s + var(--er, 0) * .25s); }
+  @keyframes edgeGrow { from { transform: scaleX(0); } }
+  @keyframes edgeGlow { from { filter: brightness(1); box-shadow: 0 0 0 transparent; } to { filter: brightness(1.28); box-shadow: 0 0 8px color-mix(in srgb, var(--green) 70%, transparent); } }
+  .edge-track i::before { content: ''; position: absolute; top: 0; bottom: 0; right: 0; width: 3px; background: #f2fff8; box-shadow: 0 0 6px #f2fff8; animation: edgeTip 1.4s ease-in-out infinite alternate; animation-delay: calc(var(--er, 0) * .18s); }
+  @keyframes edgeTip { from { opacity: .15; } to { opacity: .95; } }
+  .edge-row.none .edge-track::after { opacity: .5; }
+  .edge-pnl.pos, .edge-pnl.neg { animation: edgePnl 3s ease-in-out infinite alternate; animation-delay: calc(var(--er, 0) * .3s); }
+  @keyframes edgePnl { from { text-shadow: 0 0 0 transparent; } to { text-shadow: 0 0 10px color-mix(in srgb, currentColor 55%, transparent); } }
   @keyframes barSweep { 0% { transform: translateX(-120%); } 40%, 100% { transform: translateX(300%); } }
   /* today's calendar day breathes */
   .cal-mini-cell.today { position: relative; }
@@ -1506,12 +1513,13 @@
   .section .card { transition: border-color .25s ease, box-shadow .25s ease; }
   .section .card:hover { border-color: var(--border-strong); }
 
-  html.calm .eq-comet, html.calm .eq-ring, html.calm .eq-end, html.calm .eq-zero, html.calm .dash-big, html.calm .milestone-fill::before, html.calm .edge-track i::after, html.calm .cal-mini-cell.today::after, html.calm .cal-cell.today::after, html.calm .news-row.next .news-title::before, html.calm .streak-mini-pips .streak-pip:last-child::after, html.calm .brand .brand-accent, html.calm .nav-bar { animation: none !important; }
+  html.calm .eq-comet, html.calm .eq-ring, html.calm .eq-end, html.calm .eq-zero, html.calm .dash-big, html.calm .milestone-fill::before, html.calm .edge-track::after, html.calm .edge-track i::before, html.calm .edge-pnl, html.calm .cal-mini-cell.today::after, html.calm .cal-cell.today::after, html.calm .news-row.next .news-title::before, html.calm .streak-mini-pips .streak-pip:last-child::after, html.calm .brand .brand-accent, html.calm .nav-bar { animation: none !important; }
   html.calm .eq-area { animation: eqFade .7s .45s both !important; }
+  html.calm .edge-track i { animation: edgeGrow .9s cubic-bezier(.2,.8,.2,1) both !important; }
   html.calm .cal-mini-cell.today::after, html.calm .cal-cell.today::after { opacity: .75; }
   html.calm .brand .brand-accent { background-position: 0 0; }
   @media (prefers-reduced-motion: reduce) {
-    .eq-comet, .eq-ring, .eq-end, .eq-zero, .dash-big, .milestone-fill::before, .edge-track i::after, .cal-mini-cell.today::after, .cal-cell.today::after, .news-row.next .news-title::before, .streak-mini-pips .streak-pip:last-child::after, .brand .brand-accent, .nav-bar { animation: none !important; }
+    .eq-comet, .eq-ring, .eq-end, .eq-zero, .dash-big, .milestone-fill::before, .edge-track::after, .edge-track i, .edge-track i::before, .edge-pnl, .cal-mini-cell.today::after, .cal-cell.today::after, .news-row.next .news-title::before, .streak-mini-pips .streak-pip:last-child::after, .brand .brand-accent, .nav-bar { animation: none !important; }
     .cal-mini-cell.today::after, .cal-cell.today::after { opacity: .75; }
     .brand .brand-accent { background-position: 0 0; }
   }
@@ -4052,12 +4060,12 @@
   // win rate and P&L by session and setup, for the selected range
   function renderDashEdge(list, label, isAlgo) {
     document.getElementById('dash-edge-title').textContent = `Where your edge is · ${label}`;
-    const rows = (keys, labelFn, getKey) => {
+    const rows = (keys, labelFn, getKey, off = 0) => {
       if (isAlgo) return `<div class="edge-empty">Sessions and setups are tagged on manual trades.</div>`;
       const data = keys.map(k => { const sub = list.filter(e => getKey(e) === k); return { k, n: sub.length, st: computeStats(sub) }; });
       if (!data.some(d => d.n)) return `<div class="edge-empty">No tagged trades in this range yet.</div>`;
-      return data.map(d => `
-        <div class="edge-row${d.n ? '' : ' none'}">
+      return data.map((d, i) => `
+        <div class="edge-row${d.n ? '' : ' none'}" style="--er:${i + off}">
           <span class="edge-label">${labelFn(d.k)}</span>
           <span class="edge-track" title="${d.n ? d.st.winRate + '% win rate' : 'no trades'}"><i style="width:${d.n ? d.st.winRate : 0}%"></i></span>
           <span class="edge-num">${d.n ? `${d.n} · ${d.st.winRate}%` : '—'}</span>
@@ -4065,7 +4073,7 @@
         </div>`).join('');
     };
     document.getElementById('dash-edge-session').innerHTML = rows(['asia', 'london', 'ny'], sessionLabel, e => e.session);
-    document.getElementById('dash-edge-setup').innerHTML = rows(['continuation', 'reversal', 'judas'], setupTypeLabel, e => e.setupType);
+    document.getElementById('dash-edge-setup').innerHTML = rows(['continuation', 'reversal', 'judas'], setupTypeLabel, e => e.setupType, 1.5);
   }
   document.querySelectorAll('#dash-range-pills button').forEach(btn => btn.addEventListener('click', () => {
     dashRange = btn.dataset.range;
