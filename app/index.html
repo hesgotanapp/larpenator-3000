@@ -1461,6 +1461,60 @@
     .eq-line, .eq-area, .row-menu, .card-view.open, .card-view.open .cv-card, .section.active > *, .cal-mini-cell, .cal-cell, .streak-flame-svg.grew, .streak-pip.fresh, .trade-row.flash, .checklist-picker.all-done-now, .checklist-pill.selected.just .ck path, .session-pill .live-dot, .news-row.imminent .news-when { animation: none !important; }
     .milestone-fill, .nav-bar { transition: none; }
   }
+  /* ================= ambient motion (loops; off via Settings > Background motion) ================= */
+  /* equity: a light runs along the line, the end dot breathes and pings, the fill breathes, zero line drifts */
+  .eq-comet { stroke: color-mix(in srgb, currentColor 40%, #fff); stroke-dasharray: .06 1.2; stroke-dashoffset: .06; opacity: 0; filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 9px currentColor); animation: eqComet 7s 1.5s cubic-bezier(.45,0,.55,1) infinite; pointer-events: none; }
+  @keyframes eqComet { 0% { stroke-dashoffset: .06; opacity: 0; } 5% { opacity: 1; } 52% { stroke-dashoffset: -1; opacity: 1; } 56%, 100% { stroke-dashoffset: -1; opacity: 0; } }
+  .eq-ring { opacity: 0; transform-box: fill-box; transform-origin: center; animation: eqRing 2.6s 1.2s ease-out infinite; pointer-events: none; }
+  @keyframes eqRing { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(3.8); opacity: 0; } }
+  .eq-end { transform-box: fill-box; transform-origin: center; animation: eqEnd 2.6s 1.2s ease-in-out infinite; }
+  @keyframes eqEnd { 0%, 100% { transform: scale(1); } 18% { transform: scale(1.25); } }
+  .eq-area { animation: eqFade .7s .45s both, eqBreathe 5s 1.3s ease-in-out infinite alternate; }
+  @keyframes eqBreathe { to { opacity: .62; } }
+  .eq-zero { animation: zeroDrift 2.4s linear infinite; }
+  @keyframes zeroDrift { to { stroke-dashoffset: -8; } }
+  /* hero P&L softly glows in its colour */
+  .dash-big.pos, .dash-big.neg { animation: heroGlow 3.6s ease-in-out infinite alternate; }
+  @keyframes heroGlow { from { text-shadow: 0 0 0 transparent; } to { text-shadow: 0 0 22px color-mix(in srgb, currentColor 38%, transparent); } }
+  /* light sweeps across the goal bar and the edge bars */
+  .milestone-fill::before, .edge-track i::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent); transform: translateX(-120%); pointer-events: none; }
+  .milestone-fill::before { animation: barSweep 5s 2.2s ease-in-out infinite; }
+  .edge-track i { position: relative; overflow: hidden; }
+  .edge-track i::after { animation: barSweep 6.5s 2.6s ease-in-out infinite; }
+  .edge-row:nth-child(2) .edge-track i::after { animation-delay: 2.8s; }
+  .edge-row:nth-child(3) .edge-track i::after { animation-delay: 3s; }
+  .edge-row:nth-child(n+4) .edge-track i::after { animation-delay: 3.2s; }
+  @keyframes barSweep { 0% { transform: translateX(-120%); } 40%, 100% { transform: translateX(300%); } }
+  /* today's calendar day breathes */
+  .cal-mini-cell.today { position: relative; }
+  .cal-mini-cell.today::after, .cal-cell.today::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 14px color-mix(in srgb, var(--accent) 30%, transparent); animation: todayBreath 2.8s ease-in-out infinite; pointer-events: none; }
+  @keyframes todayBreath { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+  /* next news release blinks; newest streak pip glows */
+  .news-row.next:not(.imminent) .news-title::before { animation: nextBlink 1.8s ease-in-out infinite; }
+  @keyframes nextBlink { 0%, 100% { opacity: 1; box-shadow: 0 0 6px color-mix(in srgb, var(--red) 70%, transparent); } 50% { opacity: .35; box-shadow: none; } }
+  .streak-mini-pips .streak-pip:last-child { position: relative; }
+  .streak-mini-pips .streak-pip:last-child::after { content: ''; position: absolute; inset: -3px; border-radius: 4px; border: 1.5px solid var(--green); animation: pipGlow 2.4s 1s ease-in-out infinite; opacity: 0; pointer-events: none; }
+  .streak-mini-pips .streak-pip.loss:last-child::after { border-color: var(--red); }
+  .streak-mini-pips .streak-pip.breakeven:last-child::after { border-color: var(--amber); }
+  @keyframes pipGlow { 0%, 100% { opacity: 0; transform: scale(.9); } 50% { opacity: .9; transform: scale(1); } }
+  /* brand glint and sidebar marker glow */
+  .brand .brand-accent { background: linear-gradient(100deg, var(--green) 42%, #f2fff8 50%, var(--green) 58%); background-size: 300% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text; color: transparent; animation: brandGlint 8s 2.5s ease-in-out infinite; }
+  @keyframes brandGlint { 0% { background-position: 100% 0; } 25%, 100% { background-position: 0 0; } }
+  .nav-bar { animation: navGlow 2.6s ease-in-out infinite alternate; }
+  @keyframes navGlow { from { box-shadow: 0 0 2px var(--accent); } to { box-shadow: 0 0 10px var(--accent); } }
+  /* cards lift their border on hover */
+  .section .card { transition: border-color .25s ease, box-shadow .25s ease; }
+  .section .card:hover { border-color: var(--border-strong); }
+
+  html.calm .eq-comet, html.calm .eq-ring, html.calm .eq-end, html.calm .eq-zero, html.calm .dash-big, html.calm .milestone-fill::before, html.calm .edge-track i::after, html.calm .cal-mini-cell.today::after, html.calm .cal-cell.today::after, html.calm .news-row.next .news-title::before, html.calm .streak-mini-pips .streak-pip:last-child::after, html.calm .brand .brand-accent, html.calm .nav-bar { animation: none !important; }
+  html.calm .eq-area { animation: eqFade .7s .45s both !important; }
+  html.calm .cal-mini-cell.today::after, html.calm .cal-cell.today::after { opacity: .75; }
+  html.calm .brand .brand-accent { background-position: 0 0; }
+  @media (prefers-reduced-motion: reduce) {
+    .eq-comet, .eq-ring, .eq-end, .eq-zero, .dash-big, .milestone-fill::before, .edge-track i::after, .cal-mini-cell.today::after, .cal-cell.today::after, .news-row.next .news-title::before, .streak-mini-pips .streak-pip:last-child::after, .brand .brand-accent, .nav-bar { animation: none !important; }
+    .cal-mini-cell.today::after, .cal-cell.today::after { opacity: .75; }
+    .brand .brand-accent { background-position: 0 0; }
+  }
 </style>
 </head>
 <body>
@@ -2443,6 +2497,14 @@
             <button class="mode-btn" data-intro="on" type="button">Play on launch</button>
             <button class="mode-btn" data-intro="off" type="button">Off</button>
           </div>
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label>Background motion</label>
+          <div class="mode-switch" id="ambient-toggle" style="margin-top:6px; width:max-content;">
+            <button class="mode-btn" data-ambient="on" type="button">On</button>
+            <button class="mode-btn" data-ambient="off" type="button">Calm</button>
+          </div>
+          <p style="font-size:12px; color:var(--ink-faint); margin:8px 0 0;">Looping touches like the light on the equity curve and the glowing goal bar.</p>
         </div>
       </div>
 
@@ -4078,7 +4140,7 @@
     if (!upcoming.length) {
       list.innerHTML = `<div class="news-empty">No high-impact US news left this week.</div>`;
     } else {
-      let lastDay = '';
+      let lastDay = '', nextMarked = false;
       list.innerHTML = upcoming.map(ev => {
         const k = dayKey(ev.t);
         const dayLabel = k === todayKey ? 'Today' : k === dayKey(tmr) ? 'Tomorrow' : ev.t.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
@@ -4090,7 +4152,7 @@
         if (diff <= 0) when = '<span class="news-when past">released</span>';
         else if (diff < 24 * 3600 * 1000) { const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000); when = `<span class="news-when soon">in ${h ? h + 'h ' : ''}${m}m</span>`; }
         const nums = [ev.forecast ? `fcst ${escapeHtml(ev.forecast)}` : '', ev.previous ? `prev ${escapeHtml(ev.previous)}` : ''].filter(Boolean).join(' · ');
-        return `${head}<div class="news-row${diff <= 0 ? ' past' : diff < 15 * 60000 ? ' imminent' : ''}"><span class="news-time">${time}</span><div class="news-body"><div class="news-title">${escapeHtml(ev.title)}</div>${nums ? `<div class="news-nums">${nums}</div>` : ''}</div>${when}</div>`;
+        return `${head}<div class="news-row${diff <= 0 ? ' past' : diff < 15 * 60000 ? ' imminent' : ''}${diff > 0 && !nextMarked && (nextMarked = true) ? ' next' : ''}"><span class="news-time">${time}</span><div class="news-body"><div class="news-title">${escapeHtml(ev.title)}</div>${nums ? `<div class="news-nums">${nums}</div>` : ''}</div>${when}</div>`;
       }).join('');
     }
     const mins = Math.max(0, Math.round((now - newsState.fetchedAt) / 60000));
@@ -4121,6 +4183,8 @@
       const pnl = dayEntries.reduce((s,e) => s + (e.pnl||0), 0);
       let cls = 'cal-mini-cell';
       if (dayEntries.length) cls += pnl > 0 ? ' pos' : pnl < 0 ? ' neg' : ' neutral';
+      const nowD = new Date();
+      if (y === nowD.getFullYear() && m === nowD.getMonth() && d === nowD.getDate()) cls += ' today';
       html += `<div class="${cls}" style="--ci:${Math.floor((firstDay + d - 1) / 7) + (firstDay + d - 1) % 7}"><div class="d">${d}</div>${dayEntries.length ? `<div class="p">${fmtMoneyShort(pnl)}</div>` : ''}</div>`;
     }
     document.getElementById('dash-cal-grid').innerHTML = html;
@@ -4975,10 +5039,12 @@
           <stop offset="100%" stop-color="${lineColor}" stop-opacity="0"/>
         </linearGradient></defs>
         ${[0.25, 0.5, 0.75].map(f => { const gy = padT + plotH * f; return `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${width - padR}" y2="${gy.toFixed(1)}" stroke="${gridColor}" stroke-width="1"/>`; }).join('')}
-        <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${width - padR}" y2="${zeroY.toFixed(1)}" stroke="${zeroLineColor}" stroke-width="1" stroke-dasharray="4 4"/>
+        <line class="eq-zero" x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${width - padR}" y2="${zeroY.toFixed(1)}" stroke="${zeroLineColor}" stroke-width="1" stroke-dasharray="4 4"/>
         <path class="eq-area" d="${areaPath}" fill="url(#${gradId})" stroke="none"/>
         <path class="eq-line" pathLength="1" d="${linePath}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
-        <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="4.5" fill="${lineColor}"/>
+        <path class="eq-comet" pathLength="1" d="${linePath}" fill="none" stroke="${lineColor}" stroke-width="3.2" stroke-linecap="round" style="color:${lineColor}"/>
+        <circle class="eq-ring" cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="4.5" fill="none" stroke="${lineColor}" stroke-width="1.5"/>
+        <circle class="eq-end" cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="4.5" fill="${lineColor}"/>
         <line class="eq-hover-line" x1="0" y1="${padT}" x2="0" y2="${height - padB}" stroke="${hoverLineColor}" stroke-width="1" stroke-dasharray="3 3" style="display:none;"/>
         <circle class="eq-hover-dot" r="5" fill="${lineColor}" stroke="${surfaceColor}" stroke-width="1.5" style="display:none;"/>
         <rect class="eq-hover-zone" x="0" y="0" width="${width}" height="${height}" fill="transparent"/>
@@ -7911,6 +7977,18 @@
     renderIntroToggle();
     showToast(b.dataset.intro === 'off' ? 'Intro turned off' : 'Intro will play next time you open the app');
   }));
+
+  function renderAmbientToggle() {
+    let off = false;
+    try { off = localStorage.getItem('lvd_ambient_off') === '1'; } catch (e) {}
+    document.documentElement.classList.toggle('calm', off);
+    document.querySelectorAll('#ambient-toggle .mode-btn').forEach(b => b.classList.toggle('active', (b.dataset.ambient === 'off') === off));
+  }
+  document.querySelectorAll('#ambient-toggle .mode-btn').forEach(b => b.addEventListener('click', () => {
+    try { if (b.dataset.ambient === 'off') localStorage.setItem('lvd_ambient_off', '1'); else localStorage.removeItem('lvd_ambient_off'); } catch (e) {}
+    renderAmbientToggle();
+  }));
+  renderAmbientToggle();
 
   // ---------- init ----------
   migrateLegacyBgPhotosOnce();

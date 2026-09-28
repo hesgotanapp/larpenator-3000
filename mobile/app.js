@@ -282,10 +282,52 @@
     ctx.restore();
     if (p >= 1) { const last = pts[pts.length - 1]; ctx.beginPath(); ctx.arc(last[0], last[1], 3, 0, 7); ctx.fillStyle = col; ctx.fill(); }
     };
+    const tok = canvas._sparkTok = {};
     if (reduceMotion()) { paint(1); return; }
     const t0 = performance.now();
-    const step = now => { const p = Math.min(1, (now - t0) / 1000); paint(1 - Math.pow(1 - p, 3)); if (p < 1) requestAnimationFrame(step); };
+    const step = now => { const p = Math.min(1, (now - t0) / 1000); paint(1 - Math.pow(1 - p, 3)); if (p < 1) requestAnimationFrame(step); else sparkAmbient(canvas, tok, ctx, pts, col, paint); };
     requestAnimationFrame(step);
+  }
+  // looping touches on the sparkline: a light travels along the line, the end dot pings
+  function sparkAmbient(canvas, tok, ctx, pts, col, paint) {
+    const segs = [0];
+    for (let i = 1; i < pts.length; i++) segs.push(segs[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    const total = segs[segs.length - 1] || 1;
+    const at = f => {
+      const d = Math.max(0, Math.min(1, f)) * total;
+      let i = 1; while (i < segs.length - 1 && segs[i] < d) i++;
+      const t = (d - segs[i - 1]) / ((segs[i] - segs[i - 1]) || 1);
+      return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * t, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t];
+    };
+    const last = pts[pts.length - 1];
+    const start = performance.now();
+    const frame = now => {
+      if (canvas._sparkTok !== tok || !canvas.isConnected) return;
+      if (document.hidden || document.documentElement.classList.contains('calm') || !canvas.offsetParent) {
+        paint(1); setTimeout(() => requestAnimationFrame(frame), 600); return;
+      }
+      paint(1);
+      const t = (now - start) / 1000;
+      // comet: 3.2s run, then a 3.8s rest
+      const c = (t % 7) / 3.2;
+      if (c < 1) {
+        const e = c < .5 ? 2 * c * c : 1 - Math.pow(-2 * c + 2, 2) / 2;
+        ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = 10;
+        for (let k = 10; k >= 0; k--) {
+          const q = at(e - k * 0.006);
+          ctx.globalAlpha = (1 - k / 11) * Math.min(1, c * 8, (1 - c) * 8);
+          ctx.beginPath(); ctx.arc(q[0], q[1], k ? 1.6 : 2.4, 0, 7); ctx.fillStyle = k ? col : '#f2fff8'; ctx.fill();
+        }
+        ctx.restore();
+      }
+      // end dot ping every 2.6s
+      const r = (t % 2.6) / 2.6;
+      ctx.save(); ctx.globalAlpha = 0.9 * (1 - r);
+      ctx.beginPath(); ctx.arc(last[0], last[1], 3 + r * 9, 0, 7); ctx.strokeStyle = col; ctx.lineWidth = 1.4; ctx.stroke();
+      ctx.restore();
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
   }
   function reduceMotion() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
   const countMemory = {};
@@ -877,7 +919,7 @@
       de.forEach(e => { monthPnl += (e.pnl || 0); monthTrades++; if (e.result === 'win') monthWins++; });
       const cls = !de.length ? '' : pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : '';
       const offset = d === 1 ? ` style="grid-column-start:${firstDay + 1}"` : '';
-      html += `<div class="cal-cell ${cls}"${offset} data-date="${dateStr}">${d}</div>`;
+      html += `<div class="cal-cell ${cls}${dateStr === todayStr ? ' today' : ''}"${offset} data-date="${dateStr}">${d}</div>`;
     }
     document.getElementById('cal-grid').innerHTML = html;
     document.querySelectorAll('#cal-grid .cal-cell').forEach((c, i) => c.style.setProperty('--ci', Math.floor(i / 7) + (i % 7)));
@@ -995,6 +1037,20 @@
     renderIntroPref();
   });
   renderIntroPref();
+  function renderAmbientPref() {
+    let off = false;
+    try { off = localStorage.getItem('lvd_ambient_off') === '1'; } catch (e) {}
+    document.documentElement.classList.toggle('calm', off);
+    document.getElementById('ambient-pref-state').textContent = off ? 'Calm' : 'On';
+  }
+  document.getElementById('ambient-pref').addEventListener('click', () => {
+    try {
+      if (localStorage.getItem('lvd_ambient_off') === '1') localStorage.removeItem('lvd_ambient_off');
+      else localStorage.setItem('lvd_ambient_off', '1');
+    } catch (e) {}
+    renderAmbientPref();
+  });
+  renderAmbientPref();
 
   // ---------- auth ----------
   const authScreen = document.getElementById('auth-screen');
