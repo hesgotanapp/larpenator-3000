@@ -263,10 +263,13 @@
     const pad = 4;
     const pts = series.map((v, i) => [(i / (series.length - 1)) * cssW, pad + (1 - (v - lo) / rng) * (cssH - pad * 2)]);
     const up = series[series.length - 1] >= 0;
-    const col = up ? '#30d68a' : '#ef6a5f';
+    const col = up ? '#3ddc97' : '#f07167';
     const grad = ctx.createLinearGradient(0, 0, 0, cssH);
-    grad.addColorStop(0, up ? 'rgba(48,214,138,0.22)' : 'rgba(239,106,95,0.22)');
+    grad.addColorStop(0, up ? 'rgba(61,220,151,0.22)' : 'rgba(240,113,103,0.22)');
     grad.addColorStop(1, 'rgba(0,0,0,0)');
+    const paint = (p) => {
+    ctx.clearRect(0, 0, cssW, cssH);
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, cssW * p + 1, cssH); ctx.clip();
     ctx.beginPath(); ctx.moveTo(pts[0][0], cssH);
     pts.forEach(p => ctx.lineTo(p[0], p[1]));
     ctx.lineTo(pts[pts.length - 1][0], cssH); ctx.closePath();
@@ -274,15 +277,32 @@
     ctx.beginPath();
     pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
     ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.lineJoin = 'round';
-    ctx.shadowColor = up ? 'rgba(48,214,138,0.5)' : 'rgba(239,106,95,0.5)'; ctx.shadowBlur = 6;
+    ctx.shadowColor = up ? 'rgba(61,220,151,0.5)' : 'rgba(240,113,103,0.5)'; ctx.shadowBlur = 6;
     ctx.stroke(); ctx.shadowBlur = 0;
-    const last = pts[pts.length - 1];
-    ctx.beginPath(); ctx.arc(last[0], last[1], 3, 0, 7); ctx.fillStyle = col; ctx.fill();
+    ctx.restore();
+    if (p >= 1) { const last = pts[pts.length - 1]; ctx.beginPath(); ctx.arc(last[0], last[1], 3, 0, 7); ctx.fillStyle = col; ctx.fill(); }
+    };
+    if (reduceMotion()) { paint(1); return; }
+    const t0 = performance.now();
+    const step = now => { const p = Math.min(1, (now - t0) / 1000); paint(1 - Math.pow(1 - p, 3)); if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+  function reduceMotion() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  const countMemory = {};
+  function countTo(el, target, key) {
+    const show = v => { el.textContent = (v > 0.004 ? '+' : v < -0.004 ? '-' : '') + fmtMoney(Math.abs(v)); };
+    const from = key in countMemory ? countMemory[key] : 0;
+    countMemory[key] = target;
+    if (reduceMotion() || Math.abs(target - from) < 0.005) { show(target); return; }
+    const t0 = performance.now();
+    const step = now => { const p = Math.min(1, (now - t0) / 900); show(from + (target - from) * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
   }
   function flameSVG(kind) {
     const base = kind === 'win' ? '#30d68a' : kind === 'loss' ? '#ef6a5f' : '#f0954a';
     return `<svg class="flame" viewBox="0 0 40 54"><path d="M20 2C15 10 8 14 8 26a12 12 0 0 0 24 0c0-5-2.5-8.5-5-11 1 3-1 6-1 6s1-4-2-8c-1.5-2-3-4.5-4-11Z" fill="${base}"/></svg>`;
   }
+  let lastStreakSeen = null;
   function renderDashboard() {
     const s = computeStats(entries);
     const todayEntries = entries.filter(e => e.date === todayStr);
@@ -301,7 +321,7 @@
     document.getElementById('dash-month-label').textContent = `${monthName} P&L`;
     document.getElementById('dash-alltime').innerHTML = `all time <b class="${s.totalPnl >= 0 ? 'pos' : 'neg'}">${(s.totalPnl >= 0 ? '+' : '') + fmtMoneyShort(s.totalPnl).replace('+', '')}</b>`;
     const total = document.getElementById('dash-total');
-    total.textContent = (ms.totalPnl > 0 ? '+' : '') + fmtMoney(ms.totalPnl);
+    countTo(total, ms.totalPnl, 'month');
     total.className = 'sbig ' + (ms.totalPnl > 0 ? 'pos' : ms.totalPnl < 0 ? 'neg' : '');
     document.getElementById('dash-meta').textContent = `${monthList.length} entries · ${ms.wins}W ${ms.losses}L ${ms.be}BE`;
     drawEquitySpark(document.getElementById('dash-spark'), monthList);
@@ -316,24 +336,28 @@
     document.getElementById('dash-goal').innerHTML = `
       <div class="slbl"><span>${monthName} goal</span></div>
       <div class="smid">${Math.round(pct)}%</div>
-      <div class="strack"><i style="width:${pct}%"></i></div>
+      <div class="strack"><i data-w="${pct}"></i></div>
       <div class="ssmall">${fmtMoneyShort(ms.totalPnl).replace('+', '')} / ${fmtMoneyShort(goal).replace('+', '')}</div>`;
 
     const streak = currentStreak(entries);
     const runs = longestStreaks(entries);
     const streakEl = document.getElementById('dash-streak');
+    const grew = !!lastStreakSeen && streak && streak.kind === 'win' && (lastStreakSeen.kind !== 'win' || streak.count > lastStreakSeen.count);
+    lastStreakSeen = streak ? { kind: streak.kind, count: streak.count } : null;
     if (streak) {
       const col = streak.kind === 'win' ? 'var(--green)' : streak.kind === 'loss' ? 'var(--red)' : 'var(--amber)';
       const last10 = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 10).reverse();
       streakEl.innerHTML = `
         <div class="slbl"><span>Streak</span>${flameSVG(streak.kind)}</div>
         <div class="smid" style="color:${col};">${streak.count}${streak.kind === 'win' ? 'W' : streak.kind === 'loss' ? 'L' : 'BE'}</div>
-        <div class="spips">${last10.map(e => `<i class="${e.result}"></i>`).join('')}</div>
+        <div class="spips">${last10.map((e, i) => `<i class="${e.result}${grew && i === last10.length - 1 ? ' fresh' : ''}"></i>`).join('')}</div>
         <div class="ssmall">best ${runs.bestWin}W · worst ${runs.bestLoss}L</div>`;
     } else {
       streakEl.innerHTML = `<div class="slbl"><span>Streak</span></div><div class="ssmall">No trades yet</div>`;
     }
 
+    const bar = document.querySelector('#dash-goal .strack i');
+    if (bar) requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.width = bar.dataset.w + '%'; }));
     const focus = focusRules.length ? focusRules[Math.min(focusIndex, focusRules.length - 1)] : '';
     let excerpt = '';
     if (todayPremarket) {
@@ -364,13 +388,14 @@
   // ---------- Entries (expandable trade cards, mirrors desktop) ----------
   let entriesQuery = '';
   const expandedEntryIds = new Set();
+  let flashEntryId = null;
   document.getElementById('entries-search').addEventListener('input', (e) => {
     entriesQuery = e.target.value.trim().toLowerCase();
     renderEntriesList();
   });
   function entryCardHTML(e) {
     if (!expandedEntryIds.has(e.id)) {
-      return `<div class="tcard-wrap"><div class="tcard-row" data-open="${e.id}">
+      return `<div class="tcard-wrap"><div class="tcard-row${e.id === flashEntryId ? ' flash ' + e.result : ''}" data-open="${e.id}">
         <span class="l"><span class="d">${fmtDateShort(e.date)}</span><span class="s">${escapeHtml(e.symbol || 'Untitled trade')}</span></span>
         <span style="display:flex; align-items:center; gap:8px;"><span class="term-bd ${e.result}">${e.result === 'breakeven' ? 'BE' : e.result === 'win' ? 'W' : 'L'}</span><span class="p ${e.pnl >= 0 ? 'pos' : 'neg'}">${(e.pnl >= 0 ? '+' : '') + fmtMoney(e.pnl)}</span></span>
       </div></div>`;
@@ -413,6 +438,7 @@
     let shown = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
     if (entriesQuery) shown = shown.filter(e => [e.date, e.symbol, e.emotions, e.happened, e.good, e.bad, e.improve].join(' ').toLowerCase().includes(entriesQuery));
     const list = document.getElementById('entries-list');
+    setTimeout(() => { flashEntryId = null; }, 0);
     list.innerHTML = shown.length ? shown.map(entryCardHTML).join('') : `<div class="empty">${entriesQuery ? 'Nothing matches.' : 'No entries yet — tap + to log one.'}</div>`;
     bindEntryCards(list);
   }
@@ -733,8 +759,10 @@
       else entries.push(item);
       persistEntries();
       LvdSync.pushCollection('entries');
+      const wasEditing = !!editingEntryId;
+      flashEntryId = item.id;
       closeSheet();
-      showToast(editingEntryId ? 'Entry updated' : 'Entry saved');
+      showToast(wasEditing ? 'Entry updated' : 'Entry saved');
       renderDashboard(); renderEntriesList(); renderCalendar();
     });
     const delBtn = document.getElementById('f-delete');
@@ -852,6 +880,7 @@
       html += `<div class="cal-cell ${cls}"${offset} data-date="${dateStr}">${d}</div>`;
     }
     document.getElementById('cal-grid').innerHTML = html;
+    document.querySelectorAll('#cal-grid .cal-cell').forEach((c, i) => c.style.setProperty('--ci', Math.floor(i / 7) + (i % 7)));
     const wr = monthTrades ? Math.round((monthWins / monthTrades) * 100) : 0;
     document.getElementById('cal-monthstat').innerHTML = `
       <div class="ms"><div class="k">Month P&amp;L</div><div class="v ${monthPnl >= 0 ? 'pos' : 'neg'}">${fmtMoneyShort(monthPnl)}</div></div>
@@ -929,6 +958,44 @@
     showToast('Weekly review saved');
   });
 
+  // ---------- launch intro: split reveal ----------
+  function playIntro() {
+    const el = document.getElementById('intro');
+    if (!el || el.classList.contains('play')) return;
+    const h = new Date().getHours();
+    document.getElementById('intro-greet').innerHTML = `${h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'},<br><span>Kaine</span>`;
+    const monthPrefix = todayStr.slice(0, 7);
+    const monthList = entries.filter(e => e.date && e.date.startsWith(monthPrefix));
+    const monthPnl = monthList.reduce((sum, e) => sum + (e.pnl || 0), 0);
+    const bits = [todayDate.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })];
+    if (monthList.length) bits.push(`${todayDate.toLocaleDateString(undefined, { month: 'long' })} ${monthPnl >= 0 ? '+' : '−'}${fmtMoney(Math.abs(monthPnl))}`);
+    document.getElementById('intro-sub').textContent = bits.join(' · ');
+    el.classList.add('play');
+    let done = false;
+    const open = () => {
+      if (done) return;
+      done = true;
+      el.classList.add('split');
+      document.getElementById('app').classList.add('revealing');
+      setTimeout(() => { el.remove(); setTimeout(() => document.getElementById('app').classList.remove('revealing'), 900); }, reduceMotion() ? 60 : 820);
+    };
+    el.addEventListener('click', open);
+    setTimeout(open, reduceMotion() ? 900 : 1650);
+  }
+  function renderIntroPref() {
+    let off = false;
+    try { off = localStorage.getItem('lvd_intro_off') === '1'; } catch (e) {}
+    document.getElementById('intro-pref-state').textContent = off ? 'Off' : 'On';
+  }
+  document.getElementById('intro-pref').addEventListener('click', () => {
+    try {
+      if (localStorage.getItem('lvd_intro_off') === '1') localStorage.removeItem('lvd_intro_off');
+      else localStorage.setItem('lvd_intro_off', '1');
+    } catch (e) {}
+    renderIntroPref();
+  });
+  renderIntroPref();
+
   // ---------- auth ----------
   const authScreen = document.getElementById('auth-screen');
   const appRoot = document.getElementById('app');
@@ -978,9 +1045,12 @@
         appRoot.style.display = 'flex';
         registerSyncOnce();
         renderDashboard();
+        playIntro();
       } else {
         authScreen.style.display = 'flex';
         appRoot.style.display = 'none';
+        const intro = document.getElementById('intro');
+        if (intro) intro.remove();
       }
     });
     LvdSync.onError((ctx, err) => { console.error('[sync]', ctx, err); });

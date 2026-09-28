@@ -1347,9 +1347,139 @@
   .trade-row-tags { font-size: 12px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .entries-split.detail-open .trade-row-tags { display: none; }
   .cv-chart { width: 30%; height: 36%; opacity: 0.9; }
+
+  /* ---------- launch intro: split reveal ---------- */
+  .intro { position: fixed; inset: 0; z-index: 1000; cursor: pointer; }
+  .intro-half { position: absolute; left: 0; right: 0; height: 50%; background: var(--bg); overflow: hidden; }
+  .intro-top { top: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 22px; background: radial-gradient(900px 300px at 50% 100%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%), var(--bg); }
+  .intro-bot { bottom: 0; display: flex; justify-content: center; padding-top: 20px; background: radial-gradient(900px 300px at 50% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%), var(--bg); }
+  .intro-brand { font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: 3px; color: var(--ink-dim); margin-bottom: 14px; opacity: 0; }
+  .intro-brand b { color: var(--green); font-weight: 600; }
+  .intro-greet { font-family: var(--font-body); font-size: clamp(34px, 5vw, 60px); font-weight: 600; letter-spacing: -1.4px; line-height: 1.05; color: var(--ink); opacity: 0; transform: translateY(12px); text-align: center; padding: 0 24px; }
+  .intro-greet span { color: var(--green); }
+  .intro-sub { font-size: 15px; color: var(--ink-dim); opacity: 0; transform: translateY(-8px); text-align: center; padding: 0 24px; }
+  .intro-line { position: absolute; left: 0; top: 50%; width: 100%; height: 2px; margin-top: -1px; background: var(--green); transform: scaleX(0); transform-origin: left; box-shadow: 0 0 18px color-mix(in srgb, var(--green) 70%, transparent), 0 0 4px var(--green); }
+  .intro-skip { position: absolute; bottom: 26px; left: 0; right: 0; text-align: center; font-size: 12px; color: var(--ink-faint); opacity: 0; }
+  .intro.play .intro-brand { animation: introFade .5s .05s forwards; }
+  .intro.play .intro-greet { animation: introRise .7s .1s cubic-bezier(.2,.8,.2,1) forwards; }
+  .intro.play .intro-sub { animation: introRise .7s .3s cubic-bezier(.2,.8,.2,1) forwards; }
+  .intro.play .intro-skip { animation: introFade .5s .8s forwards; }
+  .intro.play .intro-line { animation: introLine .85s .7s cubic-bezier(.65,0,.25,1) forwards; }
+  .intro.split .intro-top { animation: splitUp .8s cubic-bezier(.75,0,.25,1) forwards; }
+  .intro.split .intro-bot { animation: splitDown .8s cubic-bezier(.75,0,.25,1) forwards; }
+  .intro.split .intro-line { animation: introLineOut .35s forwards; }
+  .intro.split .intro-skip { opacity: 0; animation: none; }
+  @keyframes introFade { to { opacity: 1; } }
+  @keyframes introRise { to { opacity: 1; transform: none; } }
+  @keyframes introLine { to { transform: scaleX(1); } }
+  @keyframes introLineOut { from { transform: scaleX(1); opacity: 1; } to { transform: scaleX(1); opacity: 0; } }
+  @keyframes splitUp { to { transform: translateY(-100%); } }
+  @keyframes splitDown { to { transform: translateY(100%); } }
+  /* the dashboard rises in underneath as the screen splits open */
+  .app-shell.revealing .section.active > * { animation: revealUp .75s cubic-bezier(.2,.8,.2,1) both; }
+  .app-shell.revealing .section.active > *:nth-child(2) { animation-delay: .06s; }
+  .app-shell.revealing .section.active > *:nth-child(3) { animation-delay: .12s; }
+  .app-shell.revealing .section.active > *:nth-child(4) { animation-delay: .18s; }
+  .app-shell.revealing .section.active > *:nth-child(n+5) { animation-delay: .24s; }
+  @keyframes revealUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .intro.play .intro-brand, .intro.play .intro-greet, .intro.play .intro-sub, .intro.play .intro-skip { animation: introRise .01ms forwards; }
+    .intro.play .intro-line { animation: none; }
+    .intro.split .intro-top, .intro.split .intro-bot { animation: introFade .01ms reverse forwards; opacity: 0; }
+    .app-shell.revealing .section.active > * { animation: none; }
+  }
+
+  /* ================= small animations ================= */
+  /* 2. equity curves draw left to right */
+  .eq-line { stroke-dasharray: 1; animation: eqDraw 1.15s cubic-bezier(.65,0,.25,1) both; }
+  .eq-area { animation: eqFade .7s .45s both; }
+  @keyframes eqDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes eqFade { from { opacity: 0; } }
+  /* 3. goal bar fills and shines */
+  .milestone-fill { transition: width 1.1s cubic-bezier(.2,.8,.2,1); position: relative; overflow: hidden; }
+  .milestone-fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform: translateX(-100%); }
+  .milestone-fill.shine::after { animation: goalShine .9s .9s ease-out; }
+  @keyframes goalShine { to { transform: translateX(100%); } }
+  .milestone-value .ms-now { font-weight: inherit; }
+  /* 4. streak flame puffs up, newest pip pops in */
+  .streak-flame-svg.grew { animation: flameGrow .9s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes flameGrow { 0% { transform: scale(.7); } 45% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  .streak-pip.fresh { animation: pipFresh .6s .35s cubic-bezier(.3,1.7,.5,1) backwards; box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 30%, transparent); }
+  @keyframes pipFresh { from { transform: scale(0); } }
+  /* 5. save: flying chip, Journal bump, new row flash */
+  .fly-chip { position: fixed; z-index: 900; pointer-events: none; font: 600 13px var(--font-mono); padding: 7px 11px; border-radius: 9px; background: var(--surface-3); color: var(--ink); border: 1px solid var(--border-strong); box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+  .fly-chip.win { color: var(--green); border-color: color-mix(in srgb, var(--green) 50%, transparent); }
+  .fly-chip.loss { color: var(--red); border-color: color-mix(in srgb, var(--red) 50%, transparent); }
+  .nav-group-head.bump { animation: navBump .5s cubic-bezier(.3,1.7,.5,1); }
+  @keyframes navBump { 40% { transform: scale(1.06); background: color-mix(in srgb, var(--accent) 16%, transparent); } }
+  .trade-row.flash.win { animation: rowFlashWin 1.6s ease-out; }
+  .trade-row.flash.loss { animation: rowFlashLoss 1.6s ease-out; }
+  .trade-row.flash.breakeven { animation: rowFlashBe 1.6s ease-out; }
+  @keyframes rowFlashWin { 0%, 30% { background: color-mix(in srgb, var(--green) 18%, var(--surface)); border-color: color-mix(in srgb, var(--green) 55%, transparent); } }
+  @keyframes rowFlashLoss { 0%, 30% { background: color-mix(in srgb, var(--red) 16%, var(--surface)); border-color: color-mix(in srgb, var(--red) 55%, transparent); } }
+  @keyframes rowFlashBe { 0%, 30% { background: color-mix(in srgb, var(--amber) 16%, var(--surface)); border-color: color-mix(in srgb, var(--amber) 55%, transparent); } }
+  /* 6. page transitions: content rises in with a stagger */
+  .section.active > * { animation: pageRise .5s cubic-bezier(.2,.8,.2,1) both; }
+  .section.active > *:nth-child(2) { animation-delay: .04s; }
+  .section.active > *:nth-child(3) { animation-delay: .08s; }
+  .section.active > *:nth-child(4) { animation-delay: .12s; }
+  .section.active > *:nth-child(5) { animation-delay: .16s; }
+  .section.active > *:nth-child(n+6) { animation-delay: .2s; }
+  @keyframes pageRise { from { opacity: 0; transform: translateY(10px); } }
+  /* 7. trade menu glides open */
+  .row-menu { animation: menuDown .3s cubic-bezier(.2,.8,.2,1) both; transform-origin: top; }
+  @keyframes menuDown { from { opacity: 0; transform: translateY(-6px); } }
+  /* 8. View card zooms in; tilt is set from script and eases back */
+  .card-view.open { animation: cvFade .25s ease both; }
+  .card-view.open .cv-card { animation: cvZoom .5s cubic-bezier(.2,.9,.25,1) both; transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+  @keyframes cvFade { from { opacity: 0; } }
+  @keyframes cvZoom { from { opacity: 0; transform: scale(.88) translateY(14px); } }
+  /* 9. live pulses */
+  .session-pill .live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 6px; vertical-align: 0; animation: livePulse 1.8s infinite; }
+  @keyframes livePulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 60%, transparent); } 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+  .news-row.imminent .news-when { color: var(--amber); animation: newsWarn 1.1s ease-in-out infinite alternate; }
+  .news-row.imminent .news-title::before { background: var(--amber); }
+  @keyframes newsWarn { from { opacity: .45; } to { opacity: 1; } }
+  /* 10. calendar days ripple in */
+  .cal-mini-cell:not(.empty), .cal-cell:not(.empty) { animation: calIn .42s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--ci, 0) * 28ms); }
+  @keyframes calIn { from { opacity: 0; transform: translateY(6px) scale(.96); } }
+  /* 11. checklist ticks draw; all ticked glows */
+  .checklist-pill .ck svg { width: 11px; height: 11px; display: block; }
+  .checklist-pill .ck path { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 20; stroke-dashoffset: 20; }
+  .checklist-pill.selected .ck path { stroke-dashoffset: 0; stroke: var(--on-accent); }
+  .checklist-pill.selected.just .ck path { animation: tickDraw .32s .05s ease-out both; }
+  @keyframes tickDraw { from { stroke-dashoffset: 20; } to { stroke-dashoffset: 0; } }
+  .checklist-picker { transition: border-color .4s, box-shadow .4s; }
+  .checklist-picker.all-done { border-color: color-mix(in srgb, var(--green) 50%, transparent); border-style: solid; }
+  .checklist-picker.all-done-now { animation: allGlow 1.2s ease-out; }
+  @keyframes allGlow { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--green) 45%, transparent); } 100% { box-shadow: 0 0 0 14px transparent; } }
+  /* 12. sidebar marker slides between pages */
+  .nav-sub { position: relative; }
+  .sidebar .nav-item.active { box-shadow: none; }
+  .nav-bar { position: absolute; left: -1px; top: 0; width: 2px; height: 0; background: var(--accent); border-radius: 2px; opacity: 0; transition: top .38s cubic-bezier(.3,1.35,.5,1), height .3s ease; pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .eq-line, .eq-area, .row-menu, .card-view.open, .card-view.open .cv-card, .section.active > *, .cal-mini-cell, .cal-cell, .streak-flame-svg.grew, .streak-pip.fresh, .trade-row.flash, .checklist-picker.all-done-now, .checklist-pill.selected.just .ck path, .session-pill .live-dot, .news-row.imminent .news-when { animation: none !important; }
+    .milestone-fill, .nav-bar { transition: none; }
+  }
 </style>
 </head>
 <body>
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro-half intro-top"><div class="intro-brand">LARPENATOR <b>3000</b></div><div class="intro-greet" id="intro-greet"></div></div>
+  <div class="intro-half intro-bot"><div class="intro-sub" id="intro-sub"></div></div>
+  <div class="intro-line"></div>
+  <div class="intro-skip">Click or press any key to skip</div>
+</div>
+<script>
+  // decided before first paint so the app never flashes behind the intro
+  (function () {
+    var el = document.getElementById('intro');
+    var off = false;
+    try { off = localStorage.getItem('lvd_intro_off') === '1'; } catch (e) {}
+    if (off) { el.remove(); return; }
+    setTimeout(function () { if (el.isConnected) el.remove(); }, 7000);
+  })();
+</script>
 
 <div class="app-shell">
   <nav class="sidebar">
@@ -2307,6 +2437,13 @@
           </div>
           <p style="font-size:12px; color:var(--ink-faint); margin:8px 0 0;">Zooms the whole app in or out. This device only — doesn't sync to the iPhone app.</p>
         </div>
+        <div class="field" style="margin-top:16px;">
+          <label>Intro animation</label>
+          <div class="mode-switch" id="intro-toggle" style="margin-top:6px; width:max-content;">
+            <button class="mode-btn" data-intro="on" type="button">Play on launch</button>
+            <button class="mode-btn" data-intro="off" type="button">Off</button>
+          </div>
+        </div>
       </div>
 
       <div class="settings-col">
@@ -2679,6 +2816,7 @@
     activeTab = name;
     document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
     updateNavGroups(name);
+    moveNavBar();
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('section-' + name).classList.add('active');
     if (name === 'dashboard') renderDashboard();
@@ -2855,6 +2993,7 @@
     });
   });
 
+  let justTickedItem = null;
   function renderEntryChecklistPicker() {
     const picker = document.getElementById('entry-checklist-picker');
     const progress = document.getElementById('checklist-progress');
@@ -2872,13 +3011,17 @@
     progress.textContent = `${selectedChecklistChecked.length} of ${items.length} confirmed`;
     picker.innerHTML = items.map(item => {
       const on = selectedChecklistChecked.includes(item);
-      return `<div class="checklist-pill${on ? ' selected' : ''}" data-item="${escapeHtml(item)}"><span class="ck">${on ? '✓' : ''}</span>${escapeHtml(item)}</div>`;
+      return `<div class="checklist-pill${on ? ' selected' : ''}${item === justTickedItem ? ' just' : ''}" data-item="${escapeHtml(item)}"><span class="ck"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>${escapeHtml(item)}</div>`;
     }).join('');
+    const allDone = items.every(it => selectedChecklistChecked.includes(it));
+    picker.classList.toggle('all-done', allDone);
+    picker.classList.toggle('all-done-now', allDone && !!justTickedItem);
+    justTickedItem = null;
     picker.querySelectorAll('.checklist-pill').forEach(pill => {
       pill.addEventListener('click', () => {
         const item = pill.dataset.item;
         if (selectedChecklistChecked.includes(item)) selectedChecklistChecked = selectedChecklistChecked.filter(t => t !== item);
-        else selectedChecklistChecked.push(item);
+        else { selectedChecklistChecked.push(item); justTickedItem = item; }
         renderEntryChecklistPicker();
       });
     });
@@ -3550,6 +3693,8 @@
       createdAt: editingId ? (entries.find(x => x.id === editingId) || {}).createdAt || Date.now() : Date.now()
     };
     const isNewEntry = !editingId;
+    flySavedCard(entry);
+    flashTradeId = entry.id;
     const priorBest = isNewEntry && entries.length ? Math.max(...entries.map(x => x.pnl || -Infinity)) : null;
     if (editingId) { entries = entries.map(x => x.id === editingId ? entry : x); showToast('Entry updated'); }
     else { entries.push(entry); showToast('Entry saved'); }
@@ -3663,6 +3808,7 @@
   }
 
   // ---------- streak flame ----------
+  let lastStreakSeen = null;
   function renderStreakFlamePanel(streak, runs, lastN) {
     const panel = document.getElementById('streak-flame-panel');
     if (!panel) return;
@@ -3671,6 +3817,9 @@
       return;
     }
     const isWin = streak.kind === 'win';
+    // a new win since the last render (not on first load) makes the flame puff up
+    const grew = !!lastStreakSeen && isWin && (lastStreakSeen.kind !== 'win' || streak.count > lastStreakSeen.count);
+    lastStreakSeen = { kind: streak.kind, count: streak.count };
     const isLoss = streak.kind === 'loss';
     const cs = getComputedStyle(document.documentElement);
     const base = ((isWin ? cs.getPropertyValue('--green') : isLoss ? cs.getPropertyValue('--red') : cs.getPropertyValue('--amber')) || '#3ddc97').trim();
@@ -3682,7 +3831,7 @@
     panel.style.setProperty('--streak-glow', base);
     panel.innerHTML = `
       <div class="glow-bg" style="background:radial-gradient(circle, ${base}, transparent 70%); width:110px; height:110px; left:34px; top:50%; transform:translate(-50%,-50%);"></div>
-      <svg class="streak-flame-svg animated" width="${w}" height="${h}" viewBox="0 0 40 54" style="opacity:${(0.6 + intensity * 0.4).toFixed(2)}">
+      <svg class="streak-flame-svg animated${grew ? ' grew' : ''}" width="${w}" height="${h}" viewBox="0 0 40 54" style="opacity:${(0.6 + intensity * 0.4).toFixed(2)}">
         <defs>
           <linearGradient id="streakFlameOuter" x1="0" y1="1" x2="0" y2="0">
             <stop offset="0%" stop-color="${base}" stop-opacity="0.5"></stop>
@@ -3699,7 +3848,7 @@
       <div class="streak-body">
         <div class="streak-flame-cap">${isWin ? 'Win streak' : isLoss ? 'Loss streak' : 'Breakeven streak'}</div>
         <div class="streak-flame-count" style="color:${base};">${count} ${isWin ? (count === 1 ? 'win' : 'wins') : isLoss ? (count === 1 ? 'loss' : 'losses') : 'BE'}</div>
-        ${lastN && lastN.length ? `<div class="streak-mini-pips">${lastN.map((e, i) => `<div class="streak-pip ${e.result}" style="animation-delay:${i * 30}ms" title="${fmtDateShort(e.date)} — ${fmtMoney(e.pnl || 0)}"></div>`).join('')}</div>` : ''}
+        ${lastN && lastN.length ? `<div class="streak-mini-pips">${lastN.map((e, i) => `<div class="streak-pip ${e.result}${grew && i === lastN.length - 1 ? ' fresh' : ''}" style="animation-delay:${i * 30}ms" title="${fmtDateShort(e.date)} — ${fmtMoney(e.pnl || 0)}"></div>`).join('')}</div>` : ''}
         ${runs ? `<div class="streak-flame-best">Best ${runs.bestWin}W · worst ${runs.bestLoss}L</div>` : ''}
       </div>
     `;
@@ -3782,8 +3931,9 @@
     const monthPnl = activeList.filter(e => e.date && e.date.startsWith(monthPrefix)).reduce((sum, e) => sum + (e.pnl || 0), 0);
     const goalProgress = milestone.goal > 0 ? Math.max(0, Math.min(100, (monthPnl / milestone.goal) * 100)) : 0;
     document.getElementById('milestone-label').textContent = `${milestone.label} · ${MONTH_NAMES[todayDate.getMonth()]}`;
-    document.getElementById('milestone-value').innerHTML = `${fmtMoney(monthPnl)} <span>/ ${fmtMoney(milestone.goal)}</span>`;
-    document.getElementById('milestone-fill').style.width = goalProgress + '%';
+    document.getElementById('milestone-value').innerHTML = `<b class="ms-now"></b> <span>/ ${fmtMoney(milestone.goal)}</span>`;
+    countTo(document.querySelector('#milestone-value .ms-now'), monthPnl, 'money', 'goal');
+    animateGoalBar(goalProgress, monthPnl);
     const remaining = milestone.goal - monthPnl;
     document.getElementById('milestone-foot').innerHTML = `<span>${remaining > 0 ? fmtMoney(remaining) + ' to go' : 'Goal reached 🎉'}</span><span>${Math.round(goalProgress)}%</span>`;
 
@@ -3824,7 +3974,7 @@
     const inRange = b.from ? activeList.filter(e => e.date >= b.from) : activeList;
     const rs = computeStats(inRange);
     const big = document.getElementById('dash-range-pnl');
-    big.textContent = (rs.totalPnl > 0 ? '+' : '') + fmtMoney(rs.totalPnl);
+    countTo(big, rs.totalPnl, 'signed', 'range');
     big.className = 'dash-big' + (rs.totalPnl > 0 ? ' pos' : rs.totalPnl < 0 ? ' neg' : '');
     document.getElementById('dash-range-title').textContent = `Equity curve · ${b.label}`;
     let sub = `${inRange.length} ${isAlgo ? 'days' : 'entries'} · ${rs.wins}W ${rs.losses}L ${rs.be}BE`;
@@ -3879,7 +4029,7 @@
       let state = 'closed', live = false;
       if (!weekend && mins >= s.open && mins < s.close) { state = 'open'; live = true; }
       else if (!weekend && mins < s.open) { const d = s.open - mins; state = `opens in ${Math.floor(d / 60) ? Math.floor(d / 60) + 'h ' : ''}${d % 60}m`; }
-      return `<span class="session-pill${live ? ' live' : ''}" title="${s.hours} local time, weekdays">${live ? '● ' : ''}${s.label} · ${state}</span>`;
+      return `<span class="session-pill${live ? ' live' : ''}" title="${s.hours} local time, weekdays">${live ? '<i class="live-dot"></i>' : ''}${s.label} · ${state}</span>`;
     }).join('');
   }
   renderSessionPills();
@@ -3940,7 +4090,7 @@
         if (diff <= 0) when = '<span class="news-when past">released</span>';
         else if (diff < 24 * 3600 * 1000) { const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000); when = `<span class="news-when soon">in ${h ? h + 'h ' : ''}${m}m</span>`; }
         const nums = [ev.forecast ? `fcst ${escapeHtml(ev.forecast)}` : '', ev.previous ? `prev ${escapeHtml(ev.previous)}` : ''].filter(Boolean).join(' · ');
-        return `${head}<div class="news-row${diff <= 0 ? ' past' : ''}"><span class="news-time">${time}</span><div class="news-body"><div class="news-title">${escapeHtml(ev.title)}</div>${nums ? `<div class="news-nums">${nums}</div>` : ''}</div>${when}</div>`;
+        return `${head}<div class="news-row${diff <= 0 ? ' past' : diff < 15 * 60000 ? ' imminent' : ''}"><span class="news-time">${time}</span><div class="news-body"><div class="news-title">${escapeHtml(ev.title)}</div>${nums ? `<div class="news-nums">${nums}</div>` : ''}</div>${when}</div>`;
       }).join('');
     }
     const mins = Math.max(0, Math.round((now - newsState.fetchedAt) / 60000));
@@ -3971,7 +4121,7 @@
       const pnl = dayEntries.reduce((s,e) => s + (e.pnl||0), 0);
       let cls = 'cal-mini-cell';
       if (dayEntries.length) cls += pnl > 0 ? ' pos' : pnl < 0 ? ' neg' : ' neutral';
-      html += `<div class="${cls}"><div class="d">${d}</div>${dayEntries.length ? `<div class="p">${fmtMoneyShort(pnl)}</div>` : ''}</div>`;
+      html += `<div class="${cls}" style="--ci:${Math.floor((firstDay + d - 1) / 7) + (firstDay + d - 1) % 7}"><div class="d">${d}</div>${dayEntries.length ? `<div class="p">${fmtMoneyShort(pnl)}</div>` : ''}</div>`;
     }
     document.getElementById('dash-cal-grid').innerHTML = html;
 
@@ -4219,7 +4369,7 @@
   function tradeRowHTML(e, sel) {
     const resultLabel = e.result === 'breakeven' ? 'BE' : e.result === 'win' ? 'Win' : 'Loss';
     return `
-        <div class="trade-row${sel ? ' sel' : ''}" data-row="${e.id}" tabindex="0">
+        <div class="trade-row${sel ? ' sel' : ''}${e.id === flashTradeId ? ' flash ' + e.result : ''}" data-row="${e.id}" tabindex="0">
           <div class="trade-row-left">
             <span class="trade-row-date">${fmtDateShort(e.date)}</span>
             <span class="trade-row-symbol">${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</span>
@@ -4482,6 +4632,7 @@
       renderEntries();
     }));
     root.querySelectorAll('.entry-screenshot-thumb').forEach(img => img.addEventListener('click', (ev) => { ev.stopPropagation(); openLightbox(img.dataset.full); }));
+    if (flashTradeId) setTimeout(() => { flashTradeId = null; }, 0);
   }
 
   function photosForEntry(e) {
@@ -4569,7 +4720,7 @@
 
     weeks.forEach((week, weekIdx) => {
       let weekTotal = 0, weekHtml = '', hasAny = false, weekDayCount = 0;
-      week.forEach(d => {
+      week.forEach((d, di) => {
         if (d === null) { weekHtml += `<div class="cal-cell empty"></div>`; return; }
         const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const dayEntries = byDate[dateStr] || [];
@@ -4589,7 +4740,7 @@
           else { cls += ' neutral'; beDays++; }
         }
         weekHtml += `
-          <div class="${cls}" data-date="${dayEntries.length ? dateStr : ''}">
+          <div class="${cls}" style="--ci:${weekIdx + di}" data-date="${dayEntries.length ? dateStr : ''}">
             ${anyRuleBroken ? `<span class="rule-badge">⚠</span>` : ''}
             <span class="daynum">${d}</span>
             <div>
@@ -4825,8 +4976,8 @@
         </linearGradient></defs>
         ${[0.25, 0.5, 0.75].map(f => { const gy = padT + plotH * f; return `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${width - padR}" y2="${gy.toFixed(1)}" stroke="${gridColor}" stroke-width="1"/>`; }).join('')}
         <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${width - padR}" y2="${zeroY.toFixed(1)}" stroke="${zeroLineColor}" stroke-width="1" stroke-dasharray="4 4"/>
-        <path d="${areaPath}" fill="url(#${gradId})" stroke="none"/>
-        <path d="${linePath}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <path class="eq-area" d="${areaPath}" fill="url(#${gradId})" stroke="none"/>
+        <path class="eq-line" pathLength="1" d="${linePath}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
         <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="4.5" fill="${lineColor}"/>
         <line class="eq-hover-line" x1="0" y1="${padT}" x2="0" y2="${height - padB}" stroke="${hoverLineColor}" stroke-width="1" stroke-dasharray="3 3" style="display:none;"/>
         <circle class="eq-hover-dot" r="5" fill="${lineColor}" stroke="${surfaceColor}" stroke-width="1.5" style="display:none;"/>
@@ -7615,6 +7766,152 @@
   }
   if (window.LvdSync && window.LvdSync.isSupported) LvdSync.onAuthChange(user => setSideSync(!!user));
 
+  // ---------- small animations ----------
+  // numbers roll from their last value to the new one (0 the first time)
+  const countMemory = {};
+  function countTo(el, target, fmt, key) {
+    if (!el) return;
+    const show = v => {
+      if (fmt === 'signed') el.textContent = (v > 0.004 ? '+' : v < -0.004 ? '-' : '') + fmtMoney(Math.abs(v));
+      else if (fmt === 'money') el.textContent = fmtMoney(v);
+      else el.textContent = String(Math.round(v));
+    };
+    const from = key in countMemory ? countMemory[key] : 0;
+    countMemory[key] = target;
+    if (reducedMotion() || Math.abs(target - from) < 0.005) { show(target); return; }
+    const t0 = performance.now(), dur = 900;
+    const step = now => {
+      const p = Math.min(1, (now - t0) / dur);
+      show(from + (target - from) * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  // goal bar fills, shines when it moves, confetti the first time it hits 100% each month
+  let lastGoalPct = null;
+  function animateGoalBar(pct, monthPnl) {
+    const fill = document.getElementById('milestone-fill');
+    fill.style.width = pct + '%';
+    if (lastGoalPct !== null && Math.abs(pct - lastGoalPct) > 0.01 && !reducedMotion()) {
+      fill.classList.remove('shine'); void fill.offsetWidth; fill.classList.add('shine');
+    }
+    lastGoalPct = pct;
+    const monthKey = todayStr.slice(0, 7);
+    let celebrated = '';
+    try { celebrated = localStorage.getItem('lvd_goal_celebrated') || ''; } catch (e) {}
+    if (pct >= 100 && milestone.goal > 0 && celebrated !== monthKey) {
+      try { localStorage.setItem('lvd_goal_celebrated', monthKey); } catch (e) {}
+      setTimeout(() => { fireConfetti(); showToast(`${MONTH_NAMES[todayDate.getMonth()]} goal reached 🎉`); }, 700);
+    }
+  }
+
+  // saving a trade: a mini card flies from the Save button to Journal in the sidebar
+  let flashTradeId = null;
+  function flySavedCard(entry) {
+    const from = document.getElementById('submit-btn').getBoundingClientRect();
+    const target = document.querySelector('.nav-group-head[data-group-head="journal"]');
+    if (!target || reducedMotion()) return;
+    const to = target.getBoundingClientRect();
+    const chip = document.createElement('div');
+    chip.className = 'fly-chip ' + (entry.result || '');
+    chip.textContent = (entry.result === 'win' ? '+' : entry.result === 'loss' ? '−' : '') + fmtMoney(Math.abs(entry.pnl || 0));
+    chip.style.left = from.left + 'px'; chip.style.top = from.top + 'px';
+    document.body.appendChild(chip);
+    const dx = to.left + 20 - from.left, dy = to.top + 4 - from.top;
+    chip.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${dx * 0.55}px, ${dy * 0.55 - 60}px) scale(0.85)`, opacity: 1, offset: 0.55 },
+      { transform: `translate(${dx}px, ${dy}px) scale(0.35)`, opacity: 0 }
+    ], { duration: 750, easing: 'cubic-bezier(.5,0,.3,1)' }).onfinish = () => {
+      chip.remove();
+      target.classList.remove('bump'); void target.offsetWidth; target.classList.add('bump');
+    };
+  }
+
+  // sidebar: a green marker slides to the page you pick
+  let navBarGroup = null;
+  document.querySelectorAll('.nav-sub').forEach(sub => { const bar = document.createElement('span'); bar.className = 'nav-bar'; sub.appendChild(bar); });
+  function moveNavBar() {
+    const open = document.querySelector('.nav-group.open');
+    if (!open) return;
+    const sub = open.querySelector('.nav-sub'), bar = sub.querySelector('.nav-bar'), act = sub.querySelector('.nav-item.active');
+    if (!act) { bar.style.opacity = 0; return; }
+    const sameGroup = navBarGroup === open.dataset.group;
+    navBarGroup = open.dataset.group;
+    if (!sameGroup) bar.style.transition = 'none';
+    bar.style.opacity = 1;
+    bar.style.top = act.offsetTop + 'px';
+    bar.style.height = act.offsetHeight + 'px';
+    if (!sameGroup) { void bar.offsetWidth; bar.style.transition = ''; }
+  }
+
+  // View card: tilts slightly with the mouse, then settles flat so screenshots stay straight
+  (function () {
+    const view = document.getElementById('card-view'), card = document.getElementById('cv-card');
+    let settle;
+    view.addEventListener('mousemove', (ev) => {
+      if (reducedMotion() || !view.classList.contains('open')) return;
+      const r = card.getBoundingClientRect();
+      const x = Math.max(-0.5, Math.min(0.5, (ev.clientX - r.left) / r.width - 0.5));
+      const y = Math.max(-0.5, Math.min(0.5, (ev.clientY - r.top) / r.height - 0.5));
+      card.style.transform = `perspective(1400px) rotateY(${x * 7}deg) rotateX(${-y * 7}deg)`;
+      clearTimeout(settle);
+      settle = setTimeout(() => { card.style.transform = ''; }, 700);
+    });
+    view.addEventListener('mouseleave', () => { card.style.transform = ''; });
+  })();
+
+  // ---------- launch intro: split reveal ----------
+  function introGreeting() {
+    const h = new Date().getHours();
+    return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+  }
+  function playIntro() {
+    const el = document.getElementById('intro');
+    if (!el) return;
+    const reduce = reducedMotion();
+    document.getElementById('intro-greet').innerHTML = `${introGreeting()}, <span>Kaine</span>`;
+    const monthPrefix = todayStr.slice(0, 7);
+    const monthList = entries.filter(e => e.date && e.date.startsWith(monthPrefix));
+    const monthPnl = monthList.reduce((s, e) => s + (e.pnl || 0), 0);
+    const streak = currentStreakFor(entries);
+    const bits = [todayDate.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })];
+    if (monthList.length) bits.push(`${MONTH_NAMES[todayDate.getMonth()]} ${monthPnl >= 0 ? '+' : '−'}${fmtMoney(Math.abs(monthPnl))}`);
+    if (streak && streak.kind !== 'breakeven' && streak.count > 1) bits.push(`${streak.count}-${streak.kind === 'win' ? 'win' : 'loss'} streak`);
+    document.getElementById('intro-sub').textContent = bits.join(' · ');
+
+    el.classList.add('play');
+    const shell = document.querySelector('.app-shell');
+    const timers = [];
+    let done = false;
+    const open = () => {
+      if (done) return;
+      done = true;
+      timers.forEach(clearTimeout);
+      window.removeEventListener('keydown', onKey, true);
+      el.classList.add('split');
+      shell.classList.add('revealing');
+      setTimeout(() => { el.remove(); setTimeout(() => shell.classList.remove('revealing'), 900); }, reduce ? 60 : 820);
+    };
+    // skipping with a key shouldn't also trigger shortcuts like N
+    const onKey = (ev) => { ev.preventDefault(); ev.stopPropagation(); open(); };
+    window.addEventListener('keydown', onKey, true);
+    el.addEventListener('click', open);
+    timers.push(setTimeout(open, reduce ? 900 : 1650));
+  }
+
+  function renderIntroToggle() {
+    let off = false;
+    try { off = localStorage.getItem('lvd_intro_off') === '1'; } catch (e) {}
+    document.querySelectorAll('#intro-toggle .mode-btn').forEach(b => b.classList.toggle('active', (b.dataset.intro === 'off') === off));
+  }
+  document.querySelectorAll('#intro-toggle .mode-btn').forEach(b => b.addEventListener('click', () => {
+    try { if (b.dataset.intro === 'off') localStorage.setItem('lvd_intro_off', '1'); else localStorage.removeItem('lvd_intro_off'); } catch (e) {}
+    renderIntroToggle();
+    showToast(b.dataset.intro === 'off' ? 'Intro turned off' : 'Intro will play next time you open the app');
+  }));
+
   // ---------- init ----------
   migrateLegacyBgPhotosOnce();
   advanceAllBgPhotosOnLaunch();
@@ -7623,6 +7920,8 @@
   switchTab('dashboard');
   renderBtRuleTagsPicker();
   renderBacktestStats();
+  renderIntroToggle();
+  playIntro();
 })();
 </script>
 
