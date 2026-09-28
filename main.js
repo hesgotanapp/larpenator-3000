@@ -107,6 +107,23 @@ ipcMain.handle('lvd-read-auto-backup', () => {
   }
 });
 
+// This week's high-impact US economic events (the ones that move the Nasdaq and
+// S&P 500). Fetched here rather than in the page because the feed doesn't allow
+// cross-origin browser requests.
+ipcMain.handle('lvd-econ-calendar', async () => {
+  try {
+    const res = await net.fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', { cache: 'no-store' });
+    if (!res.ok) return { error: 'HTTP ' + res.status };
+    const all = await res.json();
+    const events = (Array.isArray(all) ? all : [])
+      .filter(e => e && e.country === 'USD' && e.impact === 'High')
+      .map(e => ({ title: e.title, date: e.date, forecast: e.forecast || '', previous: e.previous || '' }));
+    return { events };
+  } catch (e) {
+    return { error: e && e.message ? e.message : 'network error' };
+  }
+});
+
 function wireUpdater() {
   if (updaterWired || !app.isPackaged) return;
   updaterWired = true;

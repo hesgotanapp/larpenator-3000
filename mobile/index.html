@@ -13,7 +13,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #090909; --surface: #111112; --surface-2: #161617; --surface-3: #1d1d1f;
@@ -319,6 +319,78 @@
     position: absolute; top: 8px; right: 8px; background: rgba(9,9,9,0.8); color: #fff; border: 1px solid var(--border-strong);
     border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 600;
   }
+
+  /* ================= SLATE STUDIO (phone) — matches the desktop app ================= */
+  :root {
+    --bg: #0f1216; --surface: #161a20; --surface-2: #1a1f26; --surface-3: #232931;
+    --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.14);
+    --ink: #e8ecf1; --ink-dim: #8b94a3; --ink-faint: #626b79;
+    --green: #3ddc97; --green-bg: rgba(61,220,151,0.12);
+    --red: #f07167; --red-bg: rgba(240,113,103,0.12);
+    --amber: #e8b25c; --amber-bg: rgba(232,178,92,0.14);
+    --accent: #3ddc97; --accent-bg: rgba(61,220,151,0.12);
+    --font-body: 'Geist', 'Plus Jakarta Sans', system-ui, sans-serif; --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+    --radius: 14px; --radius-sm: 10px;
+  }
+  body { letter-spacing: -0.005em; }
+  #appheader { background: var(--bg); padding-bottom: 10px; }
+  #appheader .brand-name { font-weight: 600; font-size: 13px; letter-spacing: 2.2px; }
+  #tabbar { background: rgba(12,14,18,0.94); }
+  .tab-btn span { font-size: 10px; font-weight: 500; }
+  #fab { border-radius: 16px; width: 54px; height: 54px; box-shadow: 0 8px 24px rgba(61,220,151,0.28); color: #06140d; }
+  h1 { font-size: 22px; font-weight: 600; }
+  .card { border-radius: var(--radius); }
+  label { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 12.5px; color: var(--ink-dim); font-weight: 500; }
+  .btn { font-family: var(--font-body); border-radius: 11px; }
+  .stat .label { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 12px; color: var(--ink-dim); }
+  .stat .value { font-weight: 600; }
+
+  .subtabs { display: flex; gap: 20px; border-bottom: 1px solid var(--border); margin: -4px 0 16px; }
+  .subtabs button { background: none; border: none; padding: 0 0 10px; font-size: 14px; color: var(--ink-dim); font-weight: 500; }
+  .subtabs button.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+
+  /* Today */
+  .greet { margin: 0 2px 14px; }
+  .greet-h { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  .greet-sub { font-size: 12.5px; color: var(--ink-dim); margin-top: 3px; }
+  .scard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 15px; margin-bottom: 10px; min-width: 0; }
+  .slbl { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-dim); font-weight: 500; }
+  .slbl .flame { width: 16px; height: 22px; }
+  .smono { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .smono b { font-weight: 500; }
+  .pos { color: var(--green); } .neg { color: var(--red); }
+  .sbig { font-family: var(--font-mono); font-size: 32px; font-weight: 600; letter-spacing: -1px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .sbig.pos { color: var(--green); } .sbig.neg { color: var(--red); }
+  .smeta { font-size: 11.5px; color: var(--ink-dim); margin-top: 2px; }
+  .sspark { display: block; width: 100%; height: 56px; margin-top: 8px; }
+  .skpis { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px; }
+  .skpis > div + div { border-left: 1px solid var(--border); padding-left: 10px; }
+  .skpis .k { font-size: 11px; color: var(--ink-dim); }
+  .skpis .v { font-family: var(--font-mono); font-size: 15px; font-weight: 500; margin-top: 3px; }
+  .skpis .v.pos { color: var(--green); } .skpis .v.neg { color: var(--red); }
+  .spair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .spair .scard { margin-bottom: 10px; }
+  .smid { font-family: var(--font-mono); font-size: 20px; font-weight: 600; margin-top: 4px; }
+  .strack { height: 6px; border-radius: 4px; background: var(--surface-3); overflow: hidden; margin-top: 8px; }
+  .strack i { display: block; height: 100%; background: var(--green); border-radius: 4px; }
+  .ssmall { font-size: 11px; color: var(--ink-dim); margin-top: 6px; }
+  .spips { display: flex; gap: 3px; margin-top: 8px; }
+  .spips i { width: 10px; height: 10px; border-radius: 3px; background: var(--surface-3); }
+  .spips i.win { background: var(--green); } .spips i.loss { background: var(--red); } .spips i.breakeven { background: var(--amber); }
+  .bt-row { display: flex; gap: 10px; align-items: flex-start; margin-top: 10px; font-size: 13.5px; }
+  .bt-chk { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--ink-faint); flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; margin-top: 1px; }
+  .bt-chk.done { background: var(--green); border-color: var(--green); color: #06140d; }
+  .bt-sub { font-size: 12px; color: var(--ink-dim); margin-top: 3px; line-height: 1.45; }
+  .bt-focus { font-size: 13px; color: var(--ink-dim); font-style: italic; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); line-height: 1.5; }
+  .term-list .li { font-family: var(--font-body); font-size: 13px; }
+  .term-list .li .p { font-family: var(--font-mono); }
+
+  /* entries: three choices */
+  .choice-list { display: flex; flex-direction: column; gap: 10px; padding: 14px 0 6px; }
+  .choice-list .btn { width: 100%; min-height: 50px; font-size: 15px; }
+
+  /* clean card follows the photo's own shape */
+  #cleancard .cc { --ar: 1.78; aspect-ratio: var(--ar); width: min(100%, calc((100vh - 120px) * var(--ar))); max-width: none; }
 </style>
 </head>
 <body>
@@ -348,17 +420,26 @@
   <div id="screens">
 
     <section class="screen active" id="screen-dashboard">
-      <div class="term-hero">
-        <div class="term-lbl">Total P&amp;L</div>
-        <div class="term-big" id="dash-total">$0.00</div>
-        <div class="term-meta" id="dash-meta"></div>
-        <canvas id="dash-spark" class="term-spark" width="330" height="52"></canvas>
+      <div class="greet">
+        <div class="greet-h" id="dash-greeting">Good afternoon</div>
+        <div class="greet-sub" id="dash-subline"></div>
       </div>
-      <div class="term-strip" id="dash-strip"></div>
-      <div class="term-row2" id="dash-row2"></div>
-      <div class="term-streak" id="dash-streak"></div>
-      <div class="term-sec-h">Recent</div>
-      <div class="term-list" id="dash-recent"></div>
+      <div class="scard">
+        <div class="slbl"><span id="dash-month-label">This month</span><span class="smono" id="dash-alltime"></span></div>
+        <div class="sbig" id="dash-total">$0.00</div>
+        <div class="smeta" id="dash-meta"></div>
+        <canvas id="dash-spark" class="sspark" width="330" height="56"></canvas>
+        <div class="skpis" id="dash-strip"></div>
+      </div>
+      <div class="spair">
+        <div class="scard" id="dash-goal"></div>
+        <div class="scard" id="dash-streak"></div>
+      </div>
+      <div class="scard" id="dash-before"></div>
+      <div class="scard">
+        <div class="slbl"><span>Recent trades</span></div>
+        <div class="term-list" id="dash-recent"></div>
+      </div>
     </section>
 
     <section class="screen" id="screen-entries">
@@ -375,13 +456,7 @@
     </section>
 
     <section class="screen" id="screen-more">
-      <h1>More</h1>
-      <div class="card" style="padding: 6px 12px;">
-        <div class="more-item" data-goto="calendar"><span>Calendar</span><span class="chev">›</span></div>
-        <div class="more-item" data-goto="achievements"><span>Achievements</span><span class="chev">›</span></div>
-        <div class="more-item" data-goto="checklist"><span>Checklist</span><span class="chev">›</span></div>
-        <div class="more-item" data-goto="weekly"><span>Weekly Review</span><span class="chev">›</span></div>
-      </div>
+      <h1>Account</h1>
       <div class="card" style="padding: 6px 12px;">
         <div class="more-item" id="more-signout"><span>Sign Out</span><span class="chev">›</span></div>
       </div>
@@ -418,6 +493,7 @@
       <div class="seg" id="checklist-cat-toggle">
         <button type="button" data-cat="continuation" class="on">Continuation</button>
         <button type="button" data-cat="reversal">Reversal</button>
+        <button type="button" data-cat="judas">Judas</button>
       </div>
       <div class="card" style="margin-top:12px;">
         <div id="checklist-items"></div>
@@ -450,21 +526,25 @@
   <button id="fab" type="button" aria-label="New entry">+</button>
 
   <nav id="tabbar">
-    <button class="tab-btn active" data-tab="dashboard" type="button">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
-      <span>Dashboard</span>
+    <button class="tab-btn active" data-tab="today" type="button">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      <span>Today</span>
     </button>
-    <button class="tab-btn" data-tab="entries" type="button">
-      <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
-      <span>Entries</span>
+    <button class="tab-btn" data-tab="journal" type="button">
+      <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"></path><path d="M8 9h8M8 13h8M8 17h5"></path></svg>
+      <span>Journal</span>
     </button>
-    <button class="tab-btn" data-tab="premarket" type="button">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="16" r="4"></circle><path d="M12 3v3"></path><path d="M4 21h16"></path></svg>
-      <span>Premarket</span>
+    <button class="tab-btn" data-tab="review" type="button">
+      <svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg>
+      <span>Review</span>
     </button>
-    <button class="tab-btn" data-tab="more" type="button">
-      <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg>
-      <span>More</span>
+    <button class="tab-btn" data-tab="playbook" type="button">
+      <svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h11"></path></svg>
+      <span>Playbook</span>
+    </button>
+    <button class="tab-btn" data-tab="library" type="button">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16v13H4z"></path><path d="M8 3h8v4H8z"></path></svg>
+      <span>Library</span>
     </button>
   </nav>
 </div>

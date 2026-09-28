@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect x='1' y='1' width='38' height='38' rx='10' fill='%23111112'/><line x1='20' y1='6.5' x2='20' y2='33.5' stroke='%2330d68a' stroke-width='2.8' stroke-linecap='round'/><rect x='14' y='13' width='12' height='14.5' rx='2.8' fill='%2330d68a'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #090909;
@@ -977,6 +977,376 @@
     .page-head.dash-head { flex-direction: column; align-items: flex-start; }
     .notes-graph-wrap { height: 420px; }
   }
+
+  /* =====================================================================
+     SLATE STUDIO — visual layer. Loaded after the base styles; redefines
+     the design tokens and restyles components. No behaviour lives here.
+     ===================================================================== */
+  :root {
+    --bg: #0f1216;
+    --sidebar: #0c0e12;
+    --surface: #161a20;
+    --surface-2: #1a1f26;
+    --surface-3: #232931;
+    --border: rgba(255,255,255,0.065);
+    --border-strong: rgba(255,255,255,0.13);
+    --ink: #e8ecf1;
+    --ink-dim: #8b94a3;
+    --ink-faint: #626b79;
+    --green: #3ddc97;
+    --green-dim: #1d5b40;
+    --red: #f07167;
+    --red-dim: #6c3431;
+    --amber: #e8b25c;
+    --amber-dim: #6d5226;
+    --accent: #3ddc97;
+    --accent-dim: #1d5b40;
+    --field-bg: #0f1216;
+    --on-accent: #06140d;
+    --font-body: 'Geist', 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+    --radius: 14px;
+    --radius-sm: 9px;
+    --shadow-card: none;
+    --grad-primary: var(--accent);
+    --grad-accent: var(--accent);
+  }
+  :root[data-theme="light"] {
+    --bg: #f3f5f7;
+    --sidebar: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f3f5f8;
+    --surface-3: #e6e9ee;
+    --border: rgba(21,26,32,0.09);
+    --border-strong: rgba(21,26,32,0.17);
+    --ink: #151a20;
+    --ink-dim: #5d6672;
+    --ink-faint: #8a93a0;
+    --green: #17935f;
+    --green-dim: #b4ddc8;
+    --red: #d4493f;
+    --red-dim: #f0c4bf;
+    --amber: #b0700f;
+    --amber-dim: #efd6ae;
+    --accent: #17935f;
+    --accent-dim: #b4ddc8;
+    --field-bg: #f7f8fa;
+    --on-accent: #ffffff;
+  }
+  body { font-size: 14px; letter-spacing: -0.005em; }
+  ::selection { background: var(--accent); color: var(--on-accent); }
+
+  /* ---------- sidebar ---------- */
+  .sidebar { width: 232px; background: var(--sidebar); padding: 18px 14px 16px; display: flex; flex-direction: column; gap: 14px; }
+  .brand { padding: 4px 8px 0; margin: 0; border-bottom: none; }
+  .brand .brand-name { font-family: var(--font-mono); font-weight: 600; font-size: 13px; letter-spacing: 2.4px; }
+  .brand .brand-sub { font-size: 9.5px; letter-spacing: 2px; margin-top: 4px; }
+  .side-log { display: flex; align-items: center; justify-content: space-between; width: 100%; background: var(--accent); color: var(--on-accent); border: none; font-family: var(--font-body); font-weight: 600; font-size: 13px; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: filter var(--transition); }
+  .side-log:hover { filter: brightness(1.07); }
+  .side-log kbd, .side-search kbd, .cmdk kbd, .cmdk-veil kbd { font-family: var(--font-mono); font-size: 10.5px; border-radius: 5px; padding: 2px 6px; }
+  .side-log kbd { background: rgba(0,0,0,0.14); color: inherit; }
+  .side-search { display: flex; align-items: center; justify-content: space-between; width: 100%; border: 1px solid var(--border); background: transparent; border-radius: 9px; padding: 8px 10px; font-family: var(--font-body); font-size: 12.5px; color: var(--ink-faint); cursor: pointer; transition: border-color var(--transition), color var(--transition); }
+  .side-search:hover { border-color: var(--border-strong); color: var(--ink-dim); }
+  .side-search kbd { background: var(--surface-3); color: var(--ink-dim); }
+  .nav-groups { display: flex; flex-direction: column; gap: 2px; }
+  .nav-group-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--ink-dim); cursor: pointer; transition: background var(--transition), color var(--transition); }
+  .nav-group-head svg { width: 16px; height: 16px; stroke: currentColor; }
+  .nav-group-head:hover { background: var(--surface-2); color: var(--ink); }
+  .nav-group.open .nav-group-head { background: var(--surface-3); color: var(--ink); }
+  .nav-count { margin-left: auto; font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-faint); }
+  .nav-sub { display: none; flex-direction: column; margin: 3px 0 7px 21px; border-left: 1px solid var(--border-strong); }
+  .nav-group.open .nav-sub { display: flex; }
+  .sidebar .nav-item { display: block; padding: 5px 14px; margin: 0; border-radius: 0; border-left: none; font-size: 12.5px; font-weight: 500; color: var(--ink-dim); background: none; }
+  .sidebar .nav-item:hover { color: var(--ink); background: none; }
+  .sidebar .nav-item.active { color: var(--ink); background: none; font-weight: 500; box-shadow: inset 2px 0 0 var(--accent); }
+  .side-foot { margin-top: auto; display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--ink-faint); padding: 0 8px; }
+  .side-sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); flex: 0 0 auto; }
+  .side-sync-dot.on { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
+
+  /* ---------- page ---------- */
+  .main-content { padding: 26px clamp(22px, 2.6vw, 44px) 70px; }
+  .page-head { margin-bottom: 20px; padding-bottom: 0; }
+  .page-head::after { display: none; }
+  .page-head h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.4px; margin: 0 0 4px; text-wrap: balance; }
+  .page-head p { font-size: 13.5px; color: var(--ink-dim); font-weight: 400; }
+  .group-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--border); margin: -6px 0 20px; }
+  .group-tabs button { background: none; border: none; padding: 0 0 10px; font-family: var(--font-body); font-size: 13px; color: var(--ink-dim); cursor: pointer; }
+  .group-tabs button:hover { color: var(--ink); }
+  .group-tabs button.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+
+  /* ---------- cards & shared components ---------- */
+  .card { border-radius: var(--radius); padding: 18px 20px; box-shadow: none; }
+  .card-eyebrow { font-family: var(--font-body); font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--ink-dim); font-weight: 500; }
+  .card-eyebrow .dot { display: none; }
+  .cal-card-head { margin-bottom: 12px; gap: 10px; flex-wrap: wrap; }
+  .cal-card-head h3 { font-size: 14px; font-weight: 600; letter-spacing: -0.1px; }
+  .head-note { font-size: 11.5px; font-weight: 400; color: var(--ink-faint); margin-left: 6px; }
+  .link-btn { font-family: var(--font-body); font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--ink-faint); }
+  label { font-family: var(--font-body); font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--ink-dim); font-weight: 500; }
+  input[type=date], input[type=number], input[type=text], input[type=email], input[type=password], textarea, select { background: var(--field-bg); border: 1px solid var(--border); border-radius: 9px; font-size: 13.5px; font-weight: 400; }
+  input:focus, textarea:focus, select:focus { border-color: color-mix(in srgb, var(--accent) 60%, transparent); background: var(--field-bg); }
+  .btn { font-family: var(--font-body); font-size: 13px; letter-spacing: 0; text-transform: none; font-weight: 600; border-radius: 9px; padding: 9px 16px; box-shadow: none; background: var(--accent); color: var(--on-accent); }
+  .btn:hover { box-shadow: none; transform: none; filter: brightness(1.07); }
+  .btn:active { box-shadow: none; }
+  .btn.small { padding: 6px 11px; font-size: 12px; }
+  .btn.cyan { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+  .btn.cyan:hover { box-shadow: none; }
+  .btn.ghost { color: var(--ink); background: var(--surface); border: 1px solid var(--border-strong); font-weight: 500; }
+  .btn.ghost:hover { background: var(--surface-2); filter: none; }
+  .btn.danger { font-weight: 500; }
+  .mode-switch { border-radius: 9px; padding: 3px; background: var(--surface); }
+  .mode-btn { font-family: var(--font-body); font-size: 12px; font-weight: 500; letter-spacing: 0; border-radius: 6px; padding: 5px 12px; }
+  .mode-btn.active { background: var(--surface-3); color: var(--ink); box-shadow: none; }
+  .pill { font-family: var(--font-body); font-size: 12px; text-transform: none; letter-spacing: 0; border-radius: 999px; padding: 5px 11px; background: transparent; }
+  .pill.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .filter-pills { flex-wrap: wrap; gap: 6px; }
+  .subnav { border-bottom: 1px solid var(--border); padding-bottom: 0; gap: 20px; }
+  .subnav-item { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; padding: 0 0 10px; border: none; border-radius: 0; background: none; }
+  .subnav-item:hover { background: none; }
+  .subnav-item.active { color: var(--ink); background: none; border: none; box-shadow: inset 0 -2px 0 var(--accent); }
+  .stats-strip { border-radius: var(--radius); }
+  .stats-strip .stat .label, .stat-card .label, .entry-block .k, .cmp-col-label { font-family: var(--font-body); font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--ink-dim); }
+  .stats-strip .stat .value { font-weight: 500; font-size: 19px; }
+  .result-toggle button { font-family: var(--font-body); font-size: 12.5px; text-transform: none; letter-spacing: 0; font-weight: 500; border-radius: 8px; background: var(--field-bg); }
+  .badge { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 11px; font-weight: 500; border-radius: 5px; }
+  .toast { font-family: var(--font-body); font-size: 13px; border-color: var(--border-strong); background: var(--surface-3); }
+  .empty-state { color: var(--ink-faint); }
+  .data-card { background: transparent; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+  .data-card .dtxt { font-size: 13px; font-weight: 400; }
+  .field-help { margin: 0 0 10px; font-size: 12.5px; color: var(--ink-faint); line-height: 1.5; }
+  .cal-nav-btns button { border-radius: 8px; }
+
+  /* ---------- Today ---------- */
+  .page-head.dash-head { align-items: flex-end; }
+  .dash-head-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .session-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .session-pill { font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--border); border-radius: 999px; padding: 5px 10px; color: var(--ink-faint); white-space: nowrap; }
+  .session-pill.live { color: var(--green); border-color: color-mix(in srgb, var(--green) 38%, transparent); background: color-mix(in srgb, var(--green) 8%, transparent); }
+  .dash-hero { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; margin-bottom: 14px; }
+  .dash-side { display: flex; flex-direction: column; gap: 16px; }
+  .dash-side .card { margin: 0; }
+  .dash-head-tools { display: flex; align-items: center; gap: 8px; }
+  .range-pills { display: flex; gap: 2px; background: var(--surface-2); border-radius: 8px; padding: 2px; }
+  .range-pills button { background: none; border: none; font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+  .range-pills button:hover { color: var(--ink); }
+  .range-pills button.on { background: var(--surface-3); color: var(--ink); }
+  .dash-big { font-family: var(--font-body); font-size: 38px; font-weight: 600; letter-spacing: -1.2px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .dash-big.pos { color: var(--green); } .dash-big.neg { color: var(--red); }
+  .dash-range-sub { font-size: 12.5px; color: var(--ink-dim); margin: 4px 0 10px; }
+  .dash-range-sub .pos { color: var(--green); } .dash-range-sub .neg { color: var(--red); }
+  .dash-kpi-label { font-size: 12px; color: var(--ink-faint); margin: 2px 0 8px; }
+  .stat-row { grid-template-columns: repeat(6, 1fr); gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
+  .stat-row .stat-card { background: transparent; border: none; border-radius: 0; padding: 14px 16px; }
+  .stat-row .stat-card + .stat-card { border-left: 1px solid var(--border); }
+  .stat-row .stat-card::before { display: none; }
+  .stat-row .stat-card:hover { transform: none; box-shadow: none; }
+  .stat-card .value { font-size: 19px; font-weight: 500; }
+  .stat-card .sub { font-size: 11.5px; font-weight: 400; margin-top: 5px; }
+  .dash-lower { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .dash-lower .card { margin: 0; }
+  .before-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .before-row .txt { flex: 1; color: var(--ink); }
+  .before-row .link-btn { padding: 0; }
+  .before-sub { font-size: 12px; color: var(--ink-dim); margin-top: 3px; line-height: 1.45; }
+  .before-chk { width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--ink-faint); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; flex: 0 0 auto; margin-top: 1px; }
+  .before-chk.done { background: var(--green); border-color: var(--green); color: var(--on-accent); }
+  .focus-block { padding-top: 12px; }
+  .focus-text { font-size: 13.5px; font-style: italic; color: var(--ink-dim); font-weight: 400; }
+  .milestone-value { font-size: 24px; font-weight: 600; color: var(--ink); }
+  .milestone-value span { font-size: 14px; }
+  .milestone-fill { background: var(--green); }
+  .milestone-foot { font-family: var(--font-body); font-size: 12px; }
+  .streak-flame-card { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 16px; text-align: left; padding: 16px 20px; }
+  .streak-flame-card .glow-bg { width: 110px !important; height: 110px !important; left: 34px !important; top: 50% !important; }
+  .streak-body { display: flex; flex-direction: column; gap: 2px; position: relative; z-index: 1; }
+  .streak-flame-cap { font-size: 12px; letter-spacing: 0; color: var(--ink-dim); font-weight: 500; }
+  .streak-flame-count { font-size: 24px; font-weight: 600; }
+  .streak-flame-best { font-size: 11.5px; margin-top: 6px; }
+  .streak-flame-card .streak-mini-pips { margin-top: 8px; }
+  .streak-flame-card .streak-pip { width: 12px; height: 12px; border-radius: 3px; }
+  .recent-row { padding: 8px 4px; font-size: 13.5px; }
+  .recent-date { font-size: 12px; }
+  .cal-mini-cell { border-radius: 6px; }
+
+  /* ---------- Log trade ---------- */
+  .log-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 22px; align-items: start; }
+  .log-layout #entry-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; }
+  .form-sec { grid-column: 1 / -1; font-family: var(--font-mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-faint); padding-top: 6px; border-top: 1px solid var(--border); margin-top: 6px; }
+  .form-sec:first-child { border-top: none; padding-top: 0; margin-top: 0; }
+  .log-preview { position: sticky; top: 20px; }
+  .log-preview-label { font-size: 12px; color: var(--ink-dim); margin-bottom: 8px; }
+
+  /* ---------- Entries: cards, list, detail ---------- */
+  .list-toolbar { justify-content: flex-start; gap: 10px 14px; }
+  .list-toolbar .entries-search-row { margin-left: auto; }
+  .tc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .tc { position: relative; border-radius: var(--radius); overflow: hidden; aspect-ratio: 16 / 10; border: 1px solid var(--border); background-color: var(--surface-2); background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: space-between; padding: 14px 16px; cursor: pointer; transition: border-color var(--transition), transform var(--transition); text-align: left; color: #fff; }
+  .tc::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,12,15,0.05), rgba(10,12,15,0.55) 55%, rgba(10,12,15,0.94)); pointer-events: none; }
+  .tc.no-photo { background-image: linear-gradient(135deg, var(--surface-2), var(--surface-3)); color: var(--ink); }
+  .tc.no-photo::before { display: none; }
+  .tc:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .tc:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tc > * { position: relative; }
+  .tc-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 12px; opacity: 0.9; }
+  .tc-top b { font-size: 15px; font-weight: 600; }
+  .tc-pnl { font-family: var(--font-mono); font-size: 23px; font-weight: 600; }
+  .tc-pnl.win { color: var(--green); } .tc-pnl.loss { color: var(--red); } .tc-pnl.breakeven { color: var(--amber); }
+  .tc:not(.no-photo) .tc-pnl.win { color: #3ddc97; } .tc:not(.no-photo) .tc-pnl.loss { color: #f07167; } .tc:not(.no-photo) .tc-pnl.breakeven { color: #e8b25c; }
+  .tc-tags { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+  .tc-tags span { font-size: 10.5px; background: rgba(255,255,255,0.12); border-radius: 5px; padding: 3px 7px; }
+  .tc.no-photo .tc-tags span { background: var(--surface); }
+  .entries-split.detail-open { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+  .entry-detail { display: none; }
+  .entries-split.detail-open .entry-detail { display: block; }
+  .entries-split.detail-open #entries-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; max-height: calc(100vh - 140px); overflow-y: auto; position: sticky; top: 16px; }
+  .entries-split.detail-open .trade-row { border: none; background: none; margin-bottom: 2px; padding: 9px 10px; }
+  .entries-split.detail-open .trade-row.sel { background: var(--surface-3); }
+  .entries-split.detail-open .trade-row-export { display: none; }
+  .trade-row { border-radius: 10px; }
+  .detail-close { margin-bottom: 10px; }
+  .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+  .detail-actions .push { margin-left: auto; }
+  .detail-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .detail-blocks .entry-block { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 0; }
+  .detail-blocks .entry-block.wide { grid-column: 1 / -1; }
+  .entry-detail .trade-card { aspect-ratio: 16 / 7.5; border-radius: var(--radius); }
+  .entry-detail .trade-card-photonav { opacity: 1; }
+
+  /* ---------- Settings ---------- */
+  .settings-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .settings-col { display: flex; flex-direction: column; gap: 16px; }
+
+  /* ---------- Search & jump (Ctrl K) ---------- */
+  .cmdk-veil { position: fixed; inset: 0; z-index: 400; background: rgba(5,6,8,0.6); display: none; justify-content: center; align-items: flex-start; padding: 12vh 16px 16px; }
+  .cmdk-veil.open { display: flex; }
+  .cmdk-panel { width: 100%; max-width: 580px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 14px; box-shadow: 0 30px 80px rgba(0,0,0,0.55); overflow: hidden; }
+  .cmdk-q { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border); color: var(--ink-faint); }
+  .cmdk-q input { border: none; background: transparent; padding: 4px 0; font-size: 15px; }
+  .cmdk-q input:focus { background: transparent; }
+  .cmdk-q kbd, .cmdk-foot kbd { background: var(--surface-3); color: var(--ink-dim); margin-right: 3px; }
+  .cmdk-list { max-height: 52vh; overflow-y: auto; padding: 6px 0; }
+  .cmdk-grp { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-faint); padding: 10px 16px 5px; }
+  .cmdk-it { display: flex; align-items: center; gap: 12px; padding: 8px 16px; font-size: 13.5px; color: var(--ink-dim); cursor: pointer; }
+  .cmdk-it .th { width: 34px; height: 24px; border-radius: 5px; background: var(--surface-3) center / cover; flex: 0 0 auto; }
+  .cmdk-it .r { margin-left: auto; font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
+  .cmdk-it .r.pos { color: var(--green); font-family: var(--font-mono); } .cmdk-it .r.neg { color: var(--red); font-family: var(--font-mono); }
+  .cmdk-it.sel { background: var(--surface-3); color: var(--ink); box-shadow: inset 2px 0 0 var(--accent); }
+  .cmdk-empty { padding: 22px 16px; font-size: 13px; color: var(--ink-faint); }
+  .cmdk-foot { display: flex; gap: 16px; padding: 9px 16px; border-top: 1px solid var(--border); font-size: 11.5px; color: var(--ink-faint); }
+
+  @media (max-width: 1180px) {
+    .dash-lower { grid-template-columns: 1fr 1fr; }
+    .dash-lower .card:last-child { grid-column: 1 / -1; }
+    .log-layout { grid-template-columns: 1fr; }
+    .log-preview { position: static; max-width: 420px; }
+  }
+  @media (max-width: 980px) {
+    .dash-hero, .settings-grid { grid-template-columns: 1fr; }
+    .stat-row { grid-template-columns: repeat(3, 1fr); }
+    .stat-row .stat-card:nth-child(4) { border-left: none; }
+    .stat-row .stat-card:nth-child(n+4) { border-top: 1px solid var(--border); }
+    .entries-split.detail-open { grid-template-columns: 1fr; }
+    .entries-split.detail-open #entries-list { position: static; max-height: 260px; }
+    .detail-blocks { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) {
+    .sidebar { flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 8px; }
+    .side-log, .side-search { width: auto; flex: 0 0 auto; }
+    .side-search span, .side-foot { display: none; }
+    .nav-groups { flex-direction: row; gap: 4px; }
+    .nav-sub, .nav-group.open .nav-sub { display: flex; flex-direction: row; margin: 0; border: none; }
+    .nav-group-head { display: none; }
+    .sidebar .nav-item { white-space: nowrap; }
+    .dash-lower { grid-template-columns: 1fr; }
+    .dash-lower .card:last-child { grid-column: auto; }
+  }
+  .setup-perf { font-size: 11.5px; color: var(--ink-faint); margin-left: 6px; font-weight: 400; }
+  #mr-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  #mr-stats .stat-card:nth-child(4n+1) { border-left: none; }
+  #mr-stats .stat-card:nth-child(n+5) { border-top: 1px solid var(--border); }
+  #mr-stats .empty-state { grid-column: 1 / -1; }
+  @media (max-width: 980px) { #mr-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } #mr-stats .stat-card:nth-child(odd) { border-left: none; } #mr-stats .stat-card:nth-child(even) { border-left: 1px solid var(--border); } #mr-stats .stat-card:nth-child(n+3) { border-top: 1px solid var(--border); } }
+  .cal-mini-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .cal-mini-cell { min-width: 0; overflow: hidden; padding: 4px 5px; aspect-ratio: 1 / 0.8; }
+  .cal-mini-cell .d { font-size: 10px; }
+  .cal-mini-cell .p { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+  .list-toolbar .entries-search-row { order: -1; flex: 1 1 100%; justify-content: flex-start; margin-left: 0; min-width: 0; }
+  .entries-search-row #entries-search { flex: 1 1 260px; max-width: 360px; }
+  .entries-search-row input[type=date] { width: 150px; }
+  #entry-session-toggle button.selected, #entry-setup-toggle button.selected { background: var(--surface-3); border-color: var(--border-strong); color: var(--ink); }
+  input[type=email], input[type=password] { padding: 9px 12px; width: 100%; color: var(--ink); outline: none; font-family: var(--font-body); }
+  .dash-hero { align-items: start; }
+
+  /* high-impact news */
+  .news-empty { font-size: 12.5px; color: var(--ink-faint); padding: 6px 0 2px; line-height: 1.5; }
+  .news-day { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--ink-faint); padding: 10px 0 4px; }
+  .news-day:first-child { padding-top: 0; }
+  .news-row { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .news-row:last-child { border-bottom: none; }
+  .news-row.past { opacity: 0.5; }
+  .news-time { font-family: var(--font-mono); font-size: 12px; color: var(--ink); }
+  .news-title { font-size: 13px; color: var(--ink); line-height: 1.35; }
+  .news-title::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 2px; background: var(--red); margin-right: 7px; vertical-align: 1px; }
+  .news-nums { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+  .news-when { font-family: var(--font-mono); font-size: 11px; white-space: nowrap; color: var(--ink-faint); }
+  .news-when.soon { color: var(--amber); }
+  .news-foot { font-size: 11px; color: var(--ink-faint); margin-top: 10px; }
+
+  /* entries: three choices under the clicked trade */
+  .row-menu { display: flex; gap: 8px; flex-wrap: wrap; padding: 4px 14px 12px; margin: -2px 0 6px; }
+  .trade-row + .row-menu { border-bottom: 1px solid var(--border); }
+  .entries-split:not(.detail-open) .trade-row:has(+ .row-menu) { border-color: var(--border-strong); background: var(--surface-2); }
+  .entry-detail .trade-card { aspect-ratio: var(--ar, 16 / 9); width: min(100%, calc(64vh * var(--ar, 1.78))); background-size: cover; background-position: center; }
+
+  /* View card: screenshot-ready */
+  .card-view { position: fixed; inset: 0; z-index: 380; background: rgba(4,5,7,0.94); display: none; align-items: center; justify-content: center; flex-direction: column; gap: 14px; padding: 48px 72px 28px; }
+  .card-view.open { display: flex; }
+  .cv-card { --ar: 1.78; position: relative; aspect-ratio: var(--ar); width: min(100%, calc((100vh - 130px) * var(--ar)), 1280px); border-radius: 18px; overflow: hidden; background-color: #16181c; background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: space-between; color: #fff; box-shadow: 0 30px 90px rgba(0,0,0,0.6); }
+  .cv-card.no-photo { background-image: linear-gradient(135deg, #1a1f26, #0f1216); }
+  .cv-chart { position: absolute; right: 3%; top: 5%; width: 34%; height: 44%; pointer-events: none; }
+  .cv-top { position: relative; padding: clamp(16px, 3%, 34px) clamp(18px, 3.4%, 40px) 0; }
+  .cv-sym { font-family: 'Geist', sans-serif; font-weight: 700; font-size: clamp(20px, 2.4vw, 34px); letter-spacing: -0.4px; }
+  .cv-date { font-family: 'Geist Mono', monospace; font-size: clamp(11px, 1vw, 14px); opacity: 0.8; margin-top: 3px; }
+  .cv-bot { position: relative; padding: 0 clamp(18px, 3.4%, 40px) clamp(16px, 3%, 34px); }
+  .cv-pnl { display: inline-block; font-family: 'Geist Mono', monospace; font-weight: 700; font-size: clamp(28px, 4vw, 58px); padding: 4px 16px; border-radius: 12px; background: rgba(255,255,255,0.08); }
+  .cv-pnl.win { color: #3ddc97; background: rgba(61,220,151,0.14); } .cv-pnl.loss { color: #f07167; background: rgba(240,113,103,0.14); } .cv-pnl.breakeven { color: #e8b25c; background: rgba(232,178,92,0.14); }
+  .cv-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .cv-meta span { font-size: clamp(11px, 1vw, 13.5px); background: rgba(255,255,255,0.12); border-radius: 6px; padding: 4px 9px; }
+  .cv-brand { font-family: 'Geist Mono', monospace; font-weight: 600; font-size: clamp(10px, 0.9vw, 12.5px); letter-spacing: 2.2px; margin-top: 12px; opacity: 0.9; }
+  .cv-brand span { color: #3ddc97; }
+  .cv-close { position: absolute; top: 16px; right: 20px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: #fff; font-size: 15px; cursor: pointer; }
+  .cv-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: #fff; font-size: 22px; cursor: pointer; }
+  .cv-nav.prev { left: 18px; } .cv-nav.next { right: 18px; }
+  .cv-close:hover, .cv-nav:hover { background: rgba(255,255,255,0.14); }
+  .cv-hint { font-size: 12px; color: rgba(255,255,255,0.45); }
+  /* Today hero: left column sets the height; the news list scrolls so both columns end level */
+  .dash-hero { align-items: stretch; }
+  .dash-main-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .dash-main-col .card { margin: 0; }
+  .dash-edge-card { flex: 1 1 auto; }
+  .dash-side { min-height: 0; }
+  .dash-side .news-card { flex: 1 1 0; min-height: 190px; display: flex; flex-direction: column; overflow: hidden; }
+  .dash-side .news-card #dash-news-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-right: -8px; padding-right: 8px; }
+  .edge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+  .edge-sub { font-size: 11.5px; color: var(--ink-faint); margin-bottom: 6px; }
+  .edge-row { display: grid; grid-template-columns: 92px minmax(40px, 1fr) auto 78px; gap: 10px; align-items: center; padding: 5px 0; font-size: 12.5px; }
+  .edge-row.none { opacity: 0.45; }
+  .edge-label { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .edge-track { height: 6px; border-radius: 4px; background: color-mix(in srgb, var(--red) 30%, var(--surface-3)); overflow: hidden; }
+  .edge-row.none .edge-track { background: var(--surface-3); }
+  .edge-track i { display: block; height: 100%; background: var(--green); border-radius: 4px 0 0 4px; }
+  .edge-num { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-dim); white-space: nowrap; }
+  .edge-pnl { font-family: var(--font-mono); font-size: 11.5px; text-align: right; white-space: nowrap; color: var(--ink-dim); }
+  .edge-pnl.pos { color: var(--green); } .edge-pnl.neg { color: var(--red); }
+  .edge-empty { font-size: 12.5px; color: var(--ink-faint); padding: 4px 0; }
+  @media (max-width: 1280px) { .edge-grid { grid-template-columns: 1fr; gap: 12px; } }
+  @media (max-width: 980px) { .dash-side .news-card { flex: none; } .dash-side .news-card #dash-news-list { max-height: 320px; } }
+  .news-row { grid-template-columns: 66px minmax(0, 1fr) auto; padding: 5px 0; }
+  .news-time { white-space: nowrap; }
+  .news-day { padding: 8px 0 2px; }
+  .trade-row-tags { font-size: 12px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entries-split.detail-open .trade-row-tags { display: none; }
+  .cv-chart { width: 30%; height: 36%; opacity: 0.9; }
 </style>
 </head>
 <body>
@@ -989,109 +1359,73 @@
         <div class="brand-sub">Trading Journal</div>
       </div>
     </div>
-
-    <div class="nav-section-label">Journal</div>
-    <div class="nav-item active" data-tab="dashboard">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
-      Dashboard
+    <button type="button" class="side-log" id="side-log-btn"><span>+ Log trade</span><kbd>N</kbd></button>
+    <button type="button" class="side-search" id="side-search-btn"><span>Search or jump to…</span><kbd>Ctrl K</kbd></button>
+    <div class="nav-groups">
+      <div class="nav-group" data-group="today">
+        <div class="nav-group-head" data-group-head="today" tabindex="0"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg><span>Today</span></div>
+        <div class="nav-sub">
+          <div class="nav-item" data-tab="dashboard" tabindex="0">Overview</div>
+          <div class="nav-item" data-tab="premarket" tabindex="0">Premarket</div>
+        </div>
+      </div>
+      <div class="nav-group" data-group="journal">
+        <div class="nav-group-head" data-group-head="journal" tabindex="0"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"></path><path d="M8 9h8M8 13h8M8 17h5"></path></svg><span>Journal</span><span class="nav-count" id="nav-count-journal"></span></div>
+        <div class="nav-sub">
+          <div class="nav-item" data-tab="entries" tabindex="0">Entries</div>
+          <div class="nav-item" data-tab="calendar" tabindex="0">Calendar</div>
+          <div class="nav-item" data-tab="screenshots" tabindex="0">Screenshots</div>
+        </div>
+      </div>
+      <div class="nav-group" data-group="review">
+        <div class="nav-group-head" data-group-head="review" tabindex="0"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"></path><path d="M15 7h6v6"></path></svg><span>Review</span></div>
+        <div class="nav-sub">
+          <div class="nav-item" data-tab="equity" tabindex="0">Equity</div>
+          <div class="nav-item" data-tab="weekly" tabindex="0">Weekly</div>
+          <div class="nav-item" data-tab="monthly-report" tabindex="0">Monthly report</div>
+          <div class="nav-item" data-tab="mistakes" tabindex="0">Mistakes</div>
+        </div>
+      </div>
+      <div class="nav-group" data-group="playbook">
+        <div class="nav-group-head" data-group-head="playbook" tabindex="0"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"></path><path d="M5 17a3 3 0 0 1 3-3h11"></path></svg><span>Playbook</span></div>
+        <div class="nav-sub">
+          <div class="nav-item" data-tab="rulebook" tabindex="0">Rule book</div>
+          <div class="nav-item" data-tab="checklist" tabindex="0">Checklist</div>
+          <div class="nav-item" data-tab="goals" tabindex="0">Goals</div>
+        </div>
+      </div>
+      <div class="nav-group" data-group="library">
+        <div class="nav-group-head" data-group-head="library" tabindex="0"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16v13H4z"></path><path d="M8 3h8v4H8z"></path></svg><span>Library</span></div>
+        <div class="nav-sub">
+          <div class="nav-item" data-tab="achievements" tabindex="0">Achievements</div>
+          <div class="nav-item" data-tab="backtest" tabindex="0">Backtests</div>
+          <div class="nav-item" data-tab="notes" tabindex="0">Notes</div>
+          <div class="nav-item" data-tab="data" tabindex="0">Settings</div>
+        </div>
+      </div>
     </div>
-    <div class="nav-item" data-tab="premarket">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="4"></circle><path d="M12 3v3"></path><path d="M4.2 8.2l1.9 1.9"></path><path d="M1 16h3"></path><path d="M20 16h3"></path><path d="M17.9 10.1l1.9-1.9"></path><path d="M4 21h16"></path></svg>
-      Premarket
-    </div>
-    <div class="nav-item" data-tab="new">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-      New Entry
-    </div>
-    <div class="nav-item" data-tab="entries">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>
-      Entries
-    </div>
-    <div class="nav-item" data-tab="calendar">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line></svg>
-      Calendar
-    </div>
-    <div class="nav-item" data-tab="equity">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,17 9,11 13,15 21,5"></polyline><polyline points="15,5 21,5 21,11"></polyline></svg>
-      Equity
-    </div>
-    <div class="nav-item" data-tab="weekly">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="7" y1="14" x2="9" y2="14"></line><line x1="11" y1="14" x2="17" y2="14"></line><line x1="7" y1="17" x2="13" y2="17"></line></svg>
-      Weekly Review
-    </div>
-    <div class="nav-item" data-tab="mistakes">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-      Mistake Tracker
-    </div>
-    <div class="nav-item" data-tab="rulebook">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-      Rule Book
-    </div>
-    <div class="nav-item" data-tab="checklist">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M9 3v2h6V3"></path><polyline points="8,12 10.5,14.5 16,9"></polyline></svg>
-      Checklist
-    </div>
-    <div class="nav-item" data-tab="goals">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1"></circle></svg>
-      Goals
-    </div>
-    <div class="nav-item" data-tab="screenshots">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg>
-      Screenshots
-    </div>
-    <div class="nav-item" data-tab="achievements">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M7 5H4a3 3 0 0 0 3 5"></path><path d="M17 5h3a3 3 0 0 1-3 5"></path></svg>
-      Achievements
-    </div>
-
-    <div class="nav-item" data-tab="backtest">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 19 22 12 13 5 13 19"></polygon><polygon points="2 19 11 12 2 5 2 19"></polygon></svg>
-      Backtest Journal
-    </div>
-
-    <div class="nav-section-label">Knowledge</div>
-    <div class="nav-item" data-tab="notes">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-      Notes
-    </div>
-
-    <div class="nav-section-label">Manage</div>
-    <div class="nav-item" data-tab="monthly-report">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-      Monthly Report
-    </div>
-    <div class="nav-item" data-tab="data">
-      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><line x1="10" y1="12" x2="14" y2="12"></line></svg>
-      Backup / Export
-    </div>
-
-    <div class="nav-section-label">Coming soon</div>
-    <div class="nav-item disabled">Psychology Report <span class="soon-tag">soon</span></div>
+    <div class="side-foot"><span class="side-sync-dot" id="side-sync-dot"></span><span id="side-sync-label">Cloud sync off</span></div>
   </nav>
 
   <main class="main-content">
 
-    <!-- DASHBOARD -->
+    <!-- DASHBOARD (Today) -->
     <section class="section active" id="section-dashboard">
       <div class="page-head dash-head">
         <div>
-          <h1>Dashboard</h1>
-          <p>Your trading performance at a glance.</p>
+          <h1 id="dash-greeting">Good afternoon</h1>
+          <p id="dash-subline">Your trading performance at a glance.</p>
         </div>
-        <div class="mode-switch" id="mode-switch">
-          <button class="mode-btn active" data-mode="manual">Manual</button>
-          <button class="mode-btn" data-mode="algo">Algo</button>
+        <div class="dash-head-right">
+          <div class="mode-switch" id="mode-switch">
+            <button class="mode-btn active" data-mode="manual">Manual</button>
+            <button class="mode-btn" data-mode="algo">Algo</button>
+          </div>
+          <div class="session-pills" id="session-pills"></div>
         </div>
       </div>
 
-      <div class="premarket-reminder-banner" id="premarket-reminder-banner" style="display:none;">
-        <div class="txt">You haven't logged today's <b>premarket note</b> yet — write down what you expect before the bell.</div>
-        <button class="btn small cyan" id="premarket-reminder-btn" type="button">Log premarket →</button>
-      </div>
-
-      <div class="stat-row" id="dash-stats"></div>
-
-      <div class="card algo-pnl-card" id="algo-pnl-card" style="display:none; margin-bottom:22px;">
+      <div class="card algo-pnl-card" id="algo-pnl-card" style="display:none; margin-bottom:16px;">
         <div class="cal-card-head"><h3>Algo daily P&amp;L</h3></div>
         <div class="algo-pnl-form">
           <div class="field">
@@ -1106,48 +1440,131 @@
         </div>
       </div>
 
-      <div class="banner-row" id="banner-row">
-        <div class="card" id="focus-rule-card">
-          <div class="card-head">
-            <div class="card-eyebrow"><span class="dot"></span>Focus rule</div>
-            <div style="display:flex; gap:4px;">
-              <button class="link-btn" id="focus-shuffle-btn" title="Show another quote">⟲</button>
-              <button class="link-btn" id="focus-edit-btn">Edit</button>
+      <div class="dash-hero">
+        <div class="dash-main-col">
+        <div class="card dash-equity-card">
+          <div class="cal-card-head">
+            <h3 id="dash-range-title">Equity curve</h3>
+            <div class="dash-head-tools">
+              <div class="range-pills" id="dash-range-pills">
+                <button type="button" data-range="1W">1W</button>
+                <button type="button" data-range="1M">1M</button>
+                <button type="button" data-range="3M">3M</button>
+                <button type="button" data-range="ALL">All</button>
+              </div>
+              <button class="link-btn" id="dash-view-equity">Full view →</button>
             </div>
           </div>
-          <div class="focus-text" id="focus-text-display"></div>
-          <div class="focus-edit-panel" id="focus-edit-panel" style="display:none;">
-            <div class="focus-rules-list" id="focus-rules-list"></div>
-            <div class="tag-add-row">
-              <input type="text" id="focus-input" placeholder="Add a quote or reminder...">
-              <button class="btn small cyan" id="focus-add-btn">Add</button>
+          <div class="dash-big" id="dash-range-pnl">$0.00</div>
+          <div class="dash-range-sub" id="dash-range-sub"></div>
+          <div id="dash-equity-wrap"></div>
+        </div>
+        <div class="card dash-edge-card">
+          <div class="card-head">
+            <div class="card-eyebrow" id="dash-edge-title">Where your edge is</div>
+          </div>
+          <div class="edge-grid">
+            <div><div class="edge-sub">By session</div><div id="dash-edge-session"></div></div>
+            <div><div class="edge-sub">By setup</div><div id="dash-edge-setup"></div></div>
+          </div>
+        </div>
+        </div>
+
+        <div class="dash-side" id="banner-row">
+          <div class="card">
+            <div class="card-head">
+              <div class="card-eyebrow" id="milestone-label">Monthly goal</div>
+              <button class="link-btn" id="milestone-edit-btn">Edit</button>
             </div>
-            <div class="form-actions" style="margin-top:14px;">
-              <button class="btn ghost small" id="focus-done-btn">Done</button>
+            <div class="milestone-value" id="milestone-value"></div>
+            <div class="milestone-track"><div class="milestone-fill" id="milestone-fill"></div></div>
+            <div class="milestone-foot" id="milestone-foot"></div>
+            <div class="milestone-edit" id="milestone-edit-row" style="display:none;">
+              <div class="field"><label>Goal label</label><input type="text" id="milestone-label-input"></div>
+              <div class="field"><label>Goal amount</label><div class="pnl-input-wrap"><input type="number" id="milestone-goal-input"></div></div>
+              <button class="btn small cyan" id="milestone-save-btn" style="grid-column:1/-1;">Save goal</button>
+            </div>
+          </div>
+          <div class="card streak-flame-card" id="streak-flame-panel"></div>
+          <div class="card news-card">
+            <div class="card-head">
+              <div class="card-eyebrow">High-impact news · US</div>
+              <button class="link-btn" id="news-refresh-btn" type="button" title="Refresh">⟲</button>
+            </div>
+            <div id="dash-news-list"></div>
+            <div class="news-foot" id="dash-news-foot"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-kpi-label">All time</div>
+      <div class="stat-row" id="dash-stats"></div>
+
+      <div class="dash-lower">
+        <div class="card" id="focus-rule-card">
+          <div class="card-head">
+            <div class="card-eyebrow">Before you trade</div>
+          </div>
+          <div class="before-row" id="premarket-reminder-banner" style="display:none;">
+            <span class="before-chk"></span>
+            <div class="txt">No premarket note yet today</div>
+            <button class="link-btn" id="premarket-reminder-btn" type="button">Log premarket →</button>
+          </div>
+          <div class="before-row" id="dash-premarket-done" style="display:none;">
+            <span class="before-chk done">✓</span>
+            <div class="txt"><div>Premarket note logged</div><div class="before-sub" id="dash-premarket-excerpt"></div></div>
+          </div>
+          <div class="focus-block">
+            <div class="card-head" style="margin-bottom:6px;">
+              <div class="card-eyebrow">Focus rule</div>
+              <div style="display:flex; gap:4px;">
+                <button class="link-btn" id="focus-shuffle-btn" title="Show another quote">⟲</button>
+                <button class="link-btn" id="focus-edit-btn">Edit</button>
+              </div>
+            </div>
+            <div class="focus-text" id="focus-text-display"></div>
+            <div class="focus-edit-panel" id="focus-edit-panel" style="display:none;">
+              <div class="focus-rules-list" id="focus-rules-list"></div>
+              <div class="tag-add-row">
+                <input type="text" id="focus-input" placeholder="Add a quote or reminder...">
+                <button class="btn small cyan" id="focus-add-btn">Add</button>
+              </div>
+              <div class="form-actions" style="margin-top:14px;">
+                <button class="btn ghost small" id="focus-done-btn">Done</button>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-head">
-            <div class="card-eyebrow"><span class="dot"></span>Milestone</div>
-            <button class="link-btn" id="milestone-edit-btn">Edit</button>
+          <div class="cal-card-head">
+            <h3 id="recent-entries-title">Recent entries</h3>
+            <button class="link-btn" id="dash-view-entries">View all →</button>
           </div>
-          <div id="milestone-label" style="font-size:13.5px; color:var(--ink-dim); margin-bottom:6px; font-weight:500;"></div>
-          <div class="milestone-value" id="milestone-value"></div>
-          <div class="milestone-track"><div class="milestone-fill" id="milestone-fill"></div></div>
-          <div class="milestone-foot" id="milestone-foot"></div>
-          <div class="milestone-edit" id="milestone-edit-row" style="display:none;">
-            <div class="field"><label>Goal label</label><input type="text" id="milestone-label-input"></div>
-            <div class="field"><label>Goal amount</label><div class="pnl-input-wrap"><input type="number" id="milestone-goal-input"></div></div>
-            <button class="btn small cyan" id="milestone-save-btn" style="grid-column:1/-1;">Save goal</button>
-          </div>
+          <div id="recent-entries-list"></div>
         </div>
 
-        <div class="card streak-flame-card" id="streak-flame-panel"></div>
+        <div class="card">
+          <div class="cal-card-head">
+            <h3 id="dash-cal-title">This month</h3>
+            <button class="link-btn" id="dash-view-calendar">Calendar →</button>
+            <div class="cal-nav-btns" id="dash-cal-nav" style="display:none;">
+              <button id="dash-cal-prev">‹</button>
+              <button id="dash-cal-today">•</button>
+              <button id="dash-cal-next">›</button>
+            </div>
+          </div>
+          <div class="cal-card-body">
+            <div class="cal-mini-wrap">
+              <div class="cal-mini-grid" id="dash-cal-dow"></div>
+              <div class="cal-mini-grid" id="dash-cal-grid" style="margin-top:5px;"></div>
+            </div>
+            <div class="cal-week-list" id="dash-week-list"></div>
+          </div>
+        </div>
       </div>
 
-      <div class="card" style="margin-bottom:22px;">
+      <div class="card" style="margin-top:16px;">
         <div class="cal-card-head">
           <h3>Compare periods</h3>
           <div class="filter-pills" id="compare-period-pills">
@@ -1156,41 +1573,6 @@
           </div>
         </div>
         <div id="compare-periods-body"></div>
-      </div>
-
-      <div class="card" style="margin-bottom:22px;">
-        <div class="cal-card-head">
-          <h3>Equity curve</h3>
-          <button class="link-btn" id="dash-view-equity">Full view →</button>
-        </div>
-        <div id="dash-equity-wrap"></div>
-      </div>
-
-      <div class="card" style="margin-bottom:22px;">
-        <div class="cal-card-head">
-          <h3 id="dash-cal-title">This month</h3>
-          <button class="link-btn" id="dash-view-calendar">View full calendar →</button>
-          <div class="cal-nav-btns" id="dash-cal-nav" style="display:none;">
-            <button id="dash-cal-prev">‹</button>
-            <button id="dash-cal-today">•</button>
-            <button id="dash-cal-next">›</button>
-          </div>
-        </div>
-        <div class="cal-card-body">
-          <div class="cal-mini-wrap">
-            <div class="cal-mini-grid" id="dash-cal-dow"></div>
-            <div class="cal-mini-grid" id="dash-cal-grid" style="margin-top:5px;"></div>
-          </div>
-          <div class="cal-week-list" id="dash-week-list"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="cal-card-head">
-          <h3 id="recent-entries-title">Recent entries</h3>
-          <button class="link-btn" id="dash-view-entries">View all →</button>
-        </div>
-        <div id="recent-entries-list"></div>
       </div>
     </section>
 
@@ -1241,15 +1623,17 @@
       </div>
     </section>
 
-    <!-- NEW ENTRY -->
+    <!-- NEW ENTRY (Log trade) -->
     <section class="section" id="section-new">
       <div class="page-head">
-        <h1>Log today's trade</h1>
+        <h1>Log a trade</h1>
         <p>Capture it while it's fresh — result, emotions, and what you'd do differently.</p>
       </div>
 
+      <div class="log-layout">
       <form id="entry-form">
         <div class="form-grid">
+          <div class="form-sec">1 · The trade</div>
           <div class="field">
             <label for="f-date">Date</label>
             <input type="date" id="f-date" required>
@@ -1272,6 +1656,7 @@
             <div class="pnl-input-wrap"><input type="number" id="f-pnl" step="0.01" placeholder="0.00"></div>
           </div>
 
+          <div class="form-sec">2 · Context</div>
           <div class="field full">
             <label>Session</label>
             <div class="result-toggle" id="entry-session-toggle">
@@ -1282,20 +1667,21 @@
           </div>
 
           <div class="field full">
-            <label>Discipline</label>
-            <div class="rule-toggle" id="rule-toggle"><span class="box">⚠</span> I broke my trading rules today</div>
-            <div class="rule-tags-picker" id="rule-tags-picker"></div>
-          </div>
-
-          <div class="field full">
-            <label>Pre-trade checklist</label>
+            <label>Setup &amp; pre-trade checklist</label>
             <div class="result-toggle" id="entry-setup-toggle" style="margin-bottom:10px;">
-              <button type="button" class="sel-be" data-setup="continuation">Continuation setup</button>
-              <button type="button" class="sel-be" data-setup="reversal">Reversal setup</button>
-              <button type="button" class="sel-be" data-setup="judas">Judas Swing setup</button>
+              <button type="button" class="sel-be" data-setup="continuation">Continuation</button>
+              <button type="button" class="sel-be" data-setup="reversal">Reversal</button>
+              <button type="button" class="sel-be" data-setup="judas">Judas Swing</button>
             </div>
             <div class="checklist-progress" id="checklist-progress"></div>
             <div class="checklist-picker" id="entry-checklist-picker"></div>
+          </div>
+
+          <div class="form-sec">3 · Discipline &amp; plan</div>
+          <div class="field full">
+            <label>Discipline</label>
+            <div class="rule-toggle" id="rule-toggle"><span class="box">⚠</span> I broke my trading rules today</div>
+            <div class="rule-tags-picker" id="rule-tags-picker"></div>
           </div>
 
           <div class="field full">
@@ -1303,12 +1689,13 @@
             <div id="entry-premarket-check"></div>
           </div>
 
-          <div class="field full">
+          <div class="form-sec">4 · Reflection</div>
+          <div class="field">
             <label for="f-emotions">Emotions — before, during, after</label>
             <textarea id="f-emotions" placeholder="How did you feel going in? Did anything shift mid-trade? How did you feel after?"></textarea>
           </div>
 
-          <div class="field full">
+          <div class="field">
             <label for="f-happened">What happened</label>
             <textarea id="f-happened" placeholder="The story of the trade/day — plainly, no judgement yet."></textarea>
           </div>
@@ -1327,6 +1714,7 @@
             <textarea id="f-improve" placeholder="One or two concrete things to change."></textarea>
           </div>
 
+          <div class="form-sec">5 · Screenshot &amp; card photos</div>
           <div class="field full">
             <label>Screenshot (optional)</label>
             <div class="paste-zone" id="paste-zone" tabindex="0">
@@ -1339,7 +1727,7 @@
 
           <div class="field full">
             <label>Background photos (optional)</label>
-            <p style="margin:0 0 10px; font-size:12.5px; color:var(--ink-faint);">Shared across every trade's card in the Entries list — add a few and each entry cycles through them each time you open the app or view its card.</p>
+            <p class="field-help">Shared across every trade's card in the Entries list — add a few and each entry cycles through them each time you open the app or view its card.</p>
             <div class="bgphoto-grid" id="bgphoto-grid"></div>
             <input type="file" id="bgphoto-input" accept="image/*" multiple style="display:none;">
             <button type="button" class="btn ghost small" id="bgphoto-add-btn" style="margin-top:8px;">+ Add photos</button>
@@ -1347,7 +1735,7 @@
 
           <div class="field full">
             <label>Losing trade backgrounds (optional)</label>
-            <p style="margin:0 0 10px; font-size:12.5px; color:var(--ink-faint);">Shown instead, only on cards for losing trades — cycles through these the same way, but overrides the shared photos above just for losses.</p>
+            <p class="field-help">Shown instead, only on cards for losing trades — cycles through these the same way, but overrides the shared photos above just for losses.</p>
             <div class="bgphoto-grid" id="lossbgphoto-grid"></div>
             <input type="file" id="lossbgphoto-input" accept="image/*" multiple style="display:none;">
             <button type="button" class="btn ghost small" id="lossbgphoto-add-btn" style="margin-top:8px;">+ Add photos</button>
@@ -1359,11 +1747,20 @@
           <button type="button" class="btn ghost" id="cancel-edit-btn" style="display:none;">Cancel edit</button>
         </div>
       </form>
+
+      <aside class="log-preview">
+        <div class="log-preview-label">Live preview</div>
+        <div id="log-preview-card"></div>
+        <p class="field-help" style="margin-top:10px;">This is how the trade will look in Entries.</p>
+      </aside>
+      </div>
     </section>
 
     <!-- ENTRIES -->
     <section class="section" id="section-entries">
-      <div class="page-head"><h1>Journal entries</h1><p>Every logged trade, filterable and searchable.</p></div>
+      <div class="page-head dash-head">
+        <div><h1>Entries</h1><p>Every logged trade — click one to view its card, the full entry, or edit it.</p></div>
+      </div>
       <div class="stats-strip" id="stats-strip"></div>
       <div class="list-toolbar">
         <div class="filter-pills" id="filter-pills">
@@ -1371,6 +1768,16 @@
           <div class="pill" data-filter="win">Wins</div>
           <div class="pill" data-filter="loss">Losses</div>
           <div class="pill" data-filter="breakeven">Breakeven</div>
+        </div>
+        <div class="filter-pills" id="session-filter-pills">
+          <div class="pill" data-session-filter="asia">Asia</div>
+          <div class="pill" data-session-filter="london">London</div>
+          <div class="pill" data-session-filter="ny">New York</div>
+        </div>
+        <div class="filter-pills" id="setup-filter-pills">
+          <div class="pill" data-setup-filter="continuation">Continuation</div>
+          <div class="pill" data-setup-filter="reversal">Reversal</div>
+          <div class="pill" data-setup-filter="judas">Judas Swing</div>
         </div>
         <div class="entries-search-row">
           <input type="text" id="entries-search" placeholder="Search symbol, notes, date... e.g. Jul 14">
@@ -1380,7 +1787,10 @@
           <button class="btn ghost small" id="entries-clear">Clear</button>
         </div>
       </div>
-      <div id="entries-list"></div>
+      <div class="entries-split" id="entries-split">
+        <div id="entries-list"></div>
+        <div class="entry-detail" id="entry-detail"></div>
+      </div>
     </section>
 
     <!-- CALENDAR -->
@@ -1866,10 +2276,11 @@
     </section>
 
     <section class="section" id="section-data">
-      <div class="page-head"><h1>Backup &amp; export</h1><p>Keep your data safe and portable.</p></div>
+      <div class="page-head"><h1>Settings</h1><p>Appearance for this device, cloud sync, and backups.</p></div>
 
-      <div class="card" style="margin-bottom:22px;">
-        <div class="cal-card-head"><h3>Appearance</h3></div>
+      <div class="settings-grid">
+      <div class="card">
+        <div class="cal-card-head"><h3>Appearance <span class="head-note">this device only</span></h3></div>
         <div class="field" style="margin-bottom:16px;">
           <label>Theme</label>
           <div class="mode-switch" id="theme-toggle" style="margin-top:6px;">
@@ -1898,8 +2309,9 @@
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:22px;">
-        <div class="cal-card-head"><h3>Cloud Sync</h3></div>
+      <div class="settings-col">
+      <div class="card">
+        <div class="cal-card-head"><h3>Cloud sync</h3></div>
         <div id="sync-signed-out">
           <p style="font-size:13px; color:var(--ink-dim); margin:0 0 14px; line-height:1.55;">Sign in to sync your entries, premarket notes, and settings with the iPhone app. Fully optional — everything keeps working offline either way.</p>
           <div class="form-grid">
@@ -1919,6 +2331,8 @@
         </div>
       </div>
 
+      <div class="card">
+      <div class="cal-card-head"><h3>Backup &amp; import</h3></div>
       <div class="data-card">
         <div class="dtxt">Export everything as a <b>JSON</b> file you can store or move to another device.</div>
         <button class="btn small cyan" id="export-btn">Export JSON</button>
@@ -1932,6 +2346,9 @@
         <div class="dtxt">Import trades from a <b>CSV</b> export from your broker. Looks for Date, Symbol, and P&amp;L columns (common header names are matched automatically) and adds them as new entries.</div>
         <button class="btn small ghost" id="csv-import-trigger">Import CSV</button>
         <input type="file" id="csv-import-input" accept=".csv,text/csv">
+      </div>
+      </div>
+      </div>
       </div>
     </section>
 
@@ -1965,6 +2382,26 @@
       <button class="btn small ghost" id="doc-preview-close" type="button">Close</button>
     </div>
     <div class="doc-preview-page" id="doc-preview-page"></div>
+  </div>
+</div>
+
+<div class="card-view" id="card-view" role="dialog" aria-modal="true" aria-label="Trade card">
+  <button class="cv-close" id="cv-close" type="button" aria-label="Close">✕</button>
+  <button class="cv-nav prev" id="cv-prev" type="button" aria-label="Previous photo">‹</button>
+  <div class="cv-card" id="cv-card"></div>
+  <button class="cv-nav next" id="cv-next" type="button" aria-label="Next photo">›</button>
+  <div class="cv-hint">Screenshot with Win + Shift + S · arrows change the photo · Esc to close</div>
+</div>
+
+<div class="cmdk-veil" id="cmdk" role="dialog" aria-modal="true" aria-label="Search or jump to">
+  <div class="cmdk-panel">
+    <div class="cmdk-q">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      <input type="text" id="cmdk-input" placeholder="Search trades, pages and actions…" autocomplete="off" spellcheck="false">
+      <kbd>Esc</kbd>
+    </div>
+    <div class="cmdk-list" id="cmdk-list"></div>
+    <div class="cmdk-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>Enter</kbd> open</span><span><kbd>N</kbd> log trade</span></div>
   </div>
 </div>
 
@@ -2143,11 +2580,11 @@
   algoCalMonth = todayDate.getMonth();
   reviewWeekStart = startOfWeek(todayDate);
 
-  document.querySelectorAll('.mode-btn').forEach(btn => {
+  document.querySelectorAll('#mode-switch .mode-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       dashboardMode = btn.dataset.mode;
       localStorage.setItem('lvd_dashboard_mode', dashboardMode);
-      document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === dashboardMode));
+      document.querySelectorAll('#mode-switch .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === dashboardMode));
       renderDashboard();
     });
   });
@@ -2196,14 +2633,56 @@
   function startOfWeek(d) { const dt = new Date(d); dt.setDate(dt.getDate() - dt.getDay()); dt.setHours(0,0,0,0); return dt; }
 
   // ---------- nav ----------
+  // Pages are grouped into five places; the sidebar opens only the group you're in.
+  const NAV_GROUPS = {
+    today: { label: 'Today', tabs: [['dashboard', 'Overview'], ['premarket', 'Premarket']] },
+    journal: { label: 'Journal', tabs: [['entries', 'Entries'], ['calendar', 'Calendar'], ['screenshots', 'Screenshots']] },
+    review: { label: 'Review', tabs: [['equity', 'Equity'], ['weekly', 'Weekly'], ['monthly-report', 'Monthly report'], ['mistakes', 'Mistakes']] },
+    playbook: { label: 'Playbook', tabs: [['rulebook', 'Rule book'], ['checklist', 'Checklist'], ['goals', 'Goals']] },
+    library: { label: 'Library', tabs: [['achievements', 'Achievements'], ['backtest', 'Backtests'], ['notes', 'Notes'], ['data', 'Settings']] }
+  };
+  const TAB_GROUP = { new: 'journal' };
+  Object.entries(NAV_GROUPS).forEach(([g, def]) => def.tabs.forEach(([t]) => { TAB_GROUP[t] = g; }));
+  let activeTab = 'dashboard';
+
+  // tabs across the top of every page that shares a group
+  Object.entries(NAV_GROUPS).forEach(([g, def]) => {
+    if (def.tabs.length < 2) return;
+    def.tabs.forEach(([t]) => {
+      const head = document.querySelector('#section-' + t + ' .page-head');
+      if (!head) return;
+      const strip = document.createElement('div');
+      strip.className = 'group-tabs';
+      strip.innerHTML = def.tabs.map(([tt, label]) => `<button type="button" data-goto="${tt}" class="${tt === t ? 'on' : ''}">${label}</button>`).join('');
+      head.insertAdjacentElement('afterend', strip);
+    });
+  });
+  document.querySelectorAll('.group-tabs [data-goto]').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.goto)));
+
+  function updateNavGroups(name) {
+    const g = TAB_GROUP[name];
+    document.querySelectorAll('.nav-group').forEach(el => el.classList.toggle('open', el.dataset.group === g));
+  }
+  document.querySelectorAll('.nav-group-head').forEach(h => {
+    const go = () => switchTab(NAV_GROUPS[h.dataset.groupHead].tabs[0][0]);
+    h.addEventListener('click', go);
+    h.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
+  });
+  document.querySelectorAll('.nav-item[data-tab]').forEach(tab => {
+    tab.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); switchTab(tab.dataset.tab); } });
+  });
+
   document.querySelectorAll('.nav-item[data-tab]').forEach(tab => {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
   function switchTab(name) {
+    activeTab = name;
     document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    updateNavGroups(name);
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('section-' + name).classList.add('active');
     if (name === 'dashboard') renderDashboard();
+    if (name === 'new') renderLogPreview();
     if (name === 'premarket') renderPremarketList();
     if (name === 'checklist') renderChecklistManage();
     if (name === 'entries') renderEntries();
@@ -3184,7 +3663,7 @@
   }
 
   // ---------- streak flame ----------
-  function renderStreakFlamePanel(streak, runs) {
+  function renderStreakFlamePanel(streak, runs, lastN) {
     const panel = document.getElementById('streak-flame-panel');
     if (!panel) return;
     if (!streak) {
@@ -3193,7 +3672,8 @@
     }
     const isWin = streak.kind === 'win';
     const isLoss = streak.kind === 'loss';
-    const base = isWin ? '#30d68a' : isLoss ? '#ef6a5f' : '#f0954a';
+    const cs = getComputedStyle(document.documentElement);
+    const base = ((isWin ? cs.getPropertyValue('--green') : isLoss ? cs.getPropertyValue('--red') : cs.getPropertyValue('--amber')) || '#3ddc97').trim();
     const core = isWin ? '#eafff5' : isLoss ? '#fff0ee' : '#fff5e8';
     const count = streak.count;
     const intensity = Math.min(count, 8) / 8;
@@ -3201,7 +3681,7 @@
     const w = Math.round(40 * scale), h = Math.round(54 * scale);
     panel.style.setProperty('--streak-glow', base);
     panel.innerHTML = `
-      <div class="glow-bg" style="background:radial-gradient(circle, ${base}, transparent 70%); width:110px; height:110px; left:50%; top:38%; transform:translate(-50%,-50%);"></div>
+      <div class="glow-bg" style="background:radial-gradient(circle, ${base}, transparent 70%); width:110px; height:110px; left:34px; top:50%; transform:translate(-50%,-50%);"></div>
       <svg class="streak-flame-svg animated" width="${w}" height="${h}" viewBox="0 0 40 54" style="opacity:${(0.6 + intensity * 0.4).toFixed(2)}">
         <defs>
           <linearGradient id="streakFlameOuter" x1="0" y1="1" x2="0" y2="0">
@@ -3216,9 +3696,12 @@
         <path d="M20 2C15 10 8 14 8 26a12 12 0 0 0 24 0c0-5-2.5-8.5-5-11 1 3-1 6-1 6s1-4-2-8c-1.5-2-3-4.5-4-11Z" fill="url(#streakFlameOuter)"></path>
         <path d="M20 16c-2.5 4-6 6.5-6 12a6 6 0 0 0 12 0c0-3-1.5-5-3-6.3.5 1.6-.6 3-.6 3s.5-2.2-1-4.2c-.7-1-1.1-2-1.4-4.5Z" fill="url(#streakFlameInner)"></path>
       </svg>
-      <div class="streak-flame-count" style="color:${base};">${count}</div>
-      <div class="streak-flame-cap">${isWin ? 'WIN STREAK' : isLoss ? 'LOSS STREAK' : 'BREAKEVEN STREAK'}</div>
-      ${runs ? `<div class="streak-flame-best">Best: ${runs.bestWin}W · ${runs.bestLoss}L</div>` : ''}
+      <div class="streak-body">
+        <div class="streak-flame-cap">${isWin ? 'Win streak' : isLoss ? 'Loss streak' : 'Breakeven streak'}</div>
+        <div class="streak-flame-count" style="color:${base};">${count} ${isWin ? (count === 1 ? 'win' : 'wins') : isLoss ? (count === 1 ? 'loss' : 'losses') : 'BE'}</div>
+        ${lastN && lastN.length ? `<div class="streak-mini-pips">${lastN.map((e, i) => `<div class="streak-pip ${e.result}" style="animation-delay:${i * 30}ms" title="${fmtDateShort(e.date)} — ${fmtMoney(e.pnl || 0)}"></div>`).join('')}</div>` : ''}
+        ${runs ? `<div class="streak-flame-best">Best ${runs.bestWin}W · worst ${runs.bestLoss}L</div>` : ''}
+      </div>
     `;
   }
 
@@ -3229,20 +3712,20 @@
     const s = computeStats(activeList);
     const todayEntries = activeList.filter(e => e.date === todayStr);
     const todayPnl = todayEntries.reduce((sum,e) => sum + (e.pnl||0), 0);
-    document.getElementById('premarket-reminder-banner').style.display = premarketEntries.some(p => p.date === todayStr) ? 'none' : 'flex';
+    const todayPremarket = premarketEntries.find(p => p.date === todayStr);
+    document.getElementById('premarket-reminder-banner').style.display = todayPremarket ? 'none' : 'flex';
+    document.getElementById('dash-premarket-done').style.display = todayPremarket ? 'flex' : 'none';
+    if (todayPremarket) {
+      const firstScenario = (todayPremarket.scenarios || []).find(x => x.label || x.body);
+      const excerpt = todayPremarket.outlook || (firstScenario ? (firstScenario.label || firstScenario.body) : '') || todayPremarket.levels || '';
+      document.getElementById('dash-premarket-excerpt').textContent = excerpt.length > 110 ? excerpt.slice(0, 110) + '…' : excerpt;
+    }
     const avgWin = s.wins ? activeList.filter(e => e.result === 'win').reduce((sum,e) => sum + (e.pnl||0), 0) / s.wins : 0;
     const avgLoss = s.losses ? activeList.filter(e => e.result === 'loss').reduce((sum,e) => sum + (e.pnl||0), 0) / s.losses : 0;
     const unitLabel = isAlgo ? 'days' : 'entries';
     const streak = currentStreakFor(activeList);
     const runs = longestStreaks(activeList);
     const lastN = [...activeList].sort((a,b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 10).reverse();
-    const miniPips = lastN.map((e, i) => `<div class="streak-pip ${e.result}" style="animation-delay:${i * 30}ms" title="${fmtDateShort(e.date)} — ${fmtMoney(e.pnl || 0)}"></div>`).join('');
-    let streakText = '—', streakCls = '', streakStyle = '';
-    if (streak) {
-      if (streak.kind === 'win') { streakText = streak.count + 'W'; streakCls = ' pos'; }
-      else if (streak.kind === 'loss') { streakText = streak.count + 'L'; streakCls = ' neg'; }
-      else { streakText = streak.count + 'BE'; streakStyle = ' style="color:var(--amber)"'; }
-    }
 
     document.getElementById('dash-stats').innerHTML = `
       <div class="stat-card accent">
@@ -3271,18 +3754,17 @@
         <div class="sub">per ${isAlgo ? 'day' : 'trade'}</div>
       </div>
       <div class="stat-card">
-        <div class="label">Current streak</div>
-        <div class="value${streakCls}"${streakStyle}>${streakText}</div>
-        ${lastN.length ? `<div class="streak-mini-pips">${miniPips}</div>` : ''}
-        <div class="sub">best ${runs.bestWin}W · worst ${runs.bestLoss}L</div>
+        <div class="label">Rules broken</div>
+        <div class="value${s.rulesBrokenCount ? ' neg' : ''}">${s.rulesBrokenCount}</div>
+        <div class="sub">${activeList.length ? Math.round((s.rulesBrokenCount / activeList.length) * 100) : 0}% of ${unitLabel}</div>
       </div>
     `;
 
     runCountUps(document.getElementById('dash-stats'));
     renderFocus();
-    renderStreakFlamePanel(streak, runs);
+    renderStreakFlamePanel(streak, runs, lastN);
 
-    document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === dashboardMode));
+    document.querySelectorAll('#mode-switch .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === dashboardMode));
     const focusCard = document.getElementById('focus-rule-card');
     const bannerRow = document.getElementById('banner-row');
     document.getElementById('algo-pnl-card').style.display = isAlgo ? '' : 'none';
@@ -3305,13 +3787,169 @@
     const remaining = milestone.goal - monthPnl;
     document.getElementById('milestone-foot').innerHTML = `<span>${remaining > 0 ? fmtMoney(remaining) + ' to go' : 'Goal reached 🎉'}</span><span>${Math.round(goalProgress)}%</span>`;
 
-    renderEquity('dash-equity-wrap', null, activeList);
+    renderDashRange(activeList, isAlgo);
     renderComparePeriods(activeList, comparePeriodMode);
     renderDashCalendar(activeList, isAlgo);
     document.getElementById('recent-entries-title').textContent = isAlgo ? 'Algo P&L log' : 'Recent entries';
     document.getElementById('dash-view-entries').style.display = isAlgo ? 'none' : '';
     renderRecentEntries(activeList, isAlgo);
+
+    const hr = new Date().getHours();
+    document.getElementById('dash-greeting').textContent = `Good ${hr < 12 ? 'morning' : hr < 18 ? 'afternoon' : 'evening'}, Kaine`;
+    const dayLabel = todayDate.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+    const tradeWord = isAlgo ? 'day' : 'trade';
+    document.getElementById('dash-subline').textContent = [dayLabel, todayPremarket ? 'premarket logged' : 'no premarket note yet', `${todayEntries.length} ${tradeWord}${todayEntries.length === 1 ? '' : 's'} today`].join(' · ');
+    const navCount = document.getElementById('nav-count-journal');
+    if (navCount) navCount.textContent = entries.length || '';
   }
+
+  // Today's equity hero follows the 1W / 1M / 3M / All buttons (remembered per device)
+  let dashRange = localStorage.getItem('lvd_dash_range') || '1M';
+  function dashRangeBounds(r) {
+    const y = todayDate.getFullYear(), m = todayDate.getMonth();
+    const ymd = (yy, mm, dd) => toDateStr(new Date(yy, mm, dd));
+    if (r === '1W') {
+      const s = startOfWeek(todayDate);
+      const ps = new Date(s); ps.setDate(ps.getDate() - 7);
+      const pe = new Date(s); pe.setDate(pe.getDate() - 1);
+      return { from: toDateStr(s), prevFrom: toDateStr(ps), prevTo: toDateStr(pe), label: 'This week', prevLabel: 'last week' };
+    }
+    if (r === '1M') return { from: ymd(y, m, 1), prevFrom: ymd(y, m - 1, 1), prevTo: ymd(y, m, 0), label: MONTH_NAMES[m], prevLabel: MONTH_NAMES[(m + 11) % 12] };
+    if (r === '3M') return { from: ymd(y, m - 2, 1), prevFrom: ymd(y, m - 5, 1), prevTo: ymd(y, m - 2, 0), label: 'Last 3 months', prevLabel: 'the 3 months before' };
+    return { from: null, label: 'All time' };
+  }
+  function renderDashRange(activeList, isAlgo) {
+    const b = dashRangeBounds(dashRange);
+    document.querySelectorAll('#dash-range-pills button').forEach(x => x.classList.toggle('on', x.dataset.range === dashRange));
+    const inRange = b.from ? activeList.filter(e => e.date >= b.from) : activeList;
+    const rs = computeStats(inRange);
+    const big = document.getElementById('dash-range-pnl');
+    big.textContent = (rs.totalPnl > 0 ? '+' : '') + fmtMoney(rs.totalPnl);
+    big.className = 'dash-big' + (rs.totalPnl > 0 ? ' pos' : rs.totalPnl < 0 ? ' neg' : '');
+    document.getElementById('dash-range-title').textContent = `Equity curve · ${b.label}`;
+    let sub = `${inRange.length} ${isAlgo ? 'days' : 'entries'} · ${rs.wins}W ${rs.losses}L ${rs.be}BE`;
+    if (b.prevFrom) {
+      const prevPnl = activeList.filter(e => e.date >= b.prevFrom && e.date <= b.prevTo).reduce((sum, e) => sum + (e.pnl || 0), 0);
+      const diff = rs.totalPnl - prevPnl;
+      sub += ` · <span class="${diff >= 0 ? 'pos' : 'neg'}">${diff >= 0 ? '+' : '−'}${fmtMoney(Math.abs(diff))} vs ${b.prevLabel}</span>`;
+    }
+    document.getElementById('dash-range-sub').innerHTML = sub;
+    renderEquity('dash-equity-wrap', null, inRange);
+    renderDashEdge(inRange, b.label, isAlgo);
+  }
+  // win rate and P&L by session and setup, for the selected range
+  function renderDashEdge(list, label, isAlgo) {
+    document.getElementById('dash-edge-title').textContent = `Where your edge is · ${label}`;
+    const rows = (keys, labelFn, getKey) => {
+      if (isAlgo) return `<div class="edge-empty">Sessions and setups are tagged on manual trades.</div>`;
+      const data = keys.map(k => { const sub = list.filter(e => getKey(e) === k); return { k, n: sub.length, st: computeStats(sub) }; });
+      if (!data.some(d => d.n)) return `<div class="edge-empty">No tagged trades in this range yet.</div>`;
+      return data.map(d => `
+        <div class="edge-row${d.n ? '' : ' none'}">
+          <span class="edge-label">${labelFn(d.k)}</span>
+          <span class="edge-track" title="${d.n ? d.st.winRate + '% win rate' : 'no trades'}"><i style="width:${d.n ? d.st.winRate : 0}%"></i></span>
+          <span class="edge-num">${d.n ? `${d.n} · ${d.st.winRate}%` : '—'}</span>
+          <span class="edge-pnl ${d.st.totalPnl > 0 ? 'pos' : d.st.totalPnl < 0 ? 'neg' : ''}">${d.n ? (d.st.totalPnl > 0 ? '+' : '') + fmtMoney(d.st.totalPnl) : ''}</span>
+        </div>`).join('');
+    };
+    document.getElementById('dash-edge-session').innerHTML = rows(['asia', 'london', 'ny'], sessionLabel, e => e.session);
+    document.getElementById('dash-edge-setup').innerHTML = rows(['continuation', 'reversal', 'judas'], setupTypeLabel, e => e.setupType);
+  }
+  document.querySelectorAll('#dash-range-pills button').forEach(btn => btn.addEventListener('click', () => {
+    dashRange = btn.dataset.range;
+    try { localStorage.setItem('lvd_dash_range', dashRange); } catch (e) {}
+    renderDashboard();
+  }));
+
+  // live Asia / London / New York status in the Today header (exchange hours, weekdays)
+  const MARKET_SESSIONS = [
+    { label: 'Asia', tz: 'Asia/Tokyo', open: 9 * 60, close: 15 * 60, hours: 'Tokyo 09:00–15:00' },
+    { label: 'London', tz: 'Europe/London', open: 8 * 60, close: 16 * 60 + 30, hours: 'London 08:00–16:30' },
+    { label: 'New York', tz: 'America/New_York', open: 9 * 60 + 30, close: 16 * 60, hours: 'New York 09:30–16:00' }
+  ];
+  function renderSessionPills() {
+    const el = document.getElementById('session-pills');
+    if (!el) return;
+    const now = new Date();
+    el.innerHTML = MARKET_SESSIONS.map(s => {
+      const parts = new Intl.DateTimeFormat('en-GB', { timeZone: s.tz, weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(now);
+      const get = t => (parts.find(p => p.type === t) || {}).value;
+      const wd = get('weekday'), mins = (parseInt(get('hour'), 10) % 24) * 60 + parseInt(get('minute'), 10);
+      const weekend = wd === 'Sat' || wd === 'Sun';
+      let state = 'closed', live = false;
+      if (!weekend && mins >= s.open && mins < s.close) { state = 'open'; live = true; }
+      else if (!weekend && mins < s.open) { const d = s.open - mins; state = `opens in ${Math.floor(d / 60) ? Math.floor(d / 60) + 'h ' : ''}${d % 60}m`; }
+      return `<span class="session-pill${live ? ' live' : ''}" title="${s.hours} local time, weekdays">${live ? '● ' : ''}${s.label} · ${state}</span>`;
+    }).join('');
+  }
+  renderSessionPills();
+  setInterval(renderSessionPills, 30000);
+
+  // High-impact US economic news (moves the Nasdaq & S&P 500) — this week's
+  // calendar, fetched at most hourly and cached on this device.
+  const NEWS_CACHE_KEY = 'lvd_econ_news';
+  let newsState = { events: null, fetchedAt: 0, error: null };
+  try { const c = JSON.parse(localStorage.getItem(NEWS_CACHE_KEY) || 'null'); if (c && Array.isArray(c.events)) newsState = { events: c.events, fetchedAt: c.fetchedAt || 0, error: null }; } catch (e) {}
+  let newsLoading = false;
+  async function refreshNews(force) {
+    const api = window.larpenatorDesktop && window.larpenatorDesktop.econCalendar;
+    if (!api) { newsState.error = 'desktop-only'; renderNews(); return; }
+    if (!force && newsState.events && Date.now() - newsState.fetchedAt < 60 * 60 * 1000) { renderNews(); return; }
+    if (newsLoading) return;
+    newsLoading = true; renderNews();
+    try {
+      const r = await api();
+      if (r && Array.isArray(r.events)) {
+        newsState = { events: r.events, fetchedAt: Date.now(), error: null };
+        try { localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify(newsState)); } catch (e) {}
+      } else newsState.error = (r && r.error) || 'unavailable';
+    } catch (e) { newsState.error = e.message || 'unavailable'; }
+    newsLoading = false;
+    renderNews();
+  }
+  function renderNews() {
+    const list = document.getElementById('dash-news-list');
+    const foot = document.getElementById('dash-news-foot');
+    if (!list) return;
+    if (!newsState.events) {
+      list.innerHTML = `<div class="news-empty">${newsLoading ? 'Loading this week’s calendar…' : newsState.error === 'desktop-only' ? 'News is available in the desktop app.' : 'Couldn’t load the news calendar — check your connection, then ⟲.'}</div>`;
+      foot.textContent = '';
+      return;
+    }
+    const now = Date.now();
+    const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+    const dayKey = d => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    const todayKey = dayKey(new Date());
+    const tmr = new Date(startToday); tmr.setDate(tmr.getDate() + 1);
+    const upcoming = newsState.events
+      .map(ev => ({ ...ev, t: new Date(ev.date) }))
+      .filter(ev => !isNaN(ev.t) && ev.t >= startToday)
+      .sort((a, b) => a.t - b.t);
+    if (!upcoming.length) {
+      list.innerHTML = `<div class="news-empty">No high-impact US news left this week.</div>`;
+    } else {
+      let lastDay = '';
+      list.innerHTML = upcoming.map(ev => {
+        const k = dayKey(ev.t);
+        const dayLabel = k === todayKey ? 'Today' : k === dayKey(tmr) ? 'Tomorrow' : ev.t.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+        const head = k !== lastDay ? `<div class="news-day">${dayLabel}</div>` : '';
+        lastDay = k;
+        const time = ev.t.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        const diff = ev.t - now;
+        let when = '';
+        if (diff <= 0) when = '<span class="news-when past">released</span>';
+        else if (diff < 24 * 3600 * 1000) { const h = Math.floor(diff / 3600000), m = Math.floor((diff % 3600000) / 60000); when = `<span class="news-when soon">in ${h ? h + 'h ' : ''}${m}m</span>`; }
+        const nums = [ev.forecast ? `fcst ${escapeHtml(ev.forecast)}` : '', ev.previous ? `prev ${escapeHtml(ev.previous)}` : ''].filter(Boolean).join(' · ');
+        return `${head}<div class="news-row${diff <= 0 ? ' past' : ''}"><span class="news-time">${time}</span><div class="news-body"><div class="news-title">${escapeHtml(ev.title)}</div>${nums ? `<div class="news-nums">${nums}</div>` : ''}</div>${when}</div>`;
+      }).join('');
+    }
+    const mins = Math.max(0, Math.round((now - newsState.fetchedAt) / 60000));
+    foot.textContent = `Your local time · updated ${mins < 1 ? 'just now' : mins < 60 ? mins + ' min ago' : Math.round(mins / 60) + 'h ago'}${newsState.error ? ' · refresh failed' : ''}`;
+  }
+  document.getElementById('news-refresh-btn').addEventListener('click', () => refreshNews(true));
+  refreshNews(false);
+  setInterval(() => refreshNews(false), 10 * 60 * 1000);
+  setInterval(renderNews, 60 * 1000);
 
   function renderDashCalendar(list, isAlgo) {
     const y = isAlgo ? algoCalYear : todayDate.getFullYear();
@@ -3388,7 +4026,16 @@
 
   // ---------- entries list ----------
   let entriesQuery = '', entriesFrom = '', entriesTo = '';
-  let expandedTradeIds = new Set();
+  let activeSessionFilter = null, activeSetupFilter = null, selectedTradeId = null;
+  let menuTradeId = null;
+  document.querySelectorAll('#session-filter-pills .pill').forEach(p => p.addEventListener('click', () => {
+    activeSessionFilter = activeSessionFilter === p.dataset.sessionFilter ? null : p.dataset.sessionFilter;
+    renderEntries();
+  }));
+  document.querySelectorAll('#setup-filter-pills .pill').forEach(p => p.addEventListener('click', () => {
+    activeSetupFilter = activeSetupFilter === p.dataset.setupFilter ? null : p.dataset.setupFilter;
+    renderEntries();
+  }));
   document.getElementById('entries-search').addEventListener('input', (e) => { entriesQuery = e.target.value.trim(); renderEntries(); });
   document.getElementById('entries-from').addEventListener('change', (e) => { entriesFrom = e.target.value; renderEntries(); });
   document.getElementById('entries-to').addEventListener('change', (e) => { entriesTo = e.target.value; renderEntries(); });
@@ -3536,33 +4183,47 @@
     marker(pts[sellIdx], 'S', '#ef6a5f');
   }
 
-  function renderEntries() {
-    const s = computeStats(entries);
-    document.getElementById('stats-strip').innerHTML = `
-      <div class="stat"><div class="label">Total entries</div><div class="value">${entries.length}</div></div>
-      <div class="stat"><div class="label">Win rate</div><div class="value">${s.winRate}%</div></div>
-      <div class="stat"><div class="label">Wins / Losses</div><div class="value">${s.wins} / ${s.losses}</div></div>
-      <div class="stat"><div class="label">Total P&amp;L</div><div class="value ${s.totalPnl >= 0 ? 'win' : 'loss'}">${fmtMoney(s.totalPnl)}</div></div>
-    `;
-    const list = document.getElementById('entries-list');
-    let shown = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
-    if (activeFilter !== 'all') shown = shown.filter(e => e.result === activeFilter);
-    if (entriesQuery) {
-      const q = entriesQuery.toLowerCase();
-      shown = shown.filter(e => [e.date, fmtDate(e.date), fmtDateShort(e.date), e.symbol, e.emotions, e.happened, e.good, e.bad, e.improve, (e.brokenRules || []).join(' ')].join('\n').toLowerCase().includes(q));
-    }
-    if (entriesFrom) shown = shown.filter(e => e.date >= entriesFrom);
-    if (entriesTo) shown = shown.filter(e => e.date <= entriesTo);
-    if (shown.length === 0) { list.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>${entriesQuery || entriesFrom || entriesTo ? 'Nothing matches your search or date range.' : 'No entries here yet.'}</p></div>`; return; }
-
-    list.innerHTML = shown.map(e => {
-      if (!expandedTradeIds.has(e.id)) {
-        const resultLabel = e.result === 'breakeven' ? 'BE' : e.result === 'win' ? 'Win' : 'Loss';
-        return `
-        <div class="trade-row" data-row="${e.id}">
+  // Photos are large data URLs; register each pool photo once as a CSS class
+  // instead of repeating the URL on every card in the grid.
+  let bgPhotoStyleKey = '';
+  function syncBgPhotoClasses(shared, loss) {
+    const sig = p => p.length + ':' + p.slice(22, 90) + p.slice(-60);
+    const key = shared.map(sig).join('|') + '#' + loss.map(sig).join('|');
+    if (key === bgPhotoStyleKey) return;
+    bgPhotoStyleKey = key;
+    let el = document.getElementById('bgp-style');
+    if (!el) { el = document.createElement('style'); el.id = 'bgp-style'; document.head.appendChild(el); }
+    el.textContent = shared.map((p, i) => `.bgp-s${i}{background-image:url('${p}')}`).join('\n') + '\n' + loss.map((p, i) => `.bgp-l${i}{background-image:url('${p}')}`).join('\n');
+  }
+  function photoClassFor(e, shared, loss) {
+    if (e.result === 'loss' && loss.length) return 'bgp-l' + ((e.bgPhotoIndex || 0) % loss.length);
+    if (shared.length) return 'bgp-s' + ((e.bgPhotoIndex || 0) % shared.length);
+    return '';
+  }
+  function compactCardHTML(e, photoCls, attrs) {
+    const sign = e.result === 'win' ? '+' : e.result === 'loss' ? '−' : '';
+    const tags = [];
+    if (e.session) tags.push(sessionLabel(e.session));
+    if (e.setupType) tags.push(setupTypeLabel(e.setupType));
+    if (e.result === 'breakeven') tags.push('Breakeven');
+    if (e.rulesBroken) tags.push('⚠ Rule broken');
+    return `
+      <div class="tc ${photoCls || 'no-photo'}" ${attrs || ''}>
+        <div class="tc-top"><b>${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</b><span>${e.date ? fmtDateShort(e.date) : ''}</span></div>
+        <div>
+          <div class="tc-pnl ${e.result || ''}">${sign}${fmtMoney(Math.abs(e.pnl || 0))}</div>
+          ${tags.length ? `<div class="tc-tags">${tags.map(t => `<span>${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+        </div>
+      </div>`;
+  }
+  function tradeRowHTML(e, sel) {
+    const resultLabel = e.result === 'breakeven' ? 'BE' : e.result === 'win' ? 'Win' : 'Loss';
+    return `
+        <div class="trade-row${sel ? ' sel' : ''}" data-row="${e.id}" tabindex="0">
           <div class="trade-row-left">
             <span class="trade-row-date">${fmtDateShort(e.date)}</span>
             <span class="trade-row-symbol">${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</span>
+            <span class="trade-row-tags">${[e.session ? sessionLabel(e.session) : '', e.setupType ? setupTypeLabel(e.setupType) : ''].filter(Boolean).join(' · ')}</span>
           </div>
           <div class="trade-row-right">
             <span class="badge ${e.result}">${resultLabel}</span>
@@ -3571,84 +4232,248 @@
             <button class="trade-row-export" data-export="${e.id}" type="button" title="Export as image">⤢</button>
           </div>
         </div>`;
-      }
-      const lossPhotos = e.result === 'loss' ? getLossBgPhotos() : [];
-      const photos = lossPhotos.length ? lossPhotos : getSharedBgPhotos();
-      const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
-      const activePhoto = photos.length ? photos[idx] : null;
-      const bg = activePhoto ? `style="background-image:linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)), url('${activePhoto}')"` : '';
-      const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
-      return `
-      <div class="trade-card-wrap" data-wrap="${e.id}">
-        <div class="trade-card ${activePhoto ? '' : 'no-photo'}" data-id="${e.id}" ${bg}>
-          ${tradeChartSVG(e)}
-          ${photos.length > 1 ? `
-            <button class="trade-card-photonav prev" data-photonav="${e.id}" data-dir="-1" type="button" title="Previous photo">‹</button>
-            <button class="trade-card-photonav next" data-photonav="${e.id}" data-dir="1" type="button" title="Next photo">›</button>
-          ` : ''}
-          <div class="trade-card-top" data-collapse="${e.id}">
-            <div>
-              <div class="trade-card-symbol">${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</div>
-              <div class="trade-card-date">${fmtDate(e.date)}${e.rulesBroken ? ' · <span class="rule-flag" title="Rules broken">⚠</span>' : ''}</div>
-            </div>
-            <button class="trade-card-collapse" type="button" title="Collapse">▲</button>
-          </div>
-          <div class="trade-card-body">
-            <div class="trade-card-pnl-block">
-              <div class="trade-card-pnl ${e.result}">${e.result === 'win' ? '+' : e.result === 'loss' ? '-' : ''}${fmtMoney(Math.abs(e.pnl))}</div>
-              <div class="trade-card-result ${e.result}">${resultLabel}</div>
-              ${e.setupType ? `<div class="trade-card-setup">${setupTypeLabel(e.setupType)}</div>` : ''}
-              ${e.session ? `<div class="trade-card-setup">${sessionLabel(e.session)} session</div>` : ''}
-            </div>
-            <div class="trade-card-stats">
-              ${photos.length > 1 ? `<div class="trade-card-stat"><span class="k">Photo</span><span class="v">${idx + 1} / ${photos.length}</span></div>` : ''}
-            </div>
-          </div>
-          <div class="trade-card-actions">
-            <button class="btn small" data-more="${e.id}" type="button">See more</button>
-            <button class="btn ghost small" data-edit="${e.id}" type="button">Edit</button>
-            <button class="btn ghost small" data-tradenote="${e.id}" type="button">Note ↗</button>
-            <button class="btn ghost small" data-export="${e.id}" type="button">⤢ Export</button>
-            <button class="btn danger small" data-delete="${e.id}" type="button">Delete</button>
+  }
+  function tradeDetailHTML(e, shared, loss) {
+    const photos = e.result === 'loss' && loss.length ? loss : shared;
+    const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
+    const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
+    const blocks = [
+      e.brokenRules && e.brokenRules.length ? block('Rules broken', e.brokenRules.join(', ')) : '',
+      e.checklistChecked && e.checklistChecked.length ? block('Pre-trade checklist confirmed', e.checklistChecked.join(', ')) : '',
+      block('Emotions', e.emotions),
+      block('What happened', e.happened),
+      block('What went well', e.good),
+      block('What went badly', e.bad),
+      block('Improvements', e.improve)
+    ].filter(Boolean);
+    return `
+      <button class="btn ghost small detail-close" data-close-detail type="button">✕ Close</button>
+      <div class="trade-card ${photos.length ? '' : 'no-photo'}" data-id="${e.id}">
+        ${tradeChartSVG(e)}
+        ${photos.length > 1 ? `
+          <button class="trade-card-photonav prev" data-photonav="${e.id}" data-dir="-1" type="button" title="Previous photo">‹</button>
+          <button class="trade-card-photonav next" data-photonav="${e.id}" data-dir="1" type="button" title="Next photo">›</button>
+        ` : ''}
+        <div class="trade-card-top">
+          <div>
+            <div class="trade-card-symbol">${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</div>
+            <div class="trade-card-date">${fmtDate(e.date)}${e.rulesBroken ? ' · <span class="rule-flag" title="Rules broken">⚠</span>' : ''}</div>
           </div>
         </div>
-        <div class="trade-card-more" id="more-${e.id}">
-          ${e.brokenRules && e.brokenRules.length ? block('Rules broken', e.brokenRules.join(', ')) : ''}
-          ${e.checklistChecked && e.checklistChecked.length ? block('Pre-trade checklist confirmed', e.checklistChecked.join(', ')) : ''}
-          ${block('Emotions', e.emotions)}
-          ${block('What happened', e.happened)}
-          ${block('What went well', e.good)}
-          ${block('What went badly', e.bad)}
-          ${block('Improvements', e.improve)}
-          ${e.screenshot ? `<div class="entry-block"><div class="k">Trade screenshot</div><img class="entry-screenshot-thumb" src="${e.screenshot}" data-full="${e.screenshot}"></div>` : ''}
+        <div class="trade-card-body">
+          <div class="trade-card-pnl-block">
+            <div class="trade-card-pnl ${e.result}">${e.result === 'win' ? '+' : e.result === 'loss' ? '-' : ''}${fmtMoney(Math.abs(e.pnl))}</div>
+            <div class="trade-card-result ${e.result}">${resultLabel}</div>
+            ${e.setupType ? `<div class="trade-card-setup">${setupTypeLabel(e.setupType)}</div>` : ''}
+            ${e.session ? `<div class="trade-card-setup">${sessionLabel(e.session)} session</div>` : ''}
+          </div>
+          <div class="trade-card-stats">
+            ${photos.length > 1 ? `<div class="trade-card-stat"><span class="k">Photo</span><span class="v">${idx + 1} / ${photos.length}</span></div>` : ''}
+          </div>
         </div>
       </div>
-    `; }).join('');
+      <div class="detail-actions">
+        <button class="btn small" data-edit="${e.id}" type="button">Edit</button>
+        <button class="btn ghost small" data-export="${e.id}" type="button">⤢ Export card</button>
+        <button class="btn ghost small" data-tradenote="${e.id}" type="button">Note ↗</button>
+        <button class="btn danger small push" data-delete="${e.id}" type="button">Delete</button>
+      </div>
+      <div class="detail-blocks">
+        ${blocks.join('')}
+        ${e.screenshot ? `<div class="entry-block wide"><div class="k">Trade screenshot</div><img class="entry-screenshot-thumb" src="${e.screenshot}" data-full="${e.screenshot}"></div>` : ''}
+        ${!blocks.length && !e.screenshot ? `<div class="entry-block wide"><div class="v" style="color:var(--ink-faint)">No notes on this trade yet — Edit to add some.</div></div>` : ''}
+      </div>`;
+  }
 
-    list.querySelectorAll('[data-row]').forEach(el => el.addEventListener('click', () => {
-      expandedTradeIds.add(el.dataset.row);
-      advanceBgPhoto(el.dataset.row);
-      renderEntries();
-    }));
-    list.querySelectorAll('[data-collapse]').forEach(el => el.addEventListener('click', (ev) => {
+  // Log trade: the card redraws itself as the form is filled in
+  function renderLogPreview() {
+    const el = document.getElementById('log-preview-card');
+    if (!el) return;
+    const editing = editingId ? entries.find(x => x.id === editingId) : null;
+    const pnlRaw = parseFloat(document.getElementById('f-pnl').value);
+    const e = {
+      id: editingId || 'preview',
+      symbol: document.getElementById('f-symbol').value.trim(),
+      date: dateInput.value || todayStr,
+      result: selectedResult || '',
+      pnl: isNaN(pnlRaw) ? 0 : pnlRaw,
+      session: selectedSession,
+      setupType: selectedSetupType,
+      rulesBroken,
+      bgPhotoIndex: editing ? (editing.bgPhotoIndex || 0) : 0
+    };
+    const shared = getSharedBgPhotos(), loss = getLossBgPhotos();
+    syncBgPhotoClasses(shared, loss);
+    el.innerHTML = compactCardHTML(e, photoClassFor(e, shared, loss), '');
+  }
+  document.getElementById('entry-form').addEventListener('input', renderLogPreview);
+  document.getElementById('entry-form').addEventListener('click', () => setTimeout(renderLogPreview, 0));
+
+  // clicking a trade offers three choices right under it
+  function rowMenuHTML(e) {
+    if (e.id !== menuTradeId) return '';
+    return `<div class="row-menu" role="menu">
+      <button class="btn small" type="button" data-menu-act="card" data-id="${e.id}">View card</button>
+      <button class="btn ghost small" type="button" data-menu-act="full" data-id="${e.id}">View full entry</button>
+      <button class="btn ghost small" type="button" data-menu-act="edit" data-id="${e.id}">Edit entry</button>
+    </div>`;
+  }
+  function toggleRowMenu(id) {
+    menuTradeId = menuTradeId === id ? null : id;
+    renderEntries();
+  }
+
+  // card photos are sized to the image's own shape so nothing gets cropped
+  const photoAspectCache = new Map();
+  function photoAspect(url, cb) {
+    const key = url.length + ':' + url.slice(-80);
+    if (photoAspectCache.has(key)) { cb(photoAspectCache.get(key)); return; }
+    const img = new Image();
+    img.onload = () => {
+      const ar = img.naturalWidth && img.naturalHeight ? Math.min(2.6, Math.max(0.55, img.naturalWidth / img.naturalHeight)) : 16 / 9;
+      photoAspectCache.set(key, ar); cb(ar);
+    };
+    img.src = url;
+  }
+
+  // "View card": a clean, screenshot-ready card with nothing else around it
+  const cardViewEl = document.getElementById('card-view');
+  let cardViewId = null;
+  function openCardView(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+    cardViewId = id;
+    const photos = photosForEntry(e);
+    const url = photos.length ? photos[(e.bgPhotoIndex || 0) % photos.length] : null;
+    const card = document.getElementById('cv-card');
+    const resultLabel = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
+    const sign = e.result === 'win' ? '+' : e.result === 'loss' ? '-' : '';
+    const meta = [resultLabel, e.setupType ? setupTypeLabel(e.setupType) : '', e.session ? sessionLabel(e.session) + ' session' : ''].filter(Boolean);
+    card.className = 'cv-card' + (url ? '' : ' no-photo');
+    card.style.backgroundImage = url ? `linear-gradient(180deg, rgba(9,9,9,0.12), rgba(9,9,9,0.5) 58%, rgba(9,9,9,0.93)), url('${url}')` : '';
+    card.style.setProperty('--ar', 16 / 9);
+    card.innerHTML = `
+      ${tradeChartSVG(e).replace('class="trade-card-chart"', 'class="cv-chart"')}
+      <div class="cv-top">
+        <div class="cv-sym">${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</div>
+        <div class="cv-date">${fmtDate(e.date)}</div>
+      </div>
+      <div class="cv-bot">
+        <div class="cv-pnl ${e.result}">${sign}${fmtMoney(Math.abs(e.pnl || 0))}</div>
+        <div class="cv-meta">${meta.map(m => `<span>${escapeHtml(m)}</span>`).join('')}</div>
+        <div class="cv-brand">LARPENATOR <span>3000</span></div>
+      </div>`;
+    if (url) photoAspect(url, ar => { if (cardViewId === id) card.style.setProperty('--ar', ar); });
+    const many = photos.length > 1;
+    document.getElementById('cv-prev').hidden = !many;
+    document.getElementById('cv-next').hidden = !many;
+    cardViewEl.classList.add('open');
+  }
+  function closeCardView() { cardViewEl.classList.remove('open'); cardViewId = null; }
+  function stepCardViewPhoto(dir) {
+    const e = entries.find(x => x.id === cardViewId);
+    if (!e) return;
+    setBgPhotoIndex(e.id, (e.bgPhotoIndex || 0) + dir);
+    openCardView(e.id);
+    if (activeTab === 'entries') renderEntries();
+  }
+  document.getElementById('cv-close').addEventListener('click', closeCardView);
+  document.getElementById('cv-prev').addEventListener('click', (ev) => { ev.stopPropagation(); stepCardViewPhoto(-1); });
+  document.getElementById('cv-next').addEventListener('click', (ev) => { ev.stopPropagation(); stepCardViewPhoto(1); });
+  cardViewEl.addEventListener('click', (ev) => { if (ev.target === cardViewEl) closeCardView(); });
+  document.addEventListener('keydown', (ev) => {
+    if (!cardViewEl.classList.contains('open')) {
+      if (ev.key === 'Escape' && menuTradeId && activeTab === 'entries') { menuTradeId = null; renderEntries(); }
+      return;
+    }
+    if (ev.key === 'Escape') closeCardView();
+    else if (ev.key === 'ArrowLeft') stepCardViewPhoto(-1);
+    else if (ev.key === 'ArrowRight') stepCardViewPhoto(1);
+  });
+
+  function openEntryDetail(id) {
+    if (!entries.some(x => x.id === id)) return;
+    selectedTradeId = id;
+    advanceBgPhoto(id);
+    if (activeTab !== 'entries') switchTab('entries'); else renderEntries();
+    const sec = document.getElementById('section-entries');
+    if (sec) sec.scrollIntoView({ block: 'start' });
+  }
+
+  function renderEntries() {
+    const s = computeStats(entries);
+    document.getElementById('stats-strip').innerHTML = `
+      <div class="stat"><div class="label">Total entries</div><div class="value">${entries.length}</div></div>
+      <div class="stat"><div class="label">Win rate</div><div class="value">${s.winRate}%</div></div>
+      <div class="stat"><div class="label">Wins / Losses</div><div class="value">${s.wins} / ${s.losses}</div></div>
+      <div class="stat"><div class="label">Total P&amp;L</div><div class="value ${s.totalPnl >= 0 ? 'win' : 'loss'}">${fmtMoney(s.totalPnl)}</div></div>
+    `;
+    document.querySelectorAll('#session-filter-pills .pill').forEach(p => p.classList.toggle('active', p.dataset.sessionFilter === activeSessionFilter));
+    document.querySelectorAll('#setup-filter-pills .pill').forEach(p => p.classList.toggle('active', p.dataset.setupFilter === activeSetupFilter));
+
+    const list = document.getElementById('entries-list');
+    const detail = document.getElementById('entry-detail');
+    const split = document.getElementById('entries-split');
+    let shown = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+    if (activeFilter !== 'all') shown = shown.filter(e => e.result === activeFilter);
+    if (activeSessionFilter) shown = shown.filter(e => e.session === activeSessionFilter);
+    if (activeSetupFilter) shown = shown.filter(e => e.setupType === activeSetupFilter);
+    if (entriesQuery) {
+      const q = entriesQuery.toLowerCase();
+      shown = shown.filter(e => [e.date, fmtDate(e.date), fmtDateShort(e.date), e.symbol, e.emotions, e.happened, e.good, e.bad, e.improve, (e.brokenRules || []).join(' ')].join('\n').toLowerCase().includes(q));
+    }
+    if (entriesFrom) shown = shown.filter(e => e.date >= entriesFrom);
+    if (entriesTo) shown = shown.filter(e => e.date <= entriesTo);
+
+    const selected = selectedTradeId ? entries.find(x => x.id === selectedTradeId) : null;
+    if (selectedTradeId && !selected) selectedTradeId = null;
+    split.classList.toggle('detail-open', !!selected);
+
+    const shared = getSharedBgPhotos();
+    const loss = getLossBgPhotos();
+    syncBgPhotoClasses(shared, loss);
+
+    if (selected) {
+      list.innerHTML = shown.length ? shown.map(e => tradeRowHTML(e, e.id === selected.id) + rowMenuHTML(e)).join('') : `<div class="empty-state"><p>No other trades match these filters.</p></div>`;
+      detail.innerHTML = tradeDetailHTML(selected, shared, loss);
+      const pool = selected.result === 'loss' && loss.length ? loss : shared;
+      const card = detail.querySelector('.trade-card');
+      if (pool.length && card) {
+        const url = pool[(selected.bgPhotoIndex || 0) % pool.length];
+        card.style.backgroundImage = `linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)), url('${url}')`;
+        photoAspect(url, ar => card.style.setProperty('--ar', ar));
+      }
+    } else {
+      detail.innerHTML = '';
+      if (!shown.length) {
+        const filtered = entriesQuery || entriesFrom || entriesTo || activeFilter !== 'all' || activeSessionFilter || activeSetupFilter;
+        list.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>${filtered ? 'Nothing matches your search or filters.' : 'No entries here yet.'}</p></div>`;
+        return;
+      }
+      list.innerHTML = shown.map(e => tradeRowHTML(e, false) + rowMenuHTML(e)).join('');
+    }
+
+    const root = split;
+    root.querySelectorAll('[data-row]').forEach(el => {
+      el.addEventListener('click', (ev) => { if (ev.target.closest('[data-export]')) return; toggleRowMenu(el.dataset.row); });
+      el.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); toggleRowMenu(el.dataset.row); } });
+    });
+    root.querySelectorAll('[data-menu-act]').forEach(el => el.addEventListener('click', (ev) => {
       ev.stopPropagation();
-      expandedTradeIds.delete(el.dataset.collapse);
-      renderEntries();
+      const id = el.dataset.id, act = el.dataset.menuAct;
+      menuTradeId = null;
+      if (act === 'card') { advanceBgPhoto(id); renderEntries(); openCardView(id); }
+      else if (act === 'full') openEntryDetail(id);
+      else if (act === 'edit') loadEntryIntoForm(id);
     }));
-    list.querySelectorAll('[data-more]').forEach(el => el.addEventListener('click', (ev) => {
-      ev.stopPropagation();
-      const id = el.dataset.more;
-      const panel = document.getElementById('more-' + id);
-      const opening = !panel.classList.contains('open');
-      panel.classList.toggle('open');
-      el.textContent = panel.classList.contains('open') ? 'See less' : 'See more';
-      if (opening) advanceBgPhoto(id);
-    }));
-    list.querySelectorAll('[data-tradenote]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); openTradeNote(el.dataset.tradenote); }));
-    list.querySelectorAll('[data-edit]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); loadEntryIntoForm(el.dataset.edit); }));
-    list.querySelectorAll('[data-delete]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); deleteEntry(el.dataset.delete); }));
-    list.querySelectorAll('[data-export]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); openExportCard(el.dataset.export); }));
-    list.querySelectorAll('[data-photonav]').forEach(el => el.addEventListener('click', (ev) => {
+    const openMenuBtn = root.querySelector('.row-menu [data-menu-act]');
+    if (openMenuBtn && document.activeElement && document.activeElement.closest && document.activeElement.closest('[data-row]')) openMenuBtn.focus();
+    root.querySelectorAll('[data-close-detail]').forEach(el => el.addEventListener('click', () => { selectedTradeId = null; renderEntries(); }));
+    root.querySelectorAll('[data-tradenote]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); openTradeNote(el.dataset.tradenote); }));
+    root.querySelectorAll('[data-edit]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); loadEntryIntoForm(el.dataset.edit); }));
+    root.querySelectorAll('[data-delete]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); deleteEntry(el.dataset.delete); }));
+    root.querySelectorAll('[data-export]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); openExportCard(el.dataset.export); }));
+    root.querySelectorAll('[data-photonav]').forEach(el => el.addEventListener('click', (ev) => {
       ev.stopPropagation();
       const id = el.dataset.photonav;
       const e = entries.find(x => x.id === id);
@@ -3656,7 +4481,7 @@
       setBgPhotoIndex(id, (e.bgPhotoIndex || 0) + parseInt(el.dataset.dir, 10));
       renderEntries();
     }));
-    list.querySelectorAll('.entry-screenshot-thumb').forEach(img => img.addEventListener('click', (ev) => { ev.stopPropagation(); openLightbox(img.dataset.full); }));
+    root.querySelectorAll('.entry-screenshot-thumb').forEach(img => img.addEventListener('click', (ev) => { ev.stopPropagation(); openLightbox(img.dataset.full); }));
   }
 
   function photosForEntry(e) {
@@ -4325,6 +5150,13 @@
     </div>`;
   }
 
+  function mrMaxDrawdown(list) {
+    let cum = 0, peak = 0, dd = 0;
+    [...list].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt).forEach(e => {
+      cum += e.pnl || 0; peak = Math.max(peak, cum); dd = Math.min(dd, cum - peak);
+    });
+    return dd;
+  }
   function renderMonthlyReport() {
     document.getElementById('mr-title').textContent = `${MONTH_NAMES[mrMonth]} ${mrYear}`;
     document.getElementById('mr-print-label').textContent = `${MONTH_NAMES[mrMonth]} ${mrYear}`;
@@ -4366,6 +5198,11 @@
         <div class="label">Worst trade</div>
         <div class="value neg" style="font-size:18px;">${worst ? fmtMoney(worst.pnl) : '—'}</div>
         <div class="sub">${worst ? (worst.symbol ? escapeHtml(worst.symbol) : 'Untitled') + ' · ' + fmtDateShort(worst.date) : 'no trades'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Max drawdown</div>
+        <div class="value${mrMaxDrawdown(list) < 0 ? ' neg' : ''}">${fmtMoney(mrMaxDrawdown(list))}</div>
+        <div class="sub">largest drop from a high this month</div>
       </div>
       <div class="stat-card">
         <div class="label">Rules broken</div>
@@ -4974,6 +5811,13 @@
     });
   });
   function renderChecklistManage() {
+    // each setup tab shows how that setup has actually performed
+    document.querySelectorAll('#checklist-subnav .subnav-item').forEach(item => {
+      const cat = item.dataset.checklistcat;
+      const trades = entries.filter(e => e.setupType === cat);
+      const cs = computeStats(trades);
+      item.innerHTML = `${setupTypeLabel(cat)} <span class="setup-perf">${trades.length ? `${trades.length} trade${trades.length === 1 ? '' : 's'} · ${cs.winRate}% win` : 'no trades yet'}</span>`;
+    });
     const el = document.getElementById('checklist-items-manage');
     const items = checklistCategories[activeChecklistCat] || [];
     if (!items.length) {
@@ -6693,12 +7537,90 @@
     if (card) card.closest('.card').style.display = 'none';
   }
 
+  // ---------- search & jump (Ctrl K) and keyboard shortcuts ----------
+  const cmdkEl = document.getElementById('cmdk');
+  const cmdkInput = document.getElementById('cmdk-input');
+  const cmdkList = document.getElementById('cmdk-list');
+  let cmdkItems = [], cmdkSel = 0;
+  function cmdkActions() {
+    return [
+      { label: 'Log a trade', right: 'N', run: () => switchTab('new') },
+      { label: 'Log a premarket note', right: 'Today', run: () => { switchTab('premarket'); resetPmForm(); document.getElementById('pm-date').value = todayStr; } },
+      { label: 'Print this month’s report', right: 'Review', run: () => { switchTab('monthly-report'); setTimeout(() => window.print(), 150); } },
+      { label: 'Export everything (JSON backup)', right: 'Settings', run: () => document.getElementById('export-btn').click() }
+    ];
+  }
+  function cmdkPages() {
+    const out = [];
+    Object.values(NAV_GROUPS).forEach(def => def.tabs.forEach(([t, label]) => out.push({ label, right: def.label, run: () => switchTab(t) })));
+    return out;
+  }
+  function renderCmdk() {
+    const q = cmdkInput.value.trim().toLowerCase();
+    const match = s => !q || s.toLowerCase().includes(q);
+    const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+    const trades = (q ? sorted.filter(e => [e.symbol, e.date, fmtDate(e.date), fmtDateShort(e.date), e.happened, e.emotions, e.good, e.bad, e.improve, setupTypeLabel(e.setupType || ''), sessionLabel(e.session || '')].join('\n').toLowerCase().includes(q)) : sorted).slice(0, q ? 8 : 4);
+    const groups = [
+      ['Trades', trades.map(e => {
+        return { label: `${e.symbol || 'Untitled trade'} · ${fmtDateShort(e.date)}${e.setupType ? ' · ' + setupTypeLabel(e.setupType) : ''}`, right: fmtMoney(e.pnl || 0), rightCls: (e.pnl || 0) >= 0 ? 'pos' : 'neg', run: () => openEntryDetail(e.id) };
+      })],
+      ['Actions', cmdkActions().filter(a => match(a.label))],
+      ['Pages', cmdkPages().filter(p => match(p.label) || match(p.right))]
+    ].filter(([, items]) => items.length);
+    cmdkItems = groups.flatMap(([, items]) => items);
+    if (cmdkSel >= cmdkItems.length) cmdkSel = Math.max(0, cmdkItems.length - 1);
+    let i = 0;
+    cmdkList.innerHTML = groups.length ? groups.map(([name, items]) => `<div class="cmdk-grp">${name}</div>` + items.map(it => {
+      const idx = i++;
+      return `<div class="cmdk-it${idx === cmdkSel ? ' sel' : ''}" data-i="${idx}">${it.thumb !== undefined ? `<span class="th" style="${it.thumb ? `background-image:url('${it.thumb}')` : ''}"></span>` : ''}<span>${escapeHtml(it.label)}</span><span class="r ${it.rightCls || ''}">${escapeHtml(it.right || '')}</span></div>`;
+    }).join('')).join('') : `<div class="cmdk-empty">Nothing matches “${escapeHtml(cmdkInput.value)}”.</div>`;
+    cmdkList.querySelectorAll('.cmdk-it').forEach(el => {
+      el.addEventListener('mousemove', () => { if (cmdkSel !== +el.dataset.i) { cmdkSel = +el.dataset.i; cmdkList.querySelectorAll('.cmdk-it').forEach(x => x.classList.toggle('sel', x === el)); } });
+      el.addEventListener('click', () => runCmdk(+el.dataset.i));
+    });
+    const selEl = cmdkList.querySelector('.cmdk-it.sel');
+    if (selEl) selEl.scrollIntoView({ block: 'nearest' });
+  }
+  function runCmdk(i) { const it = cmdkItems[i]; closeCmdk(); if (it) it.run(); }
+  function openCmdk() { cmdkEl.classList.add('open'); cmdkInput.value = ''; cmdkSel = 0; renderCmdk(); cmdkInput.focus(); }
+  function closeCmdk() { cmdkEl.classList.remove('open'); }
+  cmdkInput.addEventListener('input', () => { cmdkSel = 0; renderCmdk(); });
+  cmdkInput.addEventListener('keydown', (ev) => {
+    if (ev.key === 'ArrowDown') { ev.preventDefault(); cmdkSel = Math.min(cmdkItems.length - 1, cmdkSel + 1); renderCmdk(); }
+    else if (ev.key === 'ArrowUp') { ev.preventDefault(); cmdkSel = Math.max(0, cmdkSel - 1); renderCmdk(); }
+    else if (ev.key === 'Enter') { ev.preventDefault(); runCmdk(cmdkSel); }
+    else if (ev.key === 'Escape') { ev.preventDefault(); closeCmdk(); }
+  });
+  cmdkEl.addEventListener('mousedown', (ev) => { if (ev.target === cmdkEl) closeCmdk(); });
+  document.getElementById('side-search-btn').addEventListener('click', openCmdk);
+  document.getElementById('side-log-btn').addEventListener('click', () => switchTab('new'));
+  document.addEventListener('keydown', (ev) => {
+    if ((ev.ctrlKey || ev.metaKey) && !ev.altKey && ev.key.toLowerCase() === 'k') {
+      ev.preventDefault();
+      if (cmdkEl.classList.contains('open')) closeCmdk(); else openCmdk();
+      return;
+    }
+    if (cmdkEl.classList.contains('open')) return;
+    const t = ev.target;
+    const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+    if (!typing && !ev.ctrlKey && !ev.metaKey && !ev.altKey && (ev.key === 'n' || ev.key === 'N')) {
+      const modalOpen = document.querySelector('.lightbox.open, .export-card-modal.open, .doc-preview-modal.open, #welcome-overlay[style*="flex"]');
+      if (!modalOpen) { ev.preventDefault(); switchTab('new'); }
+    }
+  });
+
+  function setSideSync(on) {
+    document.getElementById('side-sync-dot').classList.toggle('on', on);
+    document.getElementById('side-sync-label').textContent = on ? 'Cloud sync on' : 'Cloud sync off';
+  }
+  if (window.LvdSync && window.LvdSync.isSupported) LvdSync.onAuthChange(user => setSideSync(!!user));
+
   // ---------- init ----------
   migrateLegacyBgPhotosOnce();
   advanceAllBgPhotosOnLaunch();
   renderBgPhotoGrid();
   renderLossBgPhotoGrid();
-  renderDashboard();
+  switchTab('dashboard');
   renderBtRuleTagsPicker();
   renderBacktestStats();
 })();

@@ -178,12 +178,33 @@
   let editingEntryId = null;
   let editingPremarketId = null;
 
-  // ---------- tabs ----------
+  // ---------- tabs: the same five places as the desktop app ----------
+  const TAB_GROUPS = {
+    today: [['dashboard', 'Overview'], ['premarket', 'Premarket']],
+    journal: [['entries', 'Entries'], ['calendar', 'Calendar']],
+    review: [['weekly', 'Weekly review']],
+    playbook: [['checklist', 'Checklist']],
+    library: [['achievements', 'Achievements'], ['more', 'Account']]
+  };
+  const SCREEN_GROUP = {};
+  Object.entries(TAB_GROUPS).forEach(([g, list]) => list.forEach(([sc]) => { SCREEN_GROUP[sc] = g; }));
+  Object.values(TAB_GROUPS).forEach(list => {
+    if (list.length < 2) return;
+    list.forEach(([sc]) => {
+      const screen = document.getElementById('screen-' + sc);
+      if (!screen) return;
+      const strip = document.createElement('div');
+      strip.className = 'subtabs';
+      strip.innerHTML = list.map(([t, label]) => `<button type="button" data-goto="${t}" class="${t === sc ? 'on' : ''}">${label}</button>`).join('');
+      screen.insertBefore(strip, screen.firstChild);
+    });
+  });
+  document.querySelectorAll('.subtabs [data-goto]').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.goto)));
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    btn.addEventListener('click', () => switchTab(TAB_GROUPS[btn.dataset.tab][0][0]));
   });
   function switchTab(name) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === SCREEN_GROUP[name]));
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-' + name).classList.add('active');
     document.getElementById('screens').scrollTop = 0;
@@ -266,38 +287,71 @@
     const s = computeStats(entries);
     const todayEntries = entries.filter(e => e.date === todayStr);
     const todayPnl = todayEntries.reduce((sum, e) => sum + (e.pnl || 0), 0);
+    const monthPrefix = todayStr.slice(0, 7);
+    const monthList = entries.filter(e => e.date && e.date.startsWith(monthPrefix));
+    const ms = computeStats(monthList);
+    const monthName = todayDate.toLocaleDateString(undefined, { month: 'long' });
+    const todayPremarket = premarketEntries.find(p => p.date === todayStr);
 
+    const hr = new Date().getHours();
+    document.getElementById('dash-greeting').textContent = `Good ${hr < 12 ? 'morning' : hr < 18 ? 'afternoon' : 'evening'}, Kaine`;
+    document.getElementById('dash-subline').textContent = `${todayDate.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })} · ${todayEntries.length} trade${todayEntries.length === 1 ? '' : 's'} today`;
+
+    // this month on the equity sparkline, all-time total alongside
+    document.getElementById('dash-month-label').textContent = `${monthName} P&L`;
+    document.getElementById('dash-alltime').innerHTML = `all time <b class="${s.totalPnl >= 0 ? 'pos' : 'neg'}">${(s.totalPnl >= 0 ? '+' : '') + fmtMoneyShort(s.totalPnl).replace('+', '')}</b>`;
     const total = document.getElementById('dash-total');
-    total.textContent = (s.totalPnl >= 0 ? '+' : '') + fmtMoney(s.totalPnl);
-    total.className = 'term-big ' + (s.totalPnl >= 0 ? 'pos' : 'neg');
-    document.getElementById('dash-meta').innerHTML =
-      `${entries.length} entries · ${s.wins}W ${s.losses}L ${s.be}BE · today <span class="${todayPnl >= 0 ? 'pos' : 'neg'}">${(todayPnl >= 0 ? '+' : '') + fmtMoneyShort(todayPnl).replace('+', '')}</span>`;
-    drawEquitySpark(document.getElementById('dash-spark'), entries);
-
+    total.textContent = (ms.totalPnl > 0 ? '+' : '') + fmtMoney(ms.totalPnl);
+    total.className = 'sbig ' + (ms.totalPnl > 0 ? 'pos' : ms.totalPnl < 0 ? 'neg' : '');
+    document.getElementById('dash-meta').textContent = `${monthList.length} entries · ${ms.wins}W ${ms.losses}L ${ms.be}BE`;
+    drawEquitySpark(document.getElementById('dash-spark'), monthList);
     document.getElementById('dash-strip').innerHTML = `
-      <div class="c"><div class="k">Win rate</div><div class="v">${s.winRate}%</div></div>
-      <div class="c"><div class="k">Profit factor</div><div class="v">${isFinite(s.profitFactor) ? s.profitFactor.toFixed(2) : '∞'}</div></div>
-      <div class="c"><div class="k">Today</div><div class="v ${todayPnl >= 0 ? 'pos' : 'neg'}">${fmtMoneyShort(todayPnl)}</div></div>`;
-    document.getElementById('dash-row2').innerHTML = `
-      <div class="b"><div class="k">Avg win</div><div class="v pos">${fmtMoneyShort(s.avgWin)}</div></div>
-      <div class="b"><div class="k">Avg loss</div><div class="v neg">${fmtMoneyShort(s.avgLoss)}</div></div>`;
+      <div><div class="k">Win rate</div><div class="v">${ms.winRate}%</div></div>
+      <div><div class="k">Profit factor</div><div class="v">${isFinite(ms.profitFactor) ? ms.profitFactor.toFixed(2) : '∞'}</div></div>
+      <div><div class="k">Today</div><div class="v ${todayPnl > 0 ? 'pos' : todayPnl < 0 ? 'neg' : ''}">${fmtMoneyShort(todayPnl)}</div></div>`;
+
+    // monthly goal — counts only this calendar month, same as desktop
+    const goal = milestone && milestone.goal > 0 ? milestone.goal : 0;
+    const pct = goal ? Math.max(0, Math.min(100, (ms.totalPnl / goal) * 100)) : 0;
+    document.getElementById('dash-goal').innerHTML = `
+      <div class="slbl"><span>${monthName} goal</span></div>
+      <div class="smid">${Math.round(pct)}%</div>
+      <div class="strack"><i style="width:${pct}%"></i></div>
+      <div class="ssmall">${fmtMoneyShort(ms.totalPnl).replace('+', '')} / ${fmtMoneyShort(goal).replace('+', '')}</div>`;
 
     const streak = currentStreak(entries);
     const runs = longestStreaks(entries);
     const streakEl = document.getElementById('dash-streak');
     if (streak) {
-      const glow = streak.kind === 'win' ? '#30d68a' : streak.kind === 'loss' ? '#ef6a5f' : '#f0954a';
-      streakEl.style.setProperty('--streak-glow', glow);
-      const last7 = [...entries].filter(e => e.result !== 'breakeven').sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 7).reverse();
-      const pips = last7.map(e => e.result === 'win' ? '◆' : '◇').join('');
-      streakEl.innerHTML = `${flameSVG(streak.kind)}
-        <div class="txt"><b style="color:${glow};">${streak.count}${streak.kind === 'win' ? 'W' : streak.kind === 'loss' ? 'L' : 'BE'}</b><span>streak · best ${runs.bestWin}W · worst ${runs.bestLoss}L</span></div>
-        <div class="pips">${pips}</div>`;
+      const col = streak.kind === 'win' ? 'var(--green)' : streak.kind === 'loss' ? 'var(--red)' : 'var(--amber)';
+      const last10 = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 10).reverse();
+      streakEl.innerHTML = `
+        <div class="slbl"><span>Streak</span>${flameSVG(streak.kind)}</div>
+        <div class="smid" style="color:${col};">${streak.count}${streak.kind === 'win' ? 'W' : streak.kind === 'loss' ? 'L' : 'BE'}</div>
+        <div class="spips">${last10.map(e => `<i class="${e.result}"></i>`).join('')}</div>
+        <div class="ssmall">best ${runs.bestWin}W · worst ${runs.bestLoss}L</div>`;
     } else {
-      streakEl.innerHTML = `<div class="txt"><span>No trades yet</span></div>`;
+      streakEl.innerHTML = `<div class="slbl"><span>Streak</span></div><div class="ssmall">No trades yet</div>`;
     }
 
-    const recent = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 6);
+    const focus = focusRules.length ? focusRules[Math.min(focusIndex, focusRules.length - 1)] : '';
+    let excerpt = '';
+    if (todayPremarket) {
+      const sc = (todayPremarket.scenarios || []).find(x => x.label || x.body);
+      excerpt = todayPremarket.outlook || (sc ? (sc.label || sc.body) : '') || todayPremarket.levels || '';
+      if (excerpt.length > 90) excerpt = excerpt.slice(0, 90) + '…';
+    }
+    document.getElementById('dash-before').innerHTML = `
+      <div class="slbl"><span>Before you trade</span></div>
+      <div class="bt-row" ${todayPremarket ? '' : 'data-goto-premarket'}>
+        <span class="bt-chk ${todayPremarket ? 'done' : ''}">${todayPremarket ? '✓' : ''}</span>
+        <div><div>${todayPremarket ? 'Premarket note logged' : 'No premarket note yet — tap to log one'}</div>${excerpt ? `<div class="bt-sub">${escapeHtml(excerpt)}</div>` : ''}</div>
+      </div>
+      ${focus ? `<div class="bt-focus">“${escapeHtml(focus)}”</div>` : ''}`;
+    const gp = document.querySelector('[data-goto-premarket]');
+    if (gp) gp.addEventListener('click', () => { switchTab('premarket'); openPremarketForm(); });
+
+    const recent = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 5);
     const rec = document.getElementById('dash-recent');
     rec.innerHTML = recent.length ? recent.map(e => `
       <div class="li" data-id="${e.id}">
@@ -362,8 +416,26 @@
     list.innerHTML = shown.length ? shown.map(entryCardHTML).join('') : `<div class="empty">${entriesQuery ? 'Nothing matches.' : 'No entries yet — tap + to log one.'}</div>`;
     bindEntryCards(list);
   }
+  // tapping a trade offers three choices
+  function openEntryChoices(id) {
+    const e = entries.find(x => x.id === id);
+    if (!e) return;
+    openSheet(`${e.symbol || 'Trade'} · ${fmtDateShort(e.date)}`, `
+      <div class="choice-list">
+        <button class="btn" type="button" data-choice="card">View card</button>
+        <button class="btn ghost" type="button" data-choice="full">View full entry</button>
+        <button class="btn ghost" type="button" data-choice="edit">Edit entry</button>
+      </div>`);
+    document.querySelectorAll('#sheet-body [data-choice]').forEach(b => b.addEventListener('click', () => {
+      const c = b.dataset.choice;
+      closeSheet();
+      if (c === 'card') showCleanCard(id);
+      else if (c === 'full') { expandedEntryIds.add(id); renderEntriesList(); const w = document.querySelector('[data-wrap="' + id + '"]'); if (w) w.scrollIntoView({ block: 'start' }); }
+      else openEntryForm(id);
+    }));
+  }
   function bindEntryCards(container) {
-    container.querySelectorAll('[data-open]').forEach(el => el.addEventListener('click', () => { expandedEntryIds.add(el.dataset.open); renderEntriesList(); }));
+    container.querySelectorAll('[data-open]').forEach(el => el.addEventListener('click', () => openEntryChoices(el.dataset.open)));
     container.querySelectorAll('[data-collapse]').forEach(el => el.addEventListener('click', (ev) => { ev.stopPropagation(); expandedEntryIds.delete(el.dataset.collapse); renderEntriesList(); }));
     container.querySelectorAll('[data-more]').forEach(el => el.addEventListener('click', (ev) => {
       ev.stopPropagation();
@@ -425,6 +497,13 @@
     cc.className = 'cc' + (photos.length ? '' : ' no-photo');
     cc.style.backgroundImage = photos.length
       ? `linear-gradient(180deg,rgba(9,9,9,0.2),rgba(9,9,9,0.62) 55%,rgba(9,9,9,0.96)),url('${photos[idx]}')` : '';
+    // size the card to the photo's own shape so nothing is cropped
+    cc.style.setProperty('--ar', 16 / 9);
+    if (photos.length) {
+      const img = new Image();
+      img.onload = () => { if (cleanCardEntryId === id && img.naturalWidth && img.naturalHeight) cc.style.setProperty('--ar', Math.min(2.6, Math.max(0.55, img.naturalWidth / img.naturalHeight))); };
+      img.src = photos[idx];
+    }
     const rl = e.result === 'breakeven' ? 'Breakeven' : e.result === 'win' ? 'Win' : 'Loss';
     const sign = e.result === 'win' ? '+' : e.result === 'loss' ? '-' : '';
     const dots = photos.length > 1
@@ -813,7 +892,7 @@
     const input = document.getElementById('checklist-input');
     const val = input.value.trim();
     if (!val) return;
-    checklistCategories[activeChecklistCat].push(val);
+    (checklistCategories[activeChecklistCat] = checklistCategories[activeChecklistCat] || []).push(val);
     persistSettings();
     LvdSync.pushSettings();
     input.value = '';

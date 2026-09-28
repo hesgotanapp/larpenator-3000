@@ -1,4 +1,5 @@
-const CACHE_NAME = 'larpenator-mobile-v1';
+// Bump when the caching strategy changes; the activate step clears older caches.
+const CACHE_NAME = 'larpenator-mobile-v2';
 const SHELL_FILES = [
   'index.html',
   'app.js',
@@ -24,23 +25,19 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// App-shell files: cache-first (instant offline load).
-// Everything else (Firestore/Auth network calls, fonts): network-first, so
-// data always tries to be fresh, falling back to cache only if offline.
+// Network-first for this site's own files: every launch picks up the latest
+// deploy when online, and the cached copy is only used offline. (Cache-first
+// kept the phone on whatever version it installed first.)
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
-  const isShellFile = url.origin === location.origin && SHELL_FILES.some(f => url.pathname.endsWith('/' + f) || url.pathname.endsWith(f));
-
-  if (isShellFile) {
-    event.respondWith(
-      caches.match(event.request).then(cached => cached || fetch(event.request))
-    );
-    return;
-  }
-
-  if (url.origin === location.origin) {
-    event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
-    );
-  }
+  if (url.origin !== location.origin) return;
+  event.respondWith(
+    fetch(event.request, { cache: 'no-cache' })
+      .then(res => {
+        if (res && res.ok) { const copy = res.clone(); caches.open(CACHE_NAME).then(c => c.put(event.request, copy)); }
+        return res;
+      })
+      .catch(() => caches.match(event.request))
+  );
 });
