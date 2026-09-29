@@ -546,6 +546,37 @@
   <div class="intro-line"></div>
 </div>
 <script>
+  window.lvdMotion = {
+    stash: [],
+    pref: function () { try { return localStorage.getItem('lvd_motion') || 'always'; } catch (e) { return 'always'; } },
+    deviceReduces: function () { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); },
+    reduced: function () { return this.pref() === 'system' && this.deviceReduces(); },
+    apply: function () {
+      var force = this.pref() !== 'system';
+      if (force && !this.stash.length) {
+        for (var s = 0; s < document.styleSheets.length; s++) {
+          var sheet = document.styleSheets[s], rules;
+          try { rules = sheet.cssRules; } catch (e) { continue; }
+          for (var i = rules.length - 1; i >= 0; i--) {
+            if (rules[i].media && /prefers-reduced-motion/.test(rules[i].media.mediaText)) {
+              this.stash.push({ sheet: sheet, text: rules[i].cssText, index: i });
+              sheet.deleteRule(i);
+            }
+          }
+        }
+      } else if (!force && this.stash.length) {
+        // put them back lowest index first so every index is still valid
+        for (var j = this.stash.length - 1; j >= 0; j--) {
+          var x = this.stash[j];
+          try { x.sheet.insertRule(x.text, Math.min(x.index, x.sheet.cssRules.length)); } catch (e) {}
+        }
+        this.stash = [];
+      }
+    }
+  };
+  window.lvdMotion.apply();
+</script>
+<script>
   (function () {
     var el = document.getElementById('intro'), off = false;
     try { off = localStorage.getItem('lvd_intro_off') === '1'; } catch (e) {}
@@ -625,6 +656,7 @@
         <div class="more-item" style="display:block"><span>Colour style</span><div class="chip-row" id="palette-chips" style="margin-top:10px"></div></div>
         <div class="more-item" id="intro-pref"><span>Intro animation</span><span class="chev" id="intro-pref-state">On</span></div>
         <div class="more-item" id="ambient-pref"><span>Background motion</span><span class="chev" id="ambient-pref-state">On</span></div>
+        <div class="more-item" id="motion-pref" style="display:block"><div style="display:flex;justify-content:space-between"><span>Animations</span><span class="chev" id="motion-pref-state">Always play</span></div><div id="motion-pref-note" style="font-size:12px;font-weight:400;color:var(--ink-faint);margin-top:4px"></div></div>
         <div class="more-item" id="more-signout"><span>Sign Out</span><span class="chev">›</span></div>
       </div>
       <p class="subtitle" style="text-align:center; margin-top:20px;">Signed in as <span id="more-email"></span></p>

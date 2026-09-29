@@ -332,7 +332,7 @@
     };
     requestAnimationFrame(frame);
   }
-  function reduceMotion() { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  function reduceMotion() { if (window.lvdMotion) return window.lvdMotion.reduced(); return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); }
   const countMemory = {};
   function countTo(el, target, key) {
     const show = v => { el.textContent = (v > 0.004 ? '+' : v < -0.004 ? '-' : '') + fmtMoney(Math.abs(v)); };
@@ -1118,6 +1118,20 @@
     renderDashboard();
   });
   renderPalettePref();
+  function renderMotionPref() {
+    const pref = window.lvdMotion ? window.lvdMotion.pref() : 'system';
+    const reduces = window.lvdMotion && window.lvdMotion.deviceReduces();
+    document.getElementById('motion-pref-state').textContent = pref === 'system' ? 'Follow device' : 'Always play';
+    document.getElementById('motion-pref-note').textContent = reduces
+      ? (pref === 'system' ? 'Reduce Motion is on in your iPhone settings, so most animations are off. Tap to play them anyway.' : 'Reduce Motion is on in your iPhone settings. Larpenator plays its animations anyway.')
+      : 'Tap to switch between always playing animations and following Reduce Motion.';
+  }
+  document.getElementById('motion-pref').addEventListener('click', () => {
+    try { if (window.lvdMotion && window.lvdMotion.pref() !== 'system') localStorage.setItem('lvd_motion', 'system'); else localStorage.removeItem('lvd_motion'); } catch (e) {}
+    if (window.lvdMotion) window.lvdMotion.apply();
+    renderMotionPref();
+  });
+  renderMotionPref();
   function renderAmbientPref() {
     let off = false;
     try { off = localStorage.getItem('lvd_ambient_off') === '1'; } catch (e) {}

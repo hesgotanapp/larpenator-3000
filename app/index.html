@@ -1692,6 +1692,37 @@
   <div class="intro-skip">Click or press any key to skip</div>
 </div>
 <script>
+  window.lvdMotion = {
+    stash: [],
+    pref: function () { try { return localStorage.getItem('lvd_motion') || 'always'; } catch (e) { return 'always'; } },
+    deviceReduces: function () { return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches); },
+    reduced: function () { return this.pref() === 'system' && this.deviceReduces(); },
+    apply: function () {
+      var force = this.pref() !== 'system';
+      if (force && !this.stash.length) {
+        for (var s = 0; s < document.styleSheets.length; s++) {
+          var sheet = document.styleSheets[s], rules;
+          try { rules = sheet.cssRules; } catch (e) { continue; }
+          for (var i = rules.length - 1; i >= 0; i--) {
+            if (rules[i].media && /prefers-reduced-motion/.test(rules[i].media.mediaText)) {
+              this.stash.push({ sheet: sheet, text: rules[i].cssText, index: i });
+              sheet.deleteRule(i);
+            }
+          }
+        }
+      } else if (!force && this.stash.length) {
+        // put them back lowest index first so every index is still valid
+        for (var j = this.stash.length - 1; j >= 0; j--) {
+          var x = this.stash[j];
+          try { x.sheet.insertRule(x.text, Math.min(x.index, x.sheet.cssRules.length)); } catch (e) {}
+        }
+        this.stash = [];
+      }
+    }
+  };
+  window.lvdMotion.apply();
+</script>
+<script>
   // decided before first paint so the app never flashes behind the intro
   (function () {
     var el = document.getElementById('intro');
@@ -2678,6 +2709,14 @@
             <button class="mode-btn" data-ambient="off" type="button">Calm</button>
           </div>
           <p style="font-size:12px; color:var(--ink-faint); margin:8px 0 0;">Looping touches like the light on the equity curve and the glowing goal bar.</p>
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label>Animations</label>
+          <div class="mode-switch" id="motion-toggle" style="margin-top:6px; width:max-content;">
+            <button class="mode-btn" data-motion="always" type="button">Always play</button>
+            <button class="mode-btn" data-motion="system" type="button">Follow device</button>
+          </div>
+          <p id="motion-note" style="font-size:12px; color:var(--ink-faint); margin:8px 0 0;"></p>
         </div>
       </div>
 
@@ -7681,7 +7720,7 @@
   });
 
   // ---------- micro-interactions ----------
-  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reducedMotion = () => window.lvdMotion ? window.lvdMotion.reduced() : window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function runCountUps(scope) {
     if (!scope || reducedMotion()) return;
     scope.querySelectorAll('[data-countup]').forEach(el => {
@@ -8215,6 +8254,21 @@
     renderIntroToggle();
     showToast(b.dataset.intro === 'off' ? 'Intro turned off' : 'Intro will play next time you open the app');
   }));
+
+  function renderMotionToggle() {
+    const pref = window.lvdMotion ? window.lvdMotion.pref() : 'system';
+    const reduces = window.lvdMotion && window.lvdMotion.deviceReduces();
+    document.querySelectorAll('#motion-toggle .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.motion === pref));
+    document.getElementById('motion-note').textContent = reduces
+      ? (pref === 'system' ? 'This computer has Windows animation effects turned off, so most animations are off. Choose Always play to show them anyway.' : 'This computer has Windows animation effects turned off. Larpenator plays its animations anyway.')
+      : 'Follow device turns animations off whenever Windows animation effects are off.';
+  }
+  document.querySelectorAll('#motion-toggle .mode-btn').forEach(b => b.addEventListener('click', () => {
+    try { if (b.dataset.motion === 'system') localStorage.setItem('lvd_motion', 'system'); else localStorage.removeItem('lvd_motion'); } catch (e) {}
+    if (window.lvdMotion) window.lvdMotion.apply();
+    renderMotionToggle();
+  }));
+  renderMotionToggle();
 
   function renderAmbientToggle() {
     let off = false;
