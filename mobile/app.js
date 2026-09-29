@@ -249,6 +249,9 @@
 
   // ---------- Dashboard (Terminal layout) ----------
   function drawEquitySpark(canvas, list) {
+    const sparkSig = (canvas.clientWidth || 0) + '|' + (canvas.clientHeight || 0) + '|' + (document.documentElement.getAttribute('data-palette') || '') + '|' + list.map(e => e.id + ':' + (e.pnl || 0) + ':' + e.date).join(',');
+    if (canvas._sparkSig === sparkSig && canvas._sparkTok) return;
+    canvas._sparkSig = sparkSig;
     const ctx = canvas.getContext('2d');
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const cssW = canvas.clientWidth || 330, cssH = canvas.clientHeight || 52;
@@ -358,7 +361,8 @@
     };
     let half = recent.map(item);
     while (half.length < 8) half = half.concat(recent.map(item));
-    run.innerHTML = half.join('') + half.join('');
+    const tapeHTML = half.join('') + half.join('');
+    if (run._lvdHTML !== tapeHTML) { run.innerHTML = tapeHTML; run._lvdHTML = tapeHTML; }
     run.style.setProperty('--tape-dur', Math.max(24, half.length * 3.4) + 's');
   }
   function renderDashboard() {
@@ -1157,7 +1161,8 @@
   function registerSyncOnce() {
     if (syncRegistered || !window.LvdSync || !LvdSync.isSupported) return;
     syncRegistered = true;
-    LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; persistEntries(); }, () => { renderDashboard(); renderEntriesList(); renderCalendar(); });
+    let entriesRerenderTimer = null;
+    LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; persistEntries(); }, () => { clearTimeout(entriesRerenderTimer); entriesRerenderTimer = setTimeout(() => { renderDashboard(); renderEntriesList(); renderCalendar(); }, 150); });
     LvdSync.registerCollection('premarketEntries', () => premarketEntries, (arr) => { premarketEntries = arr; persistPremarket(); }, renderPremarketScreen);
     LvdSync.registerCollection('achievements', () => achievements, (arr) => { achievements = arr; persistAchievements(); }, renderAchievements);
     // background-photo pools (one small doc per photo, keyed on a hash of the data URL)

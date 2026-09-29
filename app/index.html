@@ -1377,6 +1377,7 @@
   @keyframes splitDown { to { transform: translateY(100%); } }
   /* the dashboard rises in underneath as the screen splits open */
   .app-shell.revealing .section.active > * { animation: revealUp .75s cubic-bezier(.2,.8,.2,1) both; }
+  .app-shell.revealed:not(.revealing) .section.active > * { animation: none; }
   .app-shell.revealing .section.active > *:nth-child(2) { animation-delay: .06s; }
   .app-shell.revealing .section.active > *:nth-child(3) { animation-delay: .12s; }
   .app-shell.revealing .section.active > *:nth-child(4) { animation-delay: .18s; }
@@ -1660,7 +1661,7 @@
   html.calm .tape-run { animation: none; }
   @media (prefers-reduced-motion: reduce) { .tape-run { animation: none; } }
   /* ================= the stamp logo ================= */
-  .stamp-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .stamp-svg { display: block; width: 100%; height: 100%; overflow: visible; letter-spacing: normal; word-spacing: normal; }
   .brand { align-items: center; gap: 11px; }
   .brand-stamp { width: 46px; height: 46px; flex: 0 0 auto; color: var(--accent); transition: rotate .35s cubic-bezier(.3,1.6,.5,1); }
   .brand:hover .brand-stamp { rotate: -6deg; }
@@ -3060,6 +3061,7 @@
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
   function switchTab(name) {
+    if (name !== activeTab) document.querySelector('.app-shell').classList.remove('revealed');
     activeTab = name;
     document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
     updateNavGroups(name);
@@ -4059,6 +4061,16 @@
 
   // ---------- streak flame ----------
   let lastStreakSeen = null;
+  // Replace an element's HTML only when it differs from what we last put there. Re-rendering the
+  // same markup restarts its CSS animations, which made the dashboard flicker during sync bursts.
+  function setHTML(el, html) {
+    if (!el) return false;
+    if (el._lvdHTML === html && el._lvdFirst && el._lvdFirst.parentNode === el) return false;
+    el.innerHTML = html;
+    el._lvdHTML = html; el._lvdFirst = el.firstChild;
+    return true;
+  }
+
   function renderStreakFlamePanel(streak, runs, lastN) {
     const panel = document.getElementById('streak-flame-panel');
     if (!panel) return;
@@ -4079,7 +4091,7 @@
     const scale = 0.55 + intensity * 0.62;
     const w = Math.round(40 * scale), h = Math.round(54 * scale);
     panel.style.setProperty('--streak-glow', base);
-    panel.innerHTML = `
+    setHTML(panel, `
       <div class="glow-bg" style="background:radial-gradient(circle, ${base}, transparent 70%); width:110px; height:110px; left:34px; top:50%; transform:translate(-50%,-50%);"></div>
       <svg class="streak-flame-svg animated${grew ? ' grew' : ''}" width="${w}" height="${h}" viewBox="0 0 40 54" style="opacity:${(0.6 + intensity * 0.4).toFixed(2)}">
         <defs>
@@ -4101,7 +4113,7 @@
         ${lastN && lastN.length ? `<div class="streak-mini-pips">${lastN.map((e, i) => `<div class="streak-pip ${e.result}${grew && i === lastN.length - 1 ? ' fresh' : ''}" style="animation-delay:${i * 30}ms" title="${fmtDateShort(e.date)} — ${fmtMoney(e.pnl || 0)}"></div>`).join('')}</div>` : ''}
         ${runs ? `<div class="streak-flame-best">Best ${runs.bestWin}W · worst ${runs.bestLoss}L</div>` : ''}
       </div>
-    `;
+    `);
   }
 
   // ---------- dashboard ----------
@@ -4129,7 +4141,7 @@
     const runs = longestStreaks(activeList);
     const lastN = [...activeList].sort((a,b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 10).reverse();
 
-    document.getElementById('dash-stats').innerHTML = `
+    const statsHTML = `
       <div class="stat-card accent">
         <div class="label">Total P&amp;L</div>
         <div class="value ${s.totalPnl >= 0 ? 'pos' : 'neg'}" data-countup="${s.totalPnl}" data-fmt="money">${fmtMoney(s.totalPnl)}</div>
@@ -4162,7 +4174,7 @@
       </div>
     `;
 
-    runCountUps(document.getElementById('dash-stats'));
+    if (setHTML(document.getElementById('dash-stats'), statsHTML)) runCountUps(document.getElementById('dash-stats'));
     renderFocus();
     renderStreakFlamePanel(streak, runs, lastN);
 
@@ -4255,8 +4267,8 @@
           <span class="edge-pnl ${d.st.totalPnl > 0 ? 'pos' : d.st.totalPnl < 0 ? 'neg' : ''}">${d.n ? (d.st.totalPnl > 0 ? '+' : '') + fmtMoney(d.st.totalPnl) : ''}</span>
         </div>`).join('');
     };
-    document.getElementById('dash-edge-session').innerHTML = rows(['asia', 'london', 'ny'], sessionLabel, e => e.session);
-    document.getElementById('dash-edge-setup').innerHTML = rows(['continuation', 'reversal', 'judas'], setupTypeLabel, e => e.setupType, 1.5);
+    setHTML(document.getElementById('dash-edge-session'), rows(['asia', 'london', 'ny'], sessionLabel, e => e.session));
+    setHTML(document.getElementById('dash-edge-setup'), rows(['continuation', 'reversal', 'judas'], setupTypeLabel, e => e.setupType, 1.5));
   }
   document.querySelectorAll('#dash-range-pills button').forEach(btn => btn.addEventListener('click', () => {
     dashRange = btn.dataset.range;
@@ -4378,7 +4390,7 @@
       if (y === nowD.getFullYear() && m === nowD.getMonth() && d === nowD.getDate()) cls += ' today';
       html += `<div class="${cls}" style="--ci:${Math.floor((firstDay + d - 1) / 7) + (firstDay + d - 1) % 7}"${dayEntries.length ? ` data-tip="${(pnl > 0 ? '+' : '') + fmtMoney(pnl)} · ${dayEntries.length} trade${dayEntries.length === 1 ? '' : 's'}"` : ''}><div class="d">${d}</div>${dayEntries.length ? `<div class="p">${fmtMoneyShort(pnl)}</div>` : ''}</div>`;
     }
-    document.getElementById('dash-cal-grid').innerHTML = html;
+    setHTML(document.getElementById('dash-cal-grid'), html);
 
     const weeks = buildWeeks(y, m);
     const weekListHtml = weeks.map((week, idx) => {
@@ -5223,7 +5235,7 @@
     const gradId = 'eqGrad-' + wrapId;
 
     wrap.style.position = 'relative';
-    wrap.innerHTML = `
+    const eqHTML = `
       <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="width:100%; height:auto; display:block;">
         <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.32"/>
@@ -5243,6 +5255,7 @@
       <div class="equity-caption"><span>${fmtDate(points[0].date)}</span><span>${fmtDate(points[points.length - 1].date)}</span></div>
       <div class="eq-tooltip"></div>
     `;
+    if (!setHTML(wrap, eqHTML)) return;
 
     const svgEl = wrap.querySelector('svg');
     const hoverLine = wrap.querySelector('.eq-hover-line');
@@ -7868,7 +7881,12 @@
     const _localSaveMilestone = saveMilestone; saveMilestone = function () { _localSaveMilestone(); LvdSync.pushSettings(); };
     const _localSaveAlgoPnl = saveAlgoPnl; saveAlgoPnl = function () { _localSaveAlgoPnl(); LvdSync.pushSettings(); };
 
+    let remoteRerenderTimer = null;
     function rerenderAfterRemoteSync() {
+      clearTimeout(remoteRerenderTimer);
+      remoteRerenderTimer = setTimeout(rerenderAfterRemoteSyncNow, 150);
+    }
+    function rerenderAfterRemoteSyncNow() {
       renderDashboard();
       const active = document.querySelector('.section.active');
       if (!active) return;
@@ -8178,7 +8196,7 @@
       window.removeEventListener('keydown', onKey, true);
       el.classList.add('split');
       shell.classList.add('revealing');
-      setTimeout(() => { el.remove(); setTimeout(() => shell.classList.remove('revealing'), 900); }, reduce ? 60 : 820);
+      setTimeout(() => { el.remove(); setTimeout(() => { shell.classList.add('revealed'); shell.classList.remove('revealing'); }, 900); }, reduce ? 60 : 820);
     };
     // skipping with a key shouldn't also trigger shortcuts like N
     const onKey = (ev) => { ev.preventDefault(); ev.stopPropagation(); open(); };
@@ -8225,7 +8243,7 @@
     let half = recent.map(item);
     while (half.length < 12) half = half.concat(recent.map(item));
     const html = half.join('') + '<span class="tape-item"><span class="t-sep">■</span></span>';
-    run.innerHTML = html + html;
+    setHTML(run, html + html);
     run.style.setProperty('--tape-dur', Math.max(30, half.length * 3.2) + 's');
   }
 
