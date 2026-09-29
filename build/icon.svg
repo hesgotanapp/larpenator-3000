@@ -1,6 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect x="13" y="13" width="486" height="486" rx="128" fill="#111112"/>
-  <rect x="13" y="13" width="486" height="486" rx="128" fill="none" stroke="#333336" stroke-width="12"/>
-  <line x1="256" y1="83" x2="256" y2="429" stroke="#30d68a" stroke-width="36" stroke-linecap="round"/>
-  <rect x="179" y="166" width="154" height="186" rx="36" fill="#30d68a"/>
+  <!-- Larpenator stamp (Inked). app.png / app.ico / app.icns are rendered from the same design with the ink texture. -->
+  <rect width="512" height="512" rx="112" fill="#131415"/>
+  <g transform="translate(256 256) rotate(-8) scale(6.72) translate(-32 -32)" fill="none" stroke="#c9a35b">
+    <circle cx="32" cy="32" r="29.5" stroke-width="2.8"/>
+    <circle cx="32" cy="32" r="18.5" stroke-width="1.2"/>
+    <text x="32" y="36.8" text-anchor="middle" font-family="Bricolage Grotesque, Arial Narrow, sans-serif" font-weight="800" font-size="12.5" fill="#c9a35b" stroke="none">3000</text>
+  </g>
 </svg>

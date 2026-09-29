@@ -13,7 +13,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #090909; --surface: #111112; --surface-2: #161617; --surface-3: #1d1d1f;
@@ -516,6 +516,26 @@
   @keyframes tapeRun { to { transform: translateX(-50%); } }
   html.calm .tape-run { animation: none; }
   @media (prefers-reduced-motion: reduce) { .tape-run { animation: none; } }
+  /* ---------- the stamp logo ---------- */
+  .stamp-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  #appheader { display: flex; align-items: center; gap: 10px; }
+  #appheader .brand-stamp { width: 40px; height: 40px; flex: 0 0 auto; color: var(--accent); }
+  #appheader .brand-name { font-family: 'Bricolage Grotesque', var(--font-body); font-weight: 800; font-stretch: 76%; font-size: 18px; letter-spacing: .3px; line-height: 1; }
+  #appheader .brand-sub { margin-top: 4px; letter-spacing: 1.6px; }
+  #appheader .brand-num { color: var(--accent); }
+  .auth-stamp { width: 84px; height: 84px; margin: 0 auto 14px; color: var(--accent); }
+  :root[data-palette="paper"] { --intro-stamp: #c9a35b; }
+  .intro-brand { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .intro-stamp { width: 76px; height: 76px; color: var(--intro-stamp, var(--accent)); opacity: 0; }
+  .intro.play .intro-stamp { animation: stampThump .55s .1s cubic-bezier(.2,.9,.3,1.25) forwards; }
+  @keyframes stampThump { 0% { opacity: 0; transform: scale(1.9) rotate(-10deg); } 60% { opacity: 1; transform: scale(.94) rotate(-2deg); } 100% { opacity: 1; transform: none; } }
+  #cleancard .cc-brand { display: flex; align-items: center; gap: 7px; }
+  #cleancard .cc-stamp { width: 26px; height: 26px; color: var(--intro-stamp, var(--accent)); }
+  .save-ticket { position: fixed; z-index: 300; left: 50%; top: 42%; width: min(280px, calc(100vw - 48px)); padding: 16px 18px 18px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--border-strong); box-shadow: 0 24px 60px rgba(0,0,0,.45); pointer-events: none; color: var(--ink); transform: translate(-50%, -50%); }
+  .save-ticket .st-top { display: flex; justify-content: space-between; gap: 10px; font: 500 11px var(--font-mono); letter-spacing: .6px; color: var(--ink-dim); text-transform: uppercase; }
+  .save-ticket .st-pnl { font-size: 30px; font-weight: 600; letter-spacing: -1px; margin-top: 8px; }
+  .save-ticket .st-pnl.win { color: var(--green); } .save-ticket .st-pnl.loss { color: var(--red); } .save-ticket .st-pnl.breakeven { color: var(--amber); }
+  .save-ticket .st-stamp { position: absolute; right: -14px; bottom: -30px; width: 96px; height: 96px; color: var(--accent); opacity: 0; }
 </style>
 </head>
 <body>
@@ -536,6 +556,7 @@
 
 <div id="auth-screen">
   <div class="auth-box">
+    <div class="auth-stamp" id="auth-stamp"></div>
     <div class="auth-brand">LARPENATOR <span>3000</span></div>
     <div class="auth-brandsub">Trading Journal</div>
     <p class="auth-sub">Sign in with the same account you use on your desktop app to sync your journal.</p>
@@ -553,8 +574,11 @@
 
 <div id="app" style="display:none;">
   <header id="appheader">
-    <div class="brand-name">LARPENATOR <span class="brand-accent">3000</span></div>
-    <div class="brand-sub">Trading Journal</div>
+    <span class="brand-stamp" id="brand-stamp"></span>
+    <div>
+      <div class="brand-name">LARPENATOR</div>
+      <div class="brand-sub"><span class="brand-num">3000</span> · Journal</div>
+    </div>
   </header>
   <div id="screens">
 

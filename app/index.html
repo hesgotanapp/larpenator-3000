@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Larpenator 3000</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><rect x='1' y='1' width='38' height='38' rx='10' fill='%23111112'/><line x1='20' y1='6.5' x2='20' y2='33.5' stroke='%2330d68a' stroke-width='2.8' stroke-linecap='round'/><rect x='14' y='13' width='12' height='14.5' rx='2.8' fill='%2330d68a'/></svg>">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23131415%22/%3E%3Cg transform=%22translate(32 32) scale(.92) rotate(-8) translate(-32 -32)%22 fill=%22none%22 stroke=%22%23c9a35b%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2229.5%22 stroke-width=%222.8%22/%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2218.5%22 stroke-width=%221.2%22/%3E%3Cpath id=%22r%22 d=%22M32 11.399999999999999 a20.6 20.6 0 1 1 -0.01 0%22 stroke=%22none%22/%3E%3Ctext font-family=%22monospace%22 font-weight=%22700%22 font-size=%225.3%22 fill=%22%23c9a35b%22 stroke=%22none%22%3E%3CtextPath href=%22%23r%22 textLength=%22127.49%22 lengthAdjust=%22spacing%22%3ELARPENATOR %E2%9C%A6 TRADING JOURNAL %E2%9C%A6 %3C/textPath%3E%3C/text%3E%3Ctext x=%2232%22 y=%2236.8%22 text-anchor=%22middle%22 font-family=%22Arial Narrow,Arial,sans-serif%22 font-weight=%22800%22 font-size=%2212.5%22 fill=%22%23c9a35b%22 stroke=%22none%22%3E3000%3C/text%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #090909;
@@ -1659,6 +1659,28 @@
   @keyframes tapeRun { to { transform: translateX(-50%); } }
   html.calm .tape-run { animation: none; }
   @media (prefers-reduced-motion: reduce) { .tape-run { animation: none; } }
+  /* ================= the stamp logo ================= */
+  .stamp-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .brand { align-items: center; gap: 11px; }
+  .brand-stamp { width: 46px; height: 46px; flex: 0 0 auto; color: var(--accent); transition: rotate .35s cubic-bezier(.3,1.6,.5,1); }
+  .brand:hover .brand-stamp { rotate: -6deg; }
+  .brand .brand-name { font-family: 'Bricolage Grotesque', var(--font-body); font-weight: 800; font-stretch: 76%; font-size: 20px; letter-spacing: .3px; line-height: 1; }
+  .brand .brand-sub { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.6px; text-transform: uppercase; margin-top: 5px; white-space: nowrap; }
+  .intro-brand { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .intro-stamp { width: 84px; height: 84px; color: var(--intro-stamp, var(--accent)); opacity: 0; }
+  :root[data-palette="paper"] { --intro-stamp: #c9a35b; }
+  .intro.play .intro-stamp { animation: stampThump .55s .1s cubic-bezier(.2,.9,.3,1.25) forwards; }
+  @keyframes stampThump { 0% { opacity: 0; transform: scale(1.9) rotate(-10deg); } 60% { opacity: 1; transform: scale(.94) rotate(-2deg); } 100% { opacity: 1; transform: none; } }
+  .cv-brand { display: flex; align-items: center; gap: 8px; }
+  .cv-brand .cv-stamp { width: 30px; height: 30px; color: var(--intro-stamp, var(--accent)); opacity: .92; }
+  .welcome-brand .welcome-stamp { display: block; width: 72px; height: 72px; margin: 0 auto 12px; color: var(--accent); }
+  /* saving a trade: a ticket pops up, gets stamped, then flies into the Journal */
+  .save-ticket { position: fixed; z-index: 900; left: 50%; top: 44%; width: 280px; padding: 16px 18px 18px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--border-strong); box-shadow: 0 24px 60px rgba(0,0,0,.45); pointer-events: none; font-family: var(--font-body); color: var(--ink); overflow: visible; }
+  .save-ticket .st-top { display: flex; justify-content: space-between; gap: 10px; font: 500 11px var(--font-mono); letter-spacing: .6px; color: var(--ink-dim); text-transform: uppercase; }
+  .save-ticket .st-pnl { font-size: 32px; font-weight: 600; letter-spacing: -1px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .save-ticket .st-pnl.win { color: var(--green); } .save-ticket .st-pnl.loss { color: var(--red); } .save-ticket .st-pnl.breakeven { color: var(--amber); }
+  .save-ticket .st-meta { font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
+  .save-ticket .st-stamp { position: absolute; right: -22px; bottom: -34px; width: 104px; height: 104px; color: var(--accent); opacity: 0; }
 </style>
 </head>
 <body>
@@ -1682,9 +1704,10 @@
 <div class="app-shell">
   <nav class="sidebar">
     <div class="brand">
+      <span class="brand-stamp" id="brand-stamp"></span>
       <div>
-        <div class="brand-name">LARPENATOR <span class="brand-accent">3000</span></div>
-        <div class="brand-sub">Trading Journal</div>
+        <div class="brand-name">LARPENATOR</div>
+        <div class="brand-sub"><span class="brand-accent">3000</span> · Journal</div>
       </div>
     </div>
     <button type="button" class="side-log" id="side-log-btn"><span>+ Log trade</span><kbd>N</kbd></button>
@@ -3699,6 +3722,9 @@
       ctx.fillStyle = inkDim;
       ctx.fillText(sessionLabel(e.session) + ' session', pad, extraLineY);
     }
+    ctx.globalAlpha = 0.88;
+    drawStampCanvas(ctx, W - pad - 92, H - pad - 88, 92, document.documentElement.dataset.palette === 'paper' ? '#c9a35b' : (cssVar('--accent') || '#c9a35b'), false);
+    ctx.globalAlpha = 1;
 
     ctx.restore();
   }
@@ -4740,7 +4766,7 @@
       <div class="cv-bot">
         <div class="cv-pnl ${e.result}">${sign}${fmtMoney(Math.abs(e.pnl || 0))}</div>
         <div class="cv-meta">${meta.map(m => `<span>${escapeHtml(m)}</span>`).join('')}</div>
-        <div class="cv-brand">LARPENATOR <span>3000</span></div>
+        <div class="cv-brand"><span class="cv-stamp">${stampSVG(false)}</span>LARPENATOR <span>3000</span></div>
       </div>`;
     if (url) photoAspect(url, ar => { if (cardViewId === id) card.style.setProperty('--ar', ar); });
     const many = photos.length > 1;
@@ -8053,24 +8079,39 @@
   // saving a trade: a mini card flies from the Save button to Journal in the sidebar
   let flashTradeId = null;
   function flySavedCard(entry) {
-    const from = document.getElementById('submit-btn').getBoundingClientRect();
     const target = document.querySelector('.nav-group-head[data-group-head="journal"]');
     if (!target || reducedMotion()) return;
-    const to = target.getBoundingClientRect();
-    const chip = document.createElement('div');
-    chip.className = 'fly-chip ' + (entry.result || '');
-    chip.textContent = (entry.result === 'win' ? '+' : entry.result === 'loss' ? '−' : '') + fmtMoney(Math.abs(entry.pnl || 0));
-    chip.style.left = from.left + 'px'; chip.style.top = from.top + 'px';
-    document.body.appendChild(chip);
-    const dx = to.left + 20 - from.left, dy = to.top + 4 - from.top;
-    chip.animate([
-      { transform: 'translate(0,0) scale(1)', opacity: 1 },
-      { transform: `translate(${dx * 0.55}px, ${dy * 0.55 - 60}px) scale(0.85)`, opacity: 1, offset: 0.55 },
-      { transform: `translate(${dx}px, ${dy}px) scale(0.35)`, opacity: 0 }
-    ], { duration: 750, easing: 'cubic-bezier(.5,0,.3,1)' }).onfinish = () => {
-      chip.remove();
-      target.classList.remove('bump'); void target.offsetWidth; target.classList.add('bump');
-    };
+    stampSavedTicket(entry, target);
+  }
+
+  function stampSavedTicket(entry, target) {
+    const t = document.createElement('div');
+    t.className = 'save-ticket';
+    const sign = entry.result === 'win' ? '+' : entry.result === 'loss' ? '−' : '';
+    const meta = [entry.setupType ? setupTypeLabel(entry.setupType) : '', entry.session ? sessionLabel(entry.session) : ''].filter(Boolean).join(' · ');
+    t.innerHTML = `<div class="st-top"><span>${fmtDateShort(entry.date)} · ${escapeHtml(entry.symbol || 'Trade')}</span><span>${entry.result === 'breakeven' ? 'BE' : entry.result === 'win' ? 'Win' : entry.result === 'loss' ? 'Loss' : ''}</span></div><div class="st-pnl ${entry.result || ''}">${sign}${fmtMoney(Math.abs(entry.pnl || 0))}</div>${meta ? `<div class="st-meta">${escapeHtml(meta)}</div>` : ''}<span class="st-stamp">${stampSVG(false)}</span>`;
+    document.body.appendChild(t);
+    const stamp = t.querySelector('.st-stamp');
+    const c = 'translate(-50%, -50%)';
+    t.animate([{ transform: c + ' scale(.9)', opacity: 0 }, { transform: c + ' scale(1)', opacity: 1 }], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+    stamp.animate([
+      { transform: 'scale(1.9) rotate(-16deg)', opacity: 0 },
+      { transform: 'scale(.95) rotate(-11deg)', opacity: 1, offset: 0.6 },
+      { transform: 'scale(1) rotate(-11deg)', opacity: 0.95 }
+    ], { duration: 420, delay: 240, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'forwards' });
+    t.animate([{ transform: c }, { transform: c + ' translateY(3px)' }, { transform: c + ' translateY(-1px)' }, { transform: c }], { duration: 220, delay: 480, composite: 'replace' });
+    setTimeout(() => {
+      const from = t.getBoundingClientRect(), to = target.getBoundingClientRect();
+      const dx = (to.left + 24) - (from.left + from.width / 2), dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+      t.animate([
+        { transform: c, opacity: 1 },
+        { transform: `translate(calc(-50% + ${dx * 0.5}px), calc(-50% + ${dy * 0.5 - 40}px)) scale(.55)`, opacity: 1, offset: 0.5 },
+        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(.08)`, opacity: 0 }
+      ], { duration: 620, easing: 'cubic-bezier(.5,0,.3,1)', fill: 'forwards' }).onfinish = () => {
+        t.remove();
+        target.classList.remove('bump'); void target.offsetWidth; target.classList.add('bump');
+      };
+    }, 1150);
   }
 
   // sidebar: a green marker slides to the page you pick
@@ -8115,6 +8156,7 @@
     const el = document.getElementById('intro');
     if (!el) return;
     const reduce = reducedMotion();
+    el.querySelector('.intro-brand').innerHTML = `<span class="intro-stamp">${stampSVG(false)}</span>`;
     document.getElementById('intro-greet').innerHTML = `${introGreeting()}, <span>Kaine</span>`;
     const monthPrefix = todayStr.slice(0, 7);
     const monthList = entries.filter(e => e.date && e.date.startsWith(monthPrefix));
@@ -8287,6 +8329,59 @@
     }, 110);
   });
   document.addEventListener('animationend', e => { if (e.target.classList && e.target.classList.contains('before-chk') && e.animationName === 'chkPop') e.target.classList.remove('just'); });
+
+  // ---------- the Larpenator stamp (Inked) ----------
+  // One colour (currentColor), tilted, with a rubber-stamp ink texture. small = the icon-size cut (ring + 3K).
+  let stampSeq = 0;
+  function stampSVG(small) {
+    const id = 'lvink' + (stampSeq++);
+    const tex = `<defs><filter id="${id}" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.3 2.3" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></defs>`;
+    const display = `font-family="'Bricolage Grotesque','Geist',sans-serif" font-weight="800" font-stretch="75%"`;
+    let body;
+    if (small) {
+      body = `<circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" stroke-width="4.5"/><text x="32" y="39" text-anchor="middle" ${display} font-size="20" fill="currentColor">3K</text>`;
+    } else {
+      const r = 20.6, L = (2 * Math.PI * r * 0.985).toFixed(2);
+      body = `<circle cx="32" cy="32" r="29.5" fill="none" stroke="currentColor" stroke-width="2.8"/><circle cx="32" cy="32" r="18.5" fill="none" stroke="currentColor" stroke-width="1.2"/>` +
+        `<defs><path id="${id}r" d="M32 ${32 - r} a${r} ${r} 0 1 1 -0.01 0"/></defs><text font-family="'Geist Mono','JetBrains Mono',monospace" font-weight="700" font-size="5.3" fill="currentColor"><textPath href="#${id}r" textLength="${L}" lengthAdjust="spacing">LARPENATOR ✦ TRADING JOURNAL ✦ </textPath></text>` +
+        `<text x="32" y="36.8" text-anchor="middle" ${display} font-size="12.5" fill="currentColor">3000</text>`;
+    }
+    return `<svg class="stamp-svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">${tex}<g filter="url(#${id})" transform="rotate(-8 32 32)">${body}</g></svg>`;
+  }
+  // the same stamp drawn onto a canvas (exported images), with speckles knocked out for the ink texture
+  function drawStampCanvas(ctx, cx, cy, R, color, small) {
+    const s = R / 32, size = Math.ceil(R * 2 + 12);
+    const off = document.createElement('canvas'); off.width = off.height = size;
+    const o = off.getContext('2d');
+    o.translate(size / 2, size / 2); o.rotate(-8 * Math.PI / 180);
+    o.strokeStyle = o.fillStyle = color; o.textAlign = 'center'; o.textBaseline = 'alphabetic';
+    const ring = (r, w) => { o.lineWidth = w * s; o.beginPath(); o.arc(0, 0, r * s, 0, Math.PI * 2); o.stroke(); };
+    if (small) {
+      ring(28, 4.5);
+      o.font = `800 ${20 * s}px "Bricolage Grotesque", "Geist", sans-serif`; o.fillText('3K', 0, 7 * s);
+    } else {
+      ring(29.5, 2.8); ring(18.5, 1.2);
+      const str = 'LARPENATOR ✦ TRADING JOURNAL ✦ ', r = 20.6 * s;
+      o.font = `700 ${5.3 * s}px "Geist Mono", "JetBrains Mono", monospace`;
+      for (let i = 0; i < str.length; i++) {
+        o.save(); o.rotate((i + 0.5) / str.length * Math.PI * 2); o.fillText(str[i], 0, -r); o.restore();
+      }
+      o.font = `800 ${12.5 * s}px "Bricolage Grotesque", "Geist", sans-serif`; o.fillText('3000', 0, 4.8 * s);
+    }
+    o.setTransform(1, 0, 0, 1, 0, 0);
+    o.globalCompositeOperation = 'destination-out';
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const dots = Math.round(0.45 * size * size / Math.max(1, s * s));
+    for (let i = 0; i < dots; i++) {
+      o.globalAlpha = 0.35 + rnd() * 0.65;
+      o.beginPath(); o.arc(rnd() * size, rnd() * size, Math.max(0.4, (0.15 + rnd() * 0.45) * s), 0, Math.PI * 2); o.fill();
+    }
+    ctx.drawImage(off, cx - size / 2, cy - size / 2);
+  }
+
+  document.getElementById('brand-stamp').innerHTML = stampSVG(false);
+  const welcomeBrand = document.querySelector('.welcome-brand');
+  if (welcomeBrand) welcomeBrand.insertAdjacentHTML('afterbegin', `<span class="welcome-stamp">${stampSVG(false)}</span>`);
 
   // ---------- init ----------
   migrateLegacyBgPhotosOnce();
