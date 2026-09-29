@@ -1608,6 +1608,57 @@
     .rp-slider, .tab-ul, .roll-col > span, .toast { transition: none !important; }
     .cmdk-veil.open, .cmdk-veil.open .cmdk-panel, .before-chk.just, .before-chk.just svg path, .before-chk.just::after, .toast.show::after { animation: none !important; }
   }
+  /* ================= colour styles (Settings > Colour style); "original" uses the rules above untouched ================= */
+  :root[data-palette="brass"] {
+    --bg: #131415; --sidebar: #111213; --surface: #18191b; --surface-2: #1d1e21; --surface-3: #27282b; --field-bg: #141517;
+    --border: rgba(236,228,214,0.08); --border-strong: rgba(236,228,214,0.16);
+    --ink: #ece6da; --ink-dim: #968f84; --ink-faint: #635e57;
+    --green: #6cc391; --green-dim: #2d5a41; --red: #df7b6d; --red-dim: #6a3631; --amber: #d9a05b; --amber-dim: #6b4f2c;
+    --accent: #c9a35b; --accent-dim: #5e4c2b; --on-accent: #1a1409;
+  }
+  :root[data-palette="steel"] {
+    --bg: #101419; --sidebar: #0e1216; --surface: #151a20; --surface-2: #1a2028; --surface-3: #232a33; --field-bg: #11161b;
+    --border: rgba(220,230,240,0.08); --border-strong: rgba(220,230,240,0.16);
+    --ink: #e3e8ee; --ink-dim: #8792a0; --ink-faint: #59636f;
+    --green: #71c79a; --green-dim: #2c5741; --red: #e0806f; --red-dim: #6b3832; --amber: #e2a35e; --amber-dim: #6b4f2c;
+    --accent: #8fb3d9; --accent-dim: #33475d; --on-accent: #0c1520;
+  }
+  :root[data-palette="paper"] {
+    --bg: #efebe3; --sidebar: #e9e4da; --surface: #f7f4ee; --surface-2: #ece7de; --surface-3: #e0dacd; --field-bg: #faf8f3;
+    --border: rgba(34,32,28,0.1); --border-strong: rgba(34,32,28,0.2);
+    --ink: #22201c; --ink-dim: #6b655b; --ink-faint: #9a9387;
+    --green: #2f8a57; --green-dim: #b9d8c4; --red: #b8473a; --red-dim: #ecc4bd; --amber: #a86a17; --amber-dim: #ead3ae;
+    --accent: #22201c; --accent-dim: #cfc8ba; --on-accent: #efebe3;
+  }
+  :root[data-palette="brass"], :root[data-palette="steel"], :root[data-palette="paper"] {
+    --wash-1: transparent; --wash-2: transparent; --wash-corner: transparent; --wash-corner-core: transparent;
+  }
+  :root[data-palette="brass"] .brand .brand-accent, :root[data-palette="steel"] .brand .brand-accent, :root[data-palette="paper"] .brand .brand-accent {
+    background-image: linear-gradient(100deg, var(--accent) 42%, color-mix(in srgb, var(--accent) 30%, #fff) 50%, var(--accent) 58%);
+  }
+  /* the brand text is painted by its gradient (see brand glint), so the fill has to be see-through */
+  .brand .brand-name .brand-accent { -webkit-text-fill-color: transparent; }
+  .palette-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-top: 8px; }
+  .palette-opt { display: grid; gap: 8px; text-align: left; padding: 10px; border-radius: 10px; border: 1px solid var(--border); cursor: pointer; font: 500 12.5px var(--font-body); transition: border-color .2s, scale .2s; }
+  .palette-opt:hover { scale: 1.03; }
+  .palette-opt.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .palette-opt .pal-chips { display: flex; gap: 4px; }
+  .palette-opt .pal-chips i { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(128,128,128,.25); }
+  .appearance-original-only.hidden-by-palette { display: none; }
+
+  /* ================= tape of recent trades ================= */
+  .tape { overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: -6px 0 18px; padding: 7px 0; white-space: nowrap; font: 500 11.5px var(--font-mono); color: var(--ink-dim); -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+  .tape[hidden] { display: none; }
+  .tape-run { display: inline-flex; animation: tapeRun var(--tape-dur, 45s) linear infinite; }
+  .tape:hover .tape-run { animation-play-state: paused; }
+  .tape-item { display: inline-flex; gap: 8px; padding-right: 30px; align-items: baseline; }
+  .tape-item .t-d { color: var(--ink-faint); }
+  .tape-item .t-s { color: var(--ink); }
+  .tape-item .t-p.pos { color: var(--green); } .tape-item .t-p.neg { color: var(--red); } .tape-item .t-p.be { color: var(--amber); }
+  .tape-item .t-sep { color: var(--ink-faint); opacity: .5; padding-left: 22px; }
+  @keyframes tapeRun { to { transform: translateX(-50%); } }
+  html.calm .tape-run { animation: none; }
+  @media (prefers-reduced-motion: reduce) { .tape-run { animation: none; } }
 </style>
 </head>
 <body>
@@ -1688,6 +1739,7 @@
 
     <!-- DASHBOARD (Today) -->
     <section class="section active" id="section-dashboard">
+      <div class="tape" id="dash-tape" aria-label="Your last trades" hidden><div class="tape-run" id="dash-tape-run"></div></div>
       <div class="page-head dash-head">
         <div>
           <h1 id="dash-greeting">Good afternoon</h1>
@@ -2559,17 +2611,21 @@
       <div class="card">
         <div class="cal-card-head"><h3>Appearance <span class="head-note">this device only</span></h3></div>
         <div class="field" style="margin-bottom:16px;">
+          <label>Colour style</label>
+          <div class="palette-row" id="palette-row"></div>
+        </div>
+        <div class="field appearance-original-only" style="margin-bottom:16px;">
           <label>Theme</label>
           <div class="mode-switch" id="theme-toggle" style="margin-top:6px;">
             <button class="mode-btn" data-theme="dark" type="button">Dark</button>
             <button class="mode-btn" data-theme="light" type="button">Light</button>
           </div>
         </div>
-        <div class="field" style="margin-bottom:16px;">
+        <div class="field appearance-original-only" style="margin-bottom:16px;">
           <label>Accent color</label>
           <div class="accent-swatch-row" id="accent-swatches"></div>
         </div>
-        <div class="field" style="margin-bottom:16px;">
+        <div class="field appearance-original-only" style="margin-bottom:16px;">
           <label>Corner glow brightness</label>
           <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
             <input type="range" id="glow-intensity-slider" min="0" max="150" step="5">
@@ -2743,6 +2799,15 @@
   const GLOW_KEY = 'lvd_glow_intensity';
   const DISPLAY_SCALE_KEY = 'lvd_display_scale';
   let themeMode = localStorage.getItem(THEME_KEY) || 'dark';
+  const PALETTE_KEY = 'lvd_palette';
+  const PALETTES = [
+    { id: 'original', name: 'Original', chips: ['#0f1216', '#3ddc97', '#3ddc97', '#f07167'] },
+    { id: 'brass', name: 'Graphite & brass', chips: ['#131415', '#c9a35b', '#6cc391', '#df7b6d'] },
+    { id: 'steel', name: 'Ink & steel', chips: ['#101419', '#8fb3d9', '#71c79a', '#e0806f'] },
+    { id: 'paper', name: 'Paper', chips: ['#efebe3', '#22201c', '#2f8a57', '#b8473a'] }
+  ];
+  let palette = localStorage.getItem(PALETTE_KEY) || 'original';
+  if (!PALETTES.some(p => p.id === palette)) palette = 'original';
   let customAccent = localStorage.getItem(ACCENT_KEY) || null;
   let glowIntensity = parseInt(localStorage.getItem(GLOW_KEY), 10);
   if (isNaN(glowIntensity) || glowIntensity < 0) glowIntensity = 100;
@@ -2773,10 +2838,14 @@
     document.documentElement.style.setProperty('--wash-corner', `color-mix(in srgb, var(--accent) ${mid}%, transparent)`);
   }
   function applyTheme() {
-    document.documentElement.setAttribute('data-theme', themeMode);
-    if (customAccent) document.documentElement.style.setProperty('--accent', customAccent);
-    else document.documentElement.style.removeProperty('--accent');
-    applyGlowIntensity();
+    // Original keeps the dark/light toggle, accent picker and corner glow; the other styles fix their own colours
+    const root = document.documentElement, custom = palette !== 'original';
+    root.setAttribute('data-palette', palette);
+    root.setAttribute('data-theme', palette === 'paper' ? 'light' : custom ? 'dark' : themeMode);
+    if (customAccent && !custom) root.style.setProperty('--accent', customAccent);
+    else root.style.removeProperty('--accent');
+    if (custom) { root.style.removeProperty('--wash-corner-core'); root.style.removeProperty('--wash-corner'); }
+    else applyGlowIntensity();
   }
   applyTheme();
 
@@ -4013,6 +4082,7 @@
   function renderDashboard() {
     const isAlgo = dashboardMode === 'algo';
     const activeList = isAlgo ? getAlgoEntries() : entries;
+    renderTape(activeList);
     const s = computeStats(activeList);
     const todayEntries = activeList.filter(e => e.date === todayStr);
     const todayPnl = todayEntries.reduce((sum,e) => sum + (e.pnl||0), 0);
@@ -7264,7 +7334,20 @@
   }
 
   // ---------- appearance ----------
+  function renderPalettePicker() {
+    const row = document.getElementById('palette-row');
+    row.innerHTML = PALETTES.map(p => `<button type="button" class="palette-opt${p.id === palette ? ' active' : ''}" data-palette="${p.id}" style="background:${p.chips[0]}; color:${p.id === 'paper' ? '#22201c' : '#e8e4dc'}"><span class="pal-chips">${p.chips.slice(1).map(c => `<i style="background:${c}"></i>`).join('')}</span>${p.name}</button>`).join('');
+    row.querySelectorAll('.palette-opt').forEach(b => b.addEventListener('click', () => {
+      palette = b.dataset.palette;
+      try { if (palette === 'original') localStorage.removeItem(PALETTE_KEY); else localStorage.setItem(PALETTE_KEY, palette); } catch (e) {}
+      applyTheme();
+      renderAppearanceControls();
+      if (typeof renderDashboard === 'function' && activeTab === 'dashboard') renderDashboard();
+    }));
+    document.querySelectorAll('.appearance-original-only').forEach(f => f.classList.toggle('hidden-by-palette', palette !== 'original'));
+  }
   function renderAppearanceControls() {
+    renderPalettePicker();
     document.querySelectorAll('#theme-toggle .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === themeMode));
     const row = document.getElementById('accent-swatches');
     const sel = (customAccent || '').toLowerCase();
@@ -8084,6 +8167,25 @@
     renderAmbientToggle();
   }));
   renderAmbientToggle();
+
+  // tape: the last trades scroll across the top of the dashboard
+  function renderTape(list) {
+    const tape = document.getElementById('dash-tape'), run = document.getElementById('dash-tape-run');
+    const recent = [...list].sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 14);
+    tape.hidden = !recent.length;
+    if (!recent.length) { run.innerHTML = ''; return; }
+    const item = e => {
+      const p = e.pnl || 0, cls = p > 0 ? 'pos' : p < 0 ? 'neg' : 'be';
+      const res = e.result === 'breakeven' ? 'BE' : e.result === 'win' ? 'W' : e.result === 'loss' ? 'L' : '';
+      return `<span class="tape-item"><span class="t-d">${fmtDateShort(e.date).toUpperCase()}</span><span class="t-s">${escapeHtml(e.symbol || '—')}</span>${e.session ? `<span class="t-d">${sessionLabel(e.session)}</span>` : ''}<span class="t-p ${cls}">${res ? res + ' ' : ''}${p > 0 ? '+' : ''}${fmtMoney(p)}</span></span>`;
+    };
+    // at least ~12 items per half so short lists still fill a wide screen
+    let half = recent.map(item);
+    while (half.length < 12) half = half.concat(recent.map(item));
+    const html = half.join('') + '<span class="tape-item"><span class="t-sep">■</span></span>';
+    run.innerHTML = html + html;
+    run.style.setProperty('--tape-dur', Math.max(30, half.length * 3.2) + 's');
+  }
 
   // ---------- hover lab: sliders, underlines, rolling digits, tooltips, sparks ----------
   let lastPremarketDone = null;

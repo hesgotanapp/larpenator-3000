@@ -263,9 +263,9 @@
     const pad = 4;
     const pts = series.map((v, i) => [(i / (series.length - 1)) * cssW, pad + (1 - (v - lo) / rng) * (cssH - pad * 2)]);
     const up = series[series.length - 1] >= 0;
-    const col = up ? '#3ddc97' : '#f07167';
+    const col = getComputedStyle(document.documentElement).getPropertyValue(up ? '--green' : '--red').trim() || (up ? '#3ddc97' : '#f07167');
     const grad = ctx.createLinearGradient(0, 0, 0, cssH);
-    grad.addColorStop(0, up ? 'rgba(61,220,151,0.22)' : 'rgba(240,113,103,0.22)');
+    grad.addColorStop(0, col + '38');
     grad.addColorStop(1, 'rgba(0,0,0,0)');
     const paint = (p) => {
     ctx.clearRect(0, 0, cssW, cssH);
@@ -277,7 +277,7 @@
     ctx.beginPath();
     pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
     ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.lineJoin = 'round';
-    ctx.shadowColor = up ? 'rgba(61,220,151,0.5)' : 'rgba(240,113,103,0.5)'; ctx.shadowBlur = 6;
+    ctx.shadowColor = col + '80'; ctx.shadowBlur = 6;
     ctx.stroke(); ctx.shadowBlur = 0;
     ctx.restore();
     if (p >= 1) { const last = pts[pts.length - 1]; ctx.beginPath(); ctx.arc(last[0], last[1], 3, 0, 7); ctx.fillStyle = col; ctx.fill(); }
@@ -345,7 +345,24 @@
     return `<svg class="flame" viewBox="0 0 40 54"><path d="M20 2C15 10 8 14 8 26a12 12 0 0 0 24 0c0-5-2.5-8.5-5-11 1 3-1 6-1 6s1-4-2-8c-1.5-2-3-4.5-4-11Z" fill="${base}"/></svg>`;
   }
   let lastStreakSeen = null;
+  // tape: the last trades scroll across the top of Today
+  function renderTape(list) {
+    const tape = document.getElementById('dash-tape'), run = document.getElementById('dash-tape-run');
+    const recent = [...list].sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 12);
+    tape.hidden = !recent.length;
+    if (!recent.length) { run.innerHTML = ''; return; }
+    const item = e => {
+      const p = e.pnl || 0, cls = p > 0 ? 'pos' : p < 0 ? 'neg' : 'be';
+      const res = e.result === 'breakeven' ? 'BE' : e.result === 'win' ? 'W' : e.result === 'loss' ? 'L' : '';
+      return `<span class="tape-item"><span class="t-d">${fmtDateShort(e.date).toUpperCase()}</span><span class="t-s">${escapeHtml(e.symbol || '—')}</span><span class="t-p ${cls}">${res ? res + ' ' : ''}${p > 0 ? '+' : ''}${fmtMoney(p)}</span></span>`;
+    };
+    let half = recent.map(item);
+    while (half.length < 8) half = half.concat(recent.map(item));
+    run.innerHTML = half.join('') + half.join('');
+    run.style.setProperty('--tape-dur', Math.max(24, half.length * 3.4) + 's');
+  }
   function renderDashboard() {
+    renderTape(entries);
     const s = computeStats(entries);
     const todayEntries = entries.filter(e => e.date === todayStr);
     const todayPnl = todayEntries.reduce((sum, e) => sum + (e.pnl || 0), 0);
@@ -1037,6 +1054,22 @@
     renderIntroPref();
   });
   renderIntroPref();
+  const PALETTES = [['original', 'Original'], ['brass', 'Brass'], ['steel', 'Steel'], ['paper', 'Paper']];
+  function renderPalettePref() {
+    let cur = 'original';
+    try { cur = localStorage.getItem('lvd_palette') || 'original'; } catch (e) {}
+    if (cur === 'original') document.documentElement.removeAttribute('data-palette'); else document.documentElement.setAttribute('data-palette', cur);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0f1216');
+    document.getElementById('palette-chips').innerHTML = PALETTES.map(([id, name]) => `<button type="button" class="chip${id === cur ? ' on' : ''}" data-pal="${id}">${name}</button>`).join('');
+  }
+  document.getElementById('palette-chips').addEventListener('click', e => {
+    const b = e.target.closest('[data-pal]'); if (!b) return;
+    try { if (b.dataset.pal === 'original') localStorage.removeItem('lvd_palette'); else localStorage.setItem('lvd_palette', b.dataset.pal); } catch (err) {}
+    renderPalettePref();
+    renderDashboard();
+  });
+  renderPalettePref();
   function renderAmbientPref() {
     let off = false;
     try { off = localStorage.getItem('lvd_ambient_off') === '1'; } catch (e) {}

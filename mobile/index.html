@@ -477,9 +477,49 @@
     #cal-grid .cal-cell.today::after { opacity: .75; }
     #appheader .brand-name .brand-accent { background-position: 0 0; }
   }
+  /* ---------- colour styles (Account > Colour style) ---------- */
+  :root[data-palette="brass"] {
+    --bg: #131415; --surface: #18191b; --surface-2: #1d1e21; --surface-3: #27282b;
+    --border: rgba(236,228,214,0.08); --border-strong: rgba(236,228,214,0.16);
+    --ink: #ece6da; --ink-dim: #968f84; --ink-faint: #635e57;
+    --green: #6cc391; --green-bg: rgba(108,195,145,0.12); --red: #df7b6d; --red-bg: rgba(223,123,109,0.12); --amber: #d9a05b; --amber-bg: rgba(217,160,91,0.14);
+    --accent: #c9a35b; --accent-bg: rgba(201,163,91,0.13); --on-accent: #1a1409; --tabbar: rgba(19,20,21,0.95);
+  }
+  :root[data-palette="steel"] {
+    --bg: #101419; --surface: #151a20; --surface-2: #1a2028; --surface-3: #232a33;
+    --border: rgba(220,230,240,0.08); --border-strong: rgba(220,230,240,0.16);
+    --ink: #e3e8ee; --ink-dim: #8792a0; --ink-faint: #59636f;
+    --green: #71c79a; --green-bg: rgba(113,199,154,0.12); --red: #e0806f; --red-bg: rgba(224,128,111,0.12); --amber: #e2a35e; --amber-bg: rgba(226,163,94,0.14);
+    --accent: #8fb3d9; --accent-bg: rgba(143,179,217,0.13); --on-accent: #0c1520; --tabbar: rgba(16,20,25,0.95);
+  }
+  :root[data-palette="paper"] {
+    color-scheme: light;
+    --bg: #efebe3; --surface: #f7f4ee; --surface-2: #ece7de; --surface-3: #e0dacd;
+    --border: rgba(34,32,28,0.1); --border-strong: rgba(34,32,28,0.2);
+    --ink: #22201c; --ink-dim: #6b655b; --ink-faint: #9a9387;
+    --green: #2f8a57; --green-bg: rgba(47,138,87,0.1); --red: #b8473a; --red-bg: rgba(184,71,58,0.1); --amber: #a86a17; --amber-bg: rgba(168,106,23,0.12);
+    --accent: #22201c; --accent-bg: rgba(34,32,28,0.07); --on-accent: #efebe3; --tabbar: rgba(239,235,227,0.95);
+  }
+  :root[data-palette] #tabbar { background: var(--tabbar); }
+  :root[data-palette] .btn:not(.ghost), :root[data-palette] #fab, :root[data-palette] ::selection { color: var(--on-accent); }
+  :root[data-palette] #fab { box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 28%, transparent); }
+  :root[data-palette] #appheader .brand-name .brand-accent { background-image: linear-gradient(100deg, var(--accent) 42%, color-mix(in srgb, var(--accent) 30%, #fff) 50%, var(--accent) 58%); }
+  #appheader .brand-name .brand-accent { -webkit-text-fill-color: transparent; }
+
+  /* ---------- tape of recent trades ---------- */
+  .tape { overflow: hidden; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 0 -2px 14px; padding: 6px 0; white-space: nowrap; font: 500 11px var(--font-mono); color: var(--ink-dim); -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+  .tape[hidden] { display: none; }
+  .tape-run { display: inline-flex; animation: tapeRun var(--tape-dur, 40s) linear infinite; }
+  .tape-item { display: inline-flex; gap: 7px; padding-right: 24px; }
+  .tape-item .t-d { color: var(--ink-faint); } .tape-item .t-s { color: var(--ink); }
+  .tape-item .t-p.pos { color: var(--green); } .tape-item .t-p.neg { color: var(--red); } .tape-item .t-p.be { color: var(--amber); }
+  @keyframes tapeRun { to { transform: translateX(-50%); } }
+  html.calm .tape-run { animation: none; }
+  @media (prefers-reduced-motion: reduce) { .tape-run { animation: none; } }
 </style>
 </head>
 <body>
+<script>try{var p=localStorage.getItem('lvd_palette');if(p&&p!=='original')document.documentElement.setAttribute('data-palette',p);}catch(e){}</script>
 <div class="intro" id="intro" aria-hidden="true">
   <div class="intro-half intro-top"><div class="intro-brand">LARPENATOR <b>3000</b></div><div class="intro-greet" id="intro-greet"></div></div>
   <div class="intro-half intro-bot"><div class="intro-sub" id="intro-sub"></div></div>
@@ -519,6 +559,7 @@
   <div id="screens">
 
     <section class="screen active" id="screen-dashboard">
+      <div class="tape" id="dash-tape" aria-label="Your last trades" hidden><div class="tape-run" id="dash-tape-run"></div></div>
       <div class="greet">
         <div class="greet-h" id="dash-greeting">Good afternoon</div>
         <div class="greet-sub" id="dash-subline"></div>
@@ -557,6 +598,7 @@
     <section class="screen" id="screen-more">
       <h1>Account</h1>
       <div class="card" style="padding: 6px 12px;">
+        <div class="more-item" style="display:block"><span>Colour style</span><div class="chip-row" id="palette-chips" style="margin-top:10px"></div></div>
         <div class="more-item" id="intro-pref"><span>Intro animation</span><span class="chev" id="intro-pref-state">On</span></div>
         <div class="more-item" id="ambient-pref"><span>Background motion</span><span class="chev" id="ambient-pref-state">On</span></div>
         <div class="more-item" id="more-signout"><span>Sign Out</span><span class="chev">›</span></div>
