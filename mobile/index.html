@@ -536,6 +536,34 @@
   .save-ticket .st-pnl { font-size: 30px; font-weight: 600; letter-spacing: -1px; margin-top: 8px; }
   .save-ticket .st-pnl.win { color: var(--green); } .save-ticket .st-pnl.loss { color: var(--red); } .save-ticket .st-pnl.breakeven { color: var(--amber); }
   .save-ticket .st-stamp { position: absolute; right: -14px; bottom: -30px; width: 96px; height: 96px; color: var(--accent); opacity: 0; }
+  /* premarket by session: three daily tick boxes and a streak */
+  .pm-sess-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-dim); margin-bottom: 8px; }
+  .pm-streak { display: inline-flex; align-items: center; gap: 5px; font: 500 11.5px var(--font-mono); color: var(--ink-faint); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+  .pm-streak b { font-weight: 700; }
+  .pm-streak svg { width: 10px; height: 13px; }
+  .pm-streak.on { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 40%, transparent); background: color-mix(in srgb, var(--amber) 9%, transparent); }
+  .pm-streak.bump { animation: pmStreakBump .5s cubic-bezier(.3,1.7,.5,1); }
+  @keyframes pmStreakBump { 40% { transform: scale(1.18); } }
+  .pm-boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .pm-box { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 9px; row-gap: 1px; align-items: center; text-align: left; padding: 10px 11px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); cursor: pointer; font: inherit; transition: border-color .2s, background .2s, scale .2s; }
+  .pm-box:hover { scale: 1.03; border-color: var(--border-strong); }
+  .pm-box:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pm-box-chk { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--ink-faint); display: grid; place-items: center; transition: background .2s, border-color .2s; }
+  .pm-box-chk svg { width: 11px; height: 11px; fill: none; stroke: var(--bg); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset .3s .05s ease-out; }
+  .pm-box.on { border-color: color-mix(in srgb, var(--green) 45%, transparent); background: color-mix(in srgb, var(--green) 8%, var(--surface-2)); }
+  .pm-box.on .pm-box-chk { background: var(--green); border-color: var(--green); }
+  .pm-box.on .pm-box-chk svg { stroke-dashoffset: 0; }
+  .pm-box.just .pm-box-chk { animation: pmChkPop .45s cubic-bezier(.3,1.8,.5,1); }
+  @keyframes pmChkPop { from { transform: scale(.6); } }
+  .pm-box-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pm-box-sub { grid-column: 1 / -1; margin-top: 4px; font-size: 11px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pm-box-sub .pm-log { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+  .pm-sess-badge { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .4px; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; border: 1px solid var(--border-strong); color: var(--ink-dim); }
+  .bt-sessions { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .pm-box { padding: 10px 10px; min-height: 52px; grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
+  .pm-box-sub { margin-top: 0; }
+  .pm-box:hover { scale: 1; }
+  .pm-box-name { font-size: 12.5px; }
 </style>
 </head>
 <body>

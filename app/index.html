@@ -1682,6 +1682,31 @@
   .save-ticket .st-pnl.win { color: var(--green); } .save-ticket .st-pnl.loss { color: var(--red); } .save-ticket .st-pnl.breakeven { color: var(--amber); }
   .save-ticket .st-meta { font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
   .save-ticket .st-stamp { position: absolute; right: -22px; bottom: -34px; width: 104px; height: 104px; color: var(--accent); opacity: 0; }
+  /* premarket by session: three daily tick boxes and a streak */
+  .pm-sess-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12px; color: var(--ink-dim); margin-bottom: 8px; }
+  .pm-streak { display: inline-flex; align-items: center; gap: 5px; font: 500 11.5px var(--font-mono); color: var(--ink-faint); padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+  .pm-streak b { font-weight: 700; }
+  .pm-streak svg { width: 10px; height: 13px; }
+  .pm-streak.on { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 40%, transparent); background: color-mix(in srgb, var(--amber) 9%, transparent); }
+  .pm-streak.bump { animation: pmStreakBump .5s cubic-bezier(.3,1.7,.5,1); }
+  @keyframes pmStreakBump { 40% { transform: scale(1.18); } }
+  .pm-boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .pm-box { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 9px; row-gap: 1px; align-items: center; text-align: left; padding: 10px 11px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--ink); cursor: pointer; font: inherit; transition: border-color .2s, background .2s, scale .2s; }
+  .pm-box:hover { scale: 1.03; border-color: var(--border-strong); }
+  .pm-box:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pm-box-chk { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--ink-faint); display: grid; place-items: center; transition: background .2s, border-color .2s; }
+  .pm-box-chk svg { width: 11px; height: 11px; fill: none; stroke: var(--bg); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 20; stroke-dashoffset: 20; transition: stroke-dashoffset .3s .05s ease-out; }
+  .pm-box.on { border-color: color-mix(in srgb, var(--green) 45%, transparent); background: color-mix(in srgb, var(--green) 8%, var(--surface-2)); }
+  .pm-box.on .pm-box-chk { background: var(--green); border-color: var(--green); }
+  .pm-box.on .pm-box-chk svg { stroke-dashoffset: 0; }
+  .pm-box.just .pm-box-chk { animation: pmChkPop .45s cubic-bezier(.3,1.8,.5,1); }
+  @keyframes pmChkPop { from { transform: scale(.6); } }
+  .pm-box-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pm-box-sub { grid-column: 1 / -1; margin-top: 4px; font-size: 11px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pm-box-sub .pm-log { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+  .pm-sess-badge { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .4px; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; border: 1px solid var(--border-strong); color: var(--ink-dim); }
+  .pm-sessions { padding: 10px 0 12px; border-bottom: 1px solid var(--border); }
+  #pm-session-toggle button.selected { background: var(--surface-3); border-color: var(--border-strong); color: var(--ink); }
 </style>
 </head>
 <body>
@@ -1896,8 +1921,9 @@
           </div>
           <div class="before-row" id="dash-premarket-done" style="display:none;">
             <span class="before-chk done" id="dash-premarket-chk"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3"/></svg></span>
-            <div class="txt"><div>Premarket note logged</div><div class="before-sub" id="dash-premarket-excerpt"></div></div>
+            <div class="txt"><div id="dash-premarket-title">Premarket note logged</div><div class="before-sub" id="dash-premarket-excerpt"></div></div>
           </div>
+          <div class="pm-sessions" id="dash-pm-sessions"></div>
           <div class="focus-block">
             <div class="card-head" style="margin-bottom:6px;">
               <div class="card-eyebrow">Focus rule</div>
@@ -1971,6 +1997,14 @@
           <div class="field">
             <label for="pm-date">Date</label>
             <input type="date" id="pm-date" required>
+          </div>
+          <div class="field">
+            <label>Session</label>
+            <div class="result-toggle" id="pm-session-toggle">
+              <button type="button" class="sel-be" data-session="asia">Asia</button>
+              <button type="button" class="sel-be" data-session="london">London</button>
+              <button type="button" class="sel-be" data-session="ny">New York</button>
+            </div>
           </div>
           <div class="field">
             <label for="pm-levels">Key levels to watch (optional)</label>
@@ -2947,6 +2981,9 @@
   let algoPnl = loadJSON(ALGO_PNL_KEY, {});
   let achievements = loadJSON(ACHIEVEMENTS_KEY, []);
   let premarketEntries = loadJSON(PREMARKET_KEY, []);
+  const PM_TICKS_KEY = 'lvd_premarket_ticks';
+  let premarketTicks = loadJSON(PM_TICKS_KEY, {});
+  function savePremarketTicks() { try { localStorage.setItem(PM_TICKS_KEY, JSON.stringify(premarketTicks)); } catch (e) {} }
   let checklistCategories = loadJSON(CHECKLIST_CATEGORIES_KEY, null);
   if (!checklistCategories) {
     const legacyChecklist = loadJSON(CHECKLIST_ITEMS_KEY, null);
@@ -3051,6 +3088,43 @@
       const pnl = algoPnl[date];
       return { id: 'algo-' + date, date, pnl, result: pnl > 0 ? 'win' : pnl < 0 ? 'loss' : 'breakeven', rulesBroken: false, brokenRules: [], symbol: '', createdAt: new Date(date).getTime() };
     });
+  }
+
+
+  // ---------- premarket by session: daily ticks + streak ----------
+  // premarketTicks = { 'YYYY-MM-DD': { asia: true, london: true, ny: true } }, synced with the settings doc.
+  const PM_SESSIONS = ['asia', 'london', 'ny'];
+  function premarketTickedOn(dateStr) { const t = premarketTicks[dateStr]; return !!t && PM_SESSIONS.some(s => t[s]); }
+  // Days in a row with at least one session ticked, counting back from today. Weekends never break
+  // it (they only count if you ticked something), and today only counts once you've ticked it.
+  function premarketStreak() {
+    const d = new Date(); d.setHours(0, 0, 0, 0);
+    if (!premarketTickedOn(toDateStr(d))) d.setDate(d.getDate() - 1);
+    let n = 0;
+    for (let guard = 0; guard < 3700; guard++) {
+      const ticked = premarketTickedOn(toDateStr(d)), wd = d.getDay();
+      if (ticked) n++;
+      else if (wd !== 0 && wd !== 6) break;
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  }
+  function setPremarketTick(dateStr, sess, on) {
+    const t = Object.assign({}, premarketTicks[dateStr] || {});
+    if (on) t[sess] = true; else delete t[sess];
+    if (Object.keys(t).length) premarketTicks[dateStr] = t; else delete premarketTicks[dateStr];
+    savePremarketTicks();
+  }
+  // the first session on this date without a note, so a new note starts on the right one
+  function defaultPmSession(dateStr) {
+    return PM_SESSIONS.find(s => !premarketEntries.some(p => p.date === dateStr && p.session === s)) || 'ny';
+  }
+  function pmSessionBoxesHTML(dateStr) {
+    const t = premarketTicks[dateStr] || {};
+    const streak = premarketStreak();
+    const logged = s => premarketEntries.some(p => p.date === dateStr && p.session === s);
+    return `<div class="pm-sess-head"><span>Premarket by session</span><span class="pm-streak${streak ? ' on' : ''}" title="Days in a row with at least one premarket ticked. Weekends don't break it."><svg viewBox="0 0 40 54" aria-hidden="true"><path d="M20 2C15 10 8 14 8 26a12 12 0 0 0 24 0c0-5-2.5-8.5-5-11 1 3-1 6-1 6s1-4-2-8c-1.5-2-3-4.5-4-11Z" fill="currentColor"/></svg><b>${streak}</b> day${streak === 1 ? '' : 's'}</span></div>
+      <div class="pm-boxes">${PM_SESSIONS.map(s => `<button type="button" class="pm-box${t[s] ? ' on' : ''}" data-pmtick="${s}" aria-pressed="${!!t[s]}"><span class="pm-box-chk"><svg viewBox="0 0 12 12"><path d="M2 6.5l2.6 2.5L10 3"/></svg></span><span class="pm-box-name">${SESSION_LABELS[s]}</span><span class="pm-box-sub">${logged(s) ? 'Note logged' : `<span class="pm-log" data-pmlog="${s}">Log note</span>`}</span></button>`).join('')}</div>`;
   }
 
   function toDateStr(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -3340,7 +3414,7 @@
       return;
     }
     if (!matches.find(m => m.id === selectedPremarketId)) {
-      selectedPremarketId = matches[0].id;
+      selectedPremarketId = (matches.find(m => m.session && m.session === selectedSession) || matches[0]).id;
       selectedPremarketScenarioId = null;
       selectedPremarketCorrectness = null;
     }
@@ -3351,7 +3425,7 @@
     if (matches.length > 1) {
       html += `<select id="pmcheck-select" style="margin-bottom:10px;">${matches.map(m => {
         const lbl = (m.scenarios && m.scenarios[0] && m.scenarios[0].label) || m.outlook || m.levels || 'Note';
-        return `<option value="${m.id}" ${m.id === selectedPremarketId ? 'selected' : ''}>${escapeHtml(lbl.slice(0, 44))}</option>`;
+        return `<option value="${m.id}" ${m.id === selectedPremarketId ? 'selected' : ''}>${m.session ? sessionLabel(m.session) + ' · ' : ''}${escapeHtml(lbl.slice(0, 44))}</option>`;
       }).join('')}</select>`;
     }
     html += `<div class="checklist-progress">Which scenario played out?</div>`;
@@ -4167,6 +4241,9 @@
     document.getElementById('premarket-reminder-banner').style.display = todayPremarket ? 'none' : 'flex';
     document.getElementById('dash-premarket-done').style.display = todayPremarket ? 'flex' : 'none';
     if (todayPremarket && lastPremarketDone === false) document.getElementById('dash-premarket-chk').classList.add('just');
+    const loggedSessions = PM_SESSIONS.filter(x => premarketEntries.some(p => p.date === todayStr && p.session === x));
+    document.getElementById('dash-premarket-title').textContent = loggedSessions.length ? 'Premarket logged · ' + loggedSessions.map(sessionLabel).join(', ') : 'Premarket note logged';
+    setHTML(document.getElementById('dash-pm-sessions'), pmSessionBoxesHTML(todayStr));
     lastPremarketDone = !!todayPremarket;
     if (todayPremarket) {
       const firstScenario = (todayPremarket.scenarios || []).find(x => x.label || x.body);
@@ -6317,6 +6394,14 @@
   const pmForm = document.getElementById('premarket-form');
   const pmDateInput = document.getElementById('pm-date');
   pmDateInput.value = todayStr;
+  let pmSelectedSession = null;
+  function setPmSession(sess) {
+    pmSelectedSession = sess;
+    document.querySelectorAll('#pm-session-toggle button').forEach(b => b.classList.toggle('selected', b.dataset.session === sess));
+  }
+  document.querySelectorAll('#pm-session-toggle button').forEach(b => b.addEventListener('click', () => setPmSession(b.dataset.session)));
+  pmDateInput.addEventListener('change', () => { if (!pmEditingId) setPmSession(defaultPmSession(pmDateInput.value)); });
+  setPmSession(defaultPmSession(todayStr));
 
   function addScenarioRow(label, body) {
     const id = 's_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -6387,7 +6472,11 @@
       body: row.querySelector('.scenario-body-input').value.trim()
     })).filter(s => s.label || s.body);
     if (!overview && !scenarios.length) { showToast('Write an overview or add at least one scenario'); return; }
+    if (!pmSelectedSession) { showToast('Pick which session this note is for'); return; }
+    if (!pmEditingId && premarketEntries.some(p => p.date === pmDateInput.value && p.session === pmSelectedSession)
+      && !confirm(`You already have a ${sessionLabel(pmSelectedSession)} note for ${fmtDateShort(pmDateInput.value)}. Save another one?`)) return;
     const entry = {
+      session: pmSelectedSession,
       id: pmEditingId || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
       date: pmDateInput.value,
       levels: document.getElementById('pm-levels').value.trim(),
@@ -6397,8 +6486,9 @@
       createdAt: pmEditingId ? (premarketEntries.find(x => x.id === pmEditingId) || {}).createdAt || Date.now() : Date.now()
     };
     if (pmEditingId) { premarketEntries = premarketEntries.map(x => x.id === pmEditingId ? entry : x); showToast('Premarket note updated'); }
-    else { premarketEntries.push(entry); showToast('Premarket note saved'); }
+    else { premarketEntries.push(entry); showToast(sessionLabel(entry.session) + ' premarket saved'); }
     savePremarketEntries();
+    setPremarketTick(entry.date, entry.session, true);
     resetPmForm();
     renderPremarketList();
   });
@@ -6407,6 +6497,7 @@
     pmForm.reset();
     pmDateInput.value = todayStr;
     pmEditingId = null;
+    setPmSession(defaultPmSession(todayStr));
     document.getElementById('pm-scenarios-list').innerHTML = '';
     addScenarioRow();
     document.getElementById('pm-submit-btn').textContent = 'Save Premarket Note';
@@ -6419,6 +6510,7 @@
     if (!p) return;
     pmEditingId = id;
     pmDateInput.value = p.date;
+    setPmSession(p.session || null);
     document.getElementById('pm-levels').value = p.levels || '';
     document.getElementById('pm-overview').value = p.outlook || '';
     document.getElementById('pm-scenarios-list').innerHTML = '';
@@ -6449,6 +6541,7 @@
     const pct = graded.length ? Math.round((correct / graded.length) * 100) : null;
     strip.innerHTML = `
       <div class="stat"><div class="label">Premarket notes</div><div class="value">${premarketEntries.length}</div></div>
+      <div class="stat"><div class="label">Premarket streak</div><div class="value">${premarketStreak()} day${premarketStreak() === 1 ? '' : 's'}</div></div>
       <div class="stat"><div class="label">Graded trades</div><div class="value">${graded.length}</div></div>
       <div class="stat"><div class="label">Correct calls</div><div class="value ${pct === null ? '' : pct >= 50 ? 'win' : 'loss'}">${pct === null ? '—' : pct + '%'}</div></div>
       <div class="stat"><div class="label">Breakdown</div><div class="value" style="font-size:16px;"><span class="win">${correct}</span> / <span style="color:var(--amber)">${partial}</span> / <span class="loss">${incorrect}</span></div></div>
@@ -6457,7 +6550,7 @@
   function renderPremarketList() {
     renderPremarketStats();
     const list = document.getElementById('premarket-list');
-    const sorted = [...premarketEntries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+    const sorted = [...premarketEntries].sort((a, b) => b.date.localeCompare(a.date) || (PM_SESSIONS.indexOf(a.session) - PM_SESSIONS.indexOf(b.session)) || b.createdAt - a.createdAt);
     if (!sorted.length) {
       list.innerHTML = `<div class="empty-state"><div class="glyph">—</div><p>No premarket notes yet. Log what you expect before the next session opens.</p></div>`;
       return;
@@ -6485,6 +6578,7 @@
         <div class="entry-top" data-toggle="pm-${p.id}">
           <div class="entry-meta">
             <span class="entry-date">${fmtDate(p.date)}</span>
+            ${p.session ? `<span class="pm-sess-badge">${sessionLabel(p.session)}</span>` : ''}
             ${p.levels ? `<span class="entry-symbol">${escapeHtml(p.levels)}</span>` : ''}
             ${gradings.length ? `<span class="badge ${gradings.some(g => g.premarketLink.correctness === 'correct') ? 'win' : gradings.some(g => g.premarketLink.correctness === 'incorrect') ? 'loss' : 'breakeven'}">graded</span>` : ''}
           </div>
@@ -7888,7 +7982,7 @@
     savePremarketEntries = function () { _localSavePremarket(); LvdSync.pushCollection('premarketEntries'); };
 
     function settingsSnapshot() {
-      return { rulebook, goals, weeklyReviews, mistakeTags, checklistCategories, focusRules, focusIndex, milestone, algoPnl };
+      return { rulebook, goals, weeklyReviews, mistakeTags, checklistCategories, focusRules, focusIndex, milestone, algoPnl, premarketTicks };
     }
     function applySettingsSnapshot(s) {
       if (s.rulebook) rulebook = s.rulebook;
@@ -7900,6 +7994,7 @@
       if (typeof s.focusIndex === 'number') focusIndex = s.focusIndex;
       if (s.milestone) milestone = s.milestone;
       if (s.algoPnl) algoPnl = s.algoPnl;
+      if (s.premarketTicks && typeof s.premarketTicks === 'object') { premarketTicks = s.premarketTicks; localStorage.setItem(PM_TICKS_KEY, JSON.stringify(premarketTicks)); }
       localStorage.setItem(RULEBOOK_KEY, JSON.stringify(rulebook));
       localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
       localStorage.setItem(WEEKLY_KEY, JSON.stringify(weeklyReviews));
@@ -7910,6 +8005,7 @@
       localStorage.setItem(MILESTONE_KEY, JSON.stringify(milestone));
       localStorage.setItem(ALGO_PNL_KEY, JSON.stringify(algoPnl));
     }
+    const _localSaveTicks = savePremarketTicks; savePremarketTicks = function () { _localSaveTicks(); LvdSync.pushSettings(); };
     const _localSaveGoals = saveGoals; saveGoals = function () { _localSaveGoals(); LvdSync.pushSettings(); };
     const _localSaveRulebook = saveRulebook; saveRulebook = function () { _localSaveRulebook(); LvdSync.pushSettings(); };
     const _localSaveWeeklyReviews = saveWeeklyReviews; saveWeeklyReviews = function () { _localSaveWeeklyReviews(); LvdSync.pushSettings(); };
@@ -8170,6 +8266,25 @@
       };
     }, 1150);
   }
+
+  // ticking a session box on the dashboard (or jumping to log that session's note)
+  document.getElementById('dash-pm-sessions').addEventListener('click', ev => {
+    const log = ev.target.closest('[data-pmlog]');
+    if (log) {
+      ev.stopPropagation();
+      switchTab('premarket'); resetPmForm(); pmDateInput.value = todayStr; setPmSession(log.dataset.pmlog);
+      return;
+    }
+    const box = ev.target.closest('[data-pmtick]');
+    if (!box) return;
+    const sess = box.dataset.pmtick, before = premarketStreak();
+    const on = !(premarketTicks[todayStr] && premarketTicks[todayStr][sess]);
+    setPremarketTick(todayStr, sess, on);
+    renderDashboard();
+    const nb = document.querySelector(`#dash-pm-sessions [data-pmtick="${sess}"]`);
+    if (nb && on) nb.classList.add('just');
+    if (premarketStreak() !== before) { const st = document.querySelector('#dash-pm-sessions .pm-streak'); if (st) st.classList.add('bump'); }
+  });
 
   // sidebar: a green marker slides to the page you pick
   let navBarGroup = null;
