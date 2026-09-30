@@ -6816,6 +6816,21 @@
   let notesStore = loadJSON(NOTES_KEY, { notes: [], lastOpenedId: null });
   if (Array.isArray(notesStore)) notesStore = { notes: notesStore, lastOpenedId: null };
   if (!Array.isArray(notesStore.notes)) notesStore.notes = [];
+  // deleted notes are kept for 30 days (on this device) so nothing is ever lost by accident
+  const NOTE_TRASH_DAYS = 30;
+  notesStore.trash = (Array.isArray(notesStore.trash) ? notesStore.trash : []).filter(n => n && n.deletedAt > Date.now() - NOTE_TRASH_DAYS * 86400000);
+  function trashNotes(list) {
+    list.forEach(n => { notesStore.trash = notesStore.trash.filter(t => t.id !== n.id); notesStore.trash.push(Object.assign({}, n, { deletedAt: Date.now() })); });
+  }
+  function restoreNote(id) {
+    const t = notesStore.trash.find(n => n.id === id); if (!t) return;
+    notesStore.trash = notesStore.trash.filter(n => n.id !== id);
+    const note = Object.assign({}, t, { updatedAt: Date.now() }); delete note.deletedAt;
+    if (note.folderId && !folderById(note.folderId)) delete note.folderId;
+    if (!getNote(note.id)) notesStore.notes.push(note);
+    notesStore.lastOpenedId = note.id; notesFolder = 'all';
+    saveNotes(); showToast('Note restored'); renderNotesAll();
+  }
 
   let notesCurrentView = 'list';
   let noteEditorMode = 'edit';
@@ -6961,6 +6976,7 @@
       ${notesStore.folders.map(folderRow).join('')}
       ${noteFolderEditing === 'new' ? `<div class="nt-fold on"><span class="dot" style="background:${nextFolderColor()}"></span><input class="nt-fold-input" data-rename="new" placeholder="Folder name"></div>` : ''}
       ${!notesStore.folders.length && noteFolderEditing !== 'new' ? '<div class="nt-fold-empty">Group notes into folders, like Setups or Psychology. Press + to add one.</div>' : ''}
+      ${notesStore.trash.length ? `<div class="nt-fold${notesFolder === 'trash' ? ' on' : ''}" data-trash title="Deleted notes are kept here for ${NOTE_TRASH_DAYS} days"><span class="dot" style="background:var(--ink-faint)"></span><span>Recently deleted</span><em>${notesStore.trash.length}</em></div>` : ''}
       <div class="nt-fold-h"><span>View</span></div>
       <div class="nt-fold nt-map" data-open-map>${NT_ICONS.graph}<span>Brain map</span></div>`;
     const inp = el.querySelector('.nt-fold-input');
@@ -6994,9 +7010,11 @@
         notesStore.notes.forEach(x => { if (x.folderId === f.id) { delete x.folderId; x.updatedAt = Date.now(); } });
         notesStore.folders = notesStore.folders.filter(x => x.id !== f.id);
         if (notesFolder === f.id) notesFolder = 'all';
+        if (window.LvdSync && LvdSync.deleteItem) LvdSync.deleteItem('noteFolders', f.id);
         saveNotes(); renderNotesAll();
         return;
       }
+      if (ev.target.closest('[data-trash]')) { flushNoteSave(); notesFolder = 'trash'; renderNoteFolders(); renderNotesList(); return; }
       if (ev.target.closest('#nt-folder-add')) { noteFolderEditing = 'new'; renderNoteFolders(); return; }
       if (ev.target.closest('[data-open-map]')) { switchNotesView('graph'); return; }
       const row = ev.target.closest('[data-folder]');
@@ -7061,6 +7079,12 @@
     const el = document.getElementById('notes-list');
     const f = folderById(notesFolder);
     document.getElementById('nt-list-title').textContent = notesFolder === 'all' ? 'All notes' : notesFolder === 'pinned' ? 'Pinned' : (f ? f.name : 'Notes');
+    if (notesFolder === 'trash') {
+      document.getElementById('nt-list-title').textContent = 'Recently deleted';
+      const gone = notesStore.trash.slice().sort((a, b) => b.deletedAt - a.deletedAt);
+      el.innerHTML = gone.length ? `<div class="nt-grp">Kept for ${NOTE_TRASH_DAYS} days · click a note to restore it</div>` + gone.map(n => `<div class="nt-item" data-restore-id="${n.id}"><span class="t">${escapeHtml(n.title)}</span><span class="p"><b>Deleted ${noteWhen(n.deletedAt)}</b>${escapeHtml(notePreviewText(n).slice(0, 90)) || 'No additional text'}</span></div>`).join('') : '<div class="nt-list-empty">Nothing here.</div>';
+      return;
+    }
     const list = notesInView();
     if (!list.length) {
       el.innerHTML = `<div class="nt-list-empty">${noteSearchQuery ? 'Nothing matches that search.' : notesFolder === 'pinned' ? 'Pin a note from its ⋯ menu to keep it at the top.' : notesStore.notes.length ? 'No notes in this folder yet.<br>Press the pencil to write one here.' : 'No notes yet.<br>Press the pencil to write your first one.'}</div>`;
@@ -7078,7 +7102,11 @@
   }
   (function bindNotesList() {
     const el = document.getElementById('notes-list');
-    el.addEventListener('click', ev => { const row = ev.target.closest('.nt-item'); if (row) openNoteById(row.dataset.noteId); });
+    el.addEventListener('click', ev => {
+      const row = ev.target.closest('.nt-item'); if (!row) return;
+      if (row.dataset.restoreId) { const t = notesStore.trash.find(n => n.id === row.dataset.restoreId); if (t && confirm(`Restore "${t.title}"?`)) restoreNote(t.id); return; }
+      openNoteById(row.dataset.noteId);
+    });
     el.addEventListener('dragstart', ev => { const row = ev.target.closest('.nt-item'); if (!row) return; ev.dataTransfer.setData('text/lvd-note', row.dataset.noteId); ev.dataTransfer.effectAllowed = 'move'; row.classList.add('dragging'); });
     el.addEventListener('dragend', ev => { const row = ev.target.closest('.nt-item'); if (row) row.classList.remove('dragging'); });
   })();
@@ -7090,6 +7118,7 @@
   function newNoteHere() {
     flushNoteSave();
     if (notesCurrentView !== 'list') switchNotesView('list');
+    if (notesFolder === 'trash') notesFolder = 'all';
     const note = createNote('', '');
     if (notesFolder !== 'all' && notesFolder !== 'pinned' && folderById(notesFolder)) note.folderId = notesFolder;
     notesStore.lastOpenedId = note.id;
@@ -7502,9 +7531,11 @@
     flushNoteSave();
     const blCount = backlinksFor(note).length;
     const warn = blCount ? `\n\n${blCount} other note${blCount === 1 ? '' : 's'} link to it — those links will stop working.` : '';
-    if (!confirm(`Delete "${note.title}"? This cannot be undone.${warn}`)) return;
+    if (!confirm(`Delete "${note.title}"?\n\nYou can get it back from Recently deleted for ${NOTE_TRASH_DAYS} days.${warn}`)) return;
     const list = notesInView(), idx = list.findIndex(n => n.id === note.id);
+    trashNotes([note]);
     notesStore.notes = notesStore.notes.filter(n => n.id !== note.id);
+    if (window.LvdSync && LvdSync.deleteItem) LvdSync.deleteItem('notes', note.id);
     const next = list[idx + 1] || list[idx - 1];
     notesStore.lastOpenedId = next && next.id !== note.id ? next.id : null;
     saveNotes();
@@ -8595,11 +8626,14 @@
     // update notes in place so an open editor keeps pointing at the same note object
     const mergeNotes = (list, arr) => { const byId = new Map(list.map(n => [n.id, n])); return arr.map(r => { const l = byId.get(r.id); if (!l) return r; Object.keys(l).forEach(k => { if (!(k in r)) delete l[k]; }); return Object.assign(l, r); }); };
     LvdSync.registerCollection('notes', () => notesStore.notes.filter(noteFits), (arr) => {
-      const localOnly = notesStore.notes.filter(n => !noteFits(n) && !arr.some(a => a.id === n.id));
+      const ids = new Set(arr.map(a => a.id));
+      const localOnly = notesStore.notes.filter(n => !noteFits(n) && !ids.has(n.id));
+      // a note deleted on another device goes to Recently deleted here instead of vanishing
+      trashNotes(notesStore.notes.filter(n => noteFits(n) && !ids.has(n.id)));
       notesStore.notes = mergeNotes(notesStore.notes, arr).concat(localOnly);
       _localSaveNotes();
-    }, rerenderNotesAfterSync);
-    LvdSync.registerCollection('noteFolders', () => notesStore.folders || [], (arr) => { notesStore.folders = mergeNotes(notesStore.folders || [], arr); _localSaveNotes(); }, rerenderNotesAfterSync);
+    }, rerenderNotesAfterSync, { explicitDeletes: true });
+    LvdSync.registerCollection('noteFolders', () => notesStore.folders || [], (arr) => { notesStore.folders = mergeNotes(notesStore.folders || [], arr); _localSaveNotes(); }, rerenderNotesAfterSync, { explicitDeletes: true });
     LvdSync.registerCollection('premarketEntries', () => premarketEntries, (arr) => { premarketEntries = arr; _localSavePremarket(); }, rerenderAfterRemoteSync);
 
     // background-photo pools sync as their own per-item collections (one small doc

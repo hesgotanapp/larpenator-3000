@@ -49,7 +49,13 @@
   function clean(obj) { return JSON.parse(JSON.stringify(obj)); }
 
   // ---- per-item collection sync (entries, premarketEntries, ...) ----
-  function makeCollectionSync(collectionName, getArray, setArray, rerender) {
+  function makeCollectionSync(collectionName, getArray, setArray, rerender, opts) {
+    // explicitDeletes: an item missing from this device's list is NOT treated as deleted —
+    // cloud copies are only removed through removeItem(), i.e. when someone pressed Delete.
+    const explicitDeletes = !!(opts && opts.explicitDeletes);
+    // uploads wait until the cloud's current state has arrived, so a device holding old
+    // copies can't overwrite newer ones when it starts up
+    let ready = false;
     let knownIds = new Set();
     // what each item looked like when last uploaded (or received), so a save only
     // uploads the items that actually changed instead of the whole collection
@@ -68,20 +74,29 @@
         currentIds.add(id);
         const stamped = clean(Object.assign({}, item, { updatedAt: item.updatedAt || item.createdAt || Date.now() }));
         const json = JSON.stringify(stamped);
-        if (lastPushed.get(id) === json) return;
+        if (!ready || lastPushed.get(id) === json) return;
         lastPushed.set(id, json);
         col.doc(id).set(stamped).catch(err => { lastPushed.delete(id); emitError('push:' + collectionName, err); });
       });
-      knownIds.forEach(id => {
+      if (!explicitDeletes) knownIds.forEach(id => {
         if (!currentIds.has(id)) { lastPushed.delete(id); col.doc(id).delete().catch(err => emitError('delete:' + collectionName, err)); }
       });
       knownIds = currentIds;
     }
 
+    function removeItem(id) {
+      const col = userCol(collectionName);
+      id = String(id);
+      lastPushed.delete(id); knownIds.delete(id);
+      if (col) col.doc(id).delete().catch(err => emitError('delete:' + collectionName, err));
+    }
+
     function start() {
       const col = userCol(collectionName);
       if (!col) return;
-      unsubscribe = col.onSnapshot(snap => {
+      if (unsubscribe) unsubscribe();
+      ready = false;
+      unsubscribe = col.onSnapshot({ includeMetadataChanges: true }, snap => {
         suppress = true;
         const arr = getArray() || [];
         const byId = new Map(arr.map(x => [String(x.id), x]));
@@ -105,13 +120,13 @@
           if (rerender) rerender();
         }
         suppress = false;
+        // once the server's copy is in, upload whatever is new or newer on this device
+        if (!ready && !snap.metadata.fromCache) { ready = true; pushAll(); }
       }, err => emitError('listen:' + collectionName, err));
-      // first push uploads anything that only exists locally so far
-      pushAll();
     }
-    function stop() { if (unsubscribe) { unsubscribe(); unsubscribe = null; } knownIds = new Set(); lastPushed.clear(); }
+    function stop() { if (unsubscribe) { unsubscribe(); unsubscribe = null; } ready = false; knownIds = new Set(); lastPushed.clear(); }
 
-    return { start, stop, pushAll };
+    return { start, stop, pushAll, removeItem };
   }
 
   // ---- single settings document sync ----
@@ -169,8 +184,8 @@
 
     // Register an array-based store to keep in sync. Call once per store,
     // after the store's initial local value has been loaded.
-    registerCollection(name, getArray, setArray, rerender) {
-      const s = makeCollectionSync(name, getArray, setArray, rerender);
+    registerCollection(name, getArray, setArray, rerender, opts) {
+      const s = makeCollectionSync(name, getArray, setArray, rerender, opts);
       registry.collections.set(name, s);
       if (auth.currentUser) s.start();
       return s;
@@ -185,6 +200,11 @@
     pushCollection(name) {
       const s = registry.collections.get(name);
       if (s) s.pushAll();
+    },
+    // Remove one item from the cloud (for collections registered with explicitDeletes).
+    deleteItem(name, id) {
+      const s = registry.collections.get(name);
+      if (s) s.removeItem(id);
     },
     pushSettings() {
       if (registry.settings) registry.settings.push();

@@ -369,6 +369,20 @@
   if (Array.isArray(notesStore)) notesStore = { notes: notesStore, folders: [], lastOpenedId: null };
   if (!Array.isArray(notesStore.notes)) notesStore.notes = [];
   if (!Array.isArray(notesStore.folders)) notesStore.folders = [];
+  // deleted notes are kept for 30 days (on this device) so nothing is ever lost by accident
+  const NOTE_TRASH_DAYS = 30;
+  notesStore.trash = (Array.isArray(notesStore.trash) ? notesStore.trash : []).filter(n => n && n.deletedAt > Date.now() - NOTE_TRASH_DAYS * 86400000);
+  function trashNotes(list) {
+    list.forEach(n => { notesStore.trash = notesStore.trash.filter(t => t.id !== n.id); notesStore.trash.push(Object.assign({}, n, { deletedAt: Date.now() })); });
+  }
+  function restoreNote(id) {
+    const t = notesStore.trash.find(n => n.id === id); if (!t) return;
+    notesStore.trash = notesStore.trash.filter(n => n.id !== id);
+    const note = Object.assign({}, t, { updatedAt: Date.now() }); delete note.deletedAt;
+    if (note.folderId && !folderById(note.folderId)) delete note.folderId;
+    if (!getNote(note.id)) notesStore.notes.push(note);
+    pnFolder = 'all'; saveNotes(); showToast('Note restored'); renderNotesScreen();
+  }
   let pnFolder = 'all', pnQuery = '', pnOpenId = null, pnSaveTimer = null;
   function persistNotes() { try { localStorage.setItem(NOTES_KEY, JSON.stringify(notesStore)); } catch (e) { showToast('Could not save — storage may be full'); } }
   function saveNotes() {
@@ -559,8 +573,13 @@
   }
   function renderNotesScreen() {
     const chips = [['all', 'All'], ['pinned', 'Pinned']].concat(notesStore.folders.map(f => [f.id, f.name, f.color]));
-    document.getElementById('pn-folders').innerHTML = chips.map(([id, name, c]) => `<button class="chip${pnFolder === id ? ' on' : ''}" data-pnf="${id}">${c ? `<i class="pn-dot" style="background:${c}"></i>` : ''}${escapeHtml(name)}</button>`).join('') + '<button class="chip pn-addf" data-pnf-add>+ Folder</button>';
+    document.getElementById('pn-folders').innerHTML = chips.map(([id, name, c]) => `<button class="chip${pnFolder === id ? ' on' : ''}" data-pnf="${id}">${c ? `<i class="pn-dot" style="background:${c}"></i>` : ''}${escapeHtml(name)}</button>`).join('') + (notesStore.trash.length ? `<button class="chip${pnFolder === 'trash' ? ' on' : ''}" data-pnf="trash">Deleted (${notesStore.trash.length})</button>` : '') + '<button class="chip pn-addf" data-pnf-add>+ Folder</button>';
     const list = pnInView(), el = document.getElementById('pn-list');
+    if (pnFolder === 'trash') {
+      const gone = notesStore.trash.slice().sort((a, b) => b.deletedAt - a.deletedAt);
+      el.innerHTML = gone.length ? `<div class="pn-grp">Kept for ${NOTE_TRASH_DAYS} days · tap a note to restore it</div><div class="card pn-card">` + gone.map(n => `<div class="pn-row" data-pn-restore="${n.id}"><span class="t">${escapeHtml(n.title)}</span><span class="p"><b>Deleted ${noteWhen(n.deletedAt)}</b>${escapeHtml(notePreviewText(n).slice(0, 80)) || 'No additional text'}</span></div>`).join('') + '</div>' : '<div class="empty">Nothing here.</div>';
+      return;
+    }
     if (!list.length) { el.innerHTML = `<div class="empty">${pnQuery ? 'Nothing matches that search.' : notesStore.notes.length ? 'No notes here yet.' : 'No notes yet — tap + to write one.'}</div>`; return; }
     const pinnedFirst = pnFolder !== 'pinned' && !pnQuery, groups = [];
     if (pinnedFirst) { const p = list.filter(n => n.pinned); if (p.length) groups.push(['Pinned', p]); }
@@ -575,7 +594,11 @@
     const b = ev.target.closest('[data-pnf]'); if (!b) return;
     pnFolder = b.dataset.pnf; renderNotesScreen();
   });
-  document.getElementById('pn-list').addEventListener('click', ev => { const r = ev.target.closest('[data-pn]'); if (r) openNoteEditor(r.dataset.pn); });
+  document.getElementById('pn-list').addEventListener('click', ev => {
+    const g = ev.target.closest('[data-pn-restore]');
+    if (g) { const t = notesStore.trash.find(n => n.id === g.dataset.pnRestore); if (t && confirm(`Restore "${t.title}"?`)) restoreNote(t.id); return; }
+    const r = ev.target.closest('[data-pn]'); if (r) openNoteEditor(r.dataset.pn);
+  });
   document.getElementById('pn-search').addEventListener('input', ev => { pnQuery = ev.target.value.trim().toLowerCase(); renderNotesScreen(); });
   function openFolderSheet() {
     const colors = ['#3ddc97', '#7fb0e8', '#b39cf0', '#e8b25c', '#f07167', '#5fd3e0', '#f29bc8', '#a3d977'];
@@ -592,6 +615,7 @@
       const f = folderById(b.dataset.fdel); if (!f || !confirm(`Delete the folder "${f.name}"? Its notes stay in All.`)) return;
       notesStore.notes.forEach(n => { if (n.folderId === f.id) { delete n.folderId; n.updatedAt = Date.now(); } });
       notesStore.folders = notesStore.folders.filter(x => x.id !== f.id);
+      if (window.LvdSync && LvdSync.deleteItem) LvdSync.deleteItem('noteFolders', f.id);
       if (pnFolder === f.id) pnFolder = 'all';
       saveNotes(); closeSheet(); renderNotesScreen();
     }));
@@ -684,7 +708,7 @@
       openSheet('Note', `<label>Move to folder</label><div class="chip-row" id="pn-move">${notesStore.folders.map(f => `<button class="chip${n.folderId === f.id ? ' on' : ''}" data-mv="${f.id}"><i class="pn-dot" style="background:${f.color}"></i>${escapeHtml(f.name)}</button>`).join('')}<button class="chip${!n.folderId ? ' on' : ''}" data-mv="">No folder</button></div>
         <button class="btn danger" type="button" id="pn-del" style="margin-top:20px">Delete note</button>`);
       document.getElementById('pn-move').addEventListener('click', ev => { const b = ev.target.closest('[data-mv]'); if (!b) return; if (b.dataset.mv) n.folderId = b.dataset.mv; else delete n.folderId; n.updatedAt = Date.now(); saveNotes(); closeSheet(); openNoteEditor(n.id); });
-      document.getElementById('pn-del').addEventListener('click', () => { if (!confirm(`Delete "${n.title}"?`)) return; notesStore.notes = notesStore.notes.filter(x => x.id !== n.id); saveNotes(); closeSheet(); pnSaveTimer = null; pnEditorEl.classList.remove('open'); setTimeout(() => { pnEditorEl.hidden = true; }, 260); pnOpenId = null; renderNotesScreen(); showToast('Note deleted'); });
+      document.getElementById('pn-del').addEventListener('click', () => { if (!confirm(`Delete "${n.title}"?\n\nYou can get it back from Deleted for ${NOTE_TRASH_DAYS} days.`)) return; trashNotes([n]); notesStore.notes = notesStore.notes.filter(x => x.id !== n.id); if (window.LvdSync && LvdSync.deleteItem) LvdSync.deleteItem('notes', n.id); saveNotes(); closeSheet(); pnSaveTimer = null; pnEditorEl.classList.remove('open'); setTimeout(() => { pnEditorEl.hidden = true; }, 260); pnOpenId = null; renderNotesScreen(); showToast('Note deleted'); });
     });
     document.getElementById('pn-tools').addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
     document.getElementById('pn-tools').addEventListener('click', e => {
@@ -1719,8 +1743,8 @@
     LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; persistEntries(); }, () => { clearTimeout(entriesRerenderTimer); entriesRerenderTimer = setTimeout(() => { renderDashboard(); renderEntriesList(); renderCalendar(); }, 150); });
     // update notes in place so an open editor keeps pointing at the same note object
     const mergeNotes = (list, arr) => { const byId = new Map(list.map(n => [n.id, n])); return arr.map(r => { const l = byId.get(r.id); if (!l) return r; Object.keys(l).forEach(k => { if (!(k in r)) delete l[k]; }); return Object.assign(l, r); }); };
-    LvdSync.registerCollection('notes', () => notesStore.notes.filter(n => JSON.stringify(n).length < 900000), (arr) => { const localOnly = notesStore.notes.filter(n => JSON.stringify(n).length >= 900000 && !arr.some(a => a.id === n.id)); notesStore.notes = mergeNotes(notesStore.notes, arr).concat(localOnly); persistNotes(); }, rerenderNotesAfterSync);
-    LvdSync.registerCollection('noteFolders', () => notesStore.folders, (arr) => { notesStore.folders = mergeNotes(notesStore.folders, arr); persistNotes(); }, rerenderNotesAfterSync);
+    LvdSync.registerCollection('notes', () => notesStore.notes.filter(n => JSON.stringify(n).length < 900000), (arr) => { const ids = new Set(arr.map(a => a.id)); const big = n => JSON.stringify(n).length >= 900000; const localOnly = notesStore.notes.filter(n => big(n) && !ids.has(n.id)); trashNotes(notesStore.notes.filter(n => !big(n) && !ids.has(n.id))); notesStore.notes = mergeNotes(notesStore.notes, arr).concat(localOnly); persistNotes(); }, rerenderNotesAfterSync, { explicitDeletes: true });
+    LvdSync.registerCollection('noteFolders', () => notesStore.folders, (arr) => { notesStore.folders = mergeNotes(notesStore.folders, arr); persistNotes(); }, rerenderNotesAfterSync, { explicitDeletes: true });
     LvdSync.registerCollection('premarketEntries', () => premarketEntries, (arr) => { premarketEntries = arr; persistPremarket(); }, renderPremarketScreen);
     LvdSync.registerCollection('achievements', () => achievements, (arr) => { achievements = arr; persistAchievements(); }, renderAchievements);
     // background-photo pools (one small doc per photo, keyed on a hash of the data URL)
