@@ -8155,6 +8155,7 @@
 
   // ---------- import / export ----------
   document.getElementById('export-btn').addEventListener('click', () => {
+    flushNoteSave(); // include a note that is still being typed
     const bundle = {
       version: 3,
       entries,
@@ -8233,6 +8234,10 @@
             if (imported.notes && Array.isArray(imported.notes.notes)) {
               const existingNoteIds = new Set(notesStore.notes.map(n => n.id));
               imported.notes.notes.forEach(n => { if (!existingNoteIds.has(n.id)) notesStore.notes.push(n); });
+              const existingFolderIds = new Set(notesStore.folders.map(f => f.id));
+              (Array.isArray(imported.notes.folders) ? imported.notes.folders : []).forEach(f => { if (f && !existingFolderIds.has(f.id)) notesStore.folders.push(f); });
+              const knownNoteIds = new Set(notesStore.notes.concat(notesStore.trash).map(n => n.id));
+              (Array.isArray(imported.notes.trash) ? imported.notes.trash : []).forEach(n => { if (n && !knownNoteIds.has(n.id)) notesStore.trash.push(n); });
             }
             if (Array.isArray(imported.premarketEntries)) {
               const existingPmIds = new Set(premarketEntries.map(p => p.id));
@@ -8263,7 +8268,12 @@
             else if (typeof imported.focusRule === 'string') focusRules = [imported.focusRule];
             if (typeof imported.focusIndex === 'number') focusIndex = imported.focusIndex;
             if (imported.milestone && typeof imported.milestone === 'object') milestone = imported.milestone;
-            if (imported.notes && typeof imported.notes === 'object' && Array.isArray(imported.notes.notes)) notesStore = imported.notes;
+            if (imported.notes && typeof imported.notes === 'object' && Array.isArray(imported.notes.notes)) {
+              notesStore = imported.notes;
+              if (!Array.isArray(notesStore.folders)) notesStore.folders = [];
+              if (!Array.isArray(notesStore.trash)) notesStore.trash = [];
+              notesFolder = 'all';
+            }
             if (Array.isArray(imported.premarketEntries)) premarketEntries = imported.premarketEntries;
             if (imported.checklistCategories && typeof imported.checklistCategories === 'object') { checklistCategories = imported.checklistCategories; if (!checklistCategories.judas) checklistCategories.judas = []; }
             else if (Array.isArray(imported.checklistItems)) checklistCategories = { continuation: imported.checklistItems, reversal: checklistCategories.reversal, judas: checklistCategories.judas };
