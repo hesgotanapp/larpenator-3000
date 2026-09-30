@@ -7,7 +7,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23131415%22/%3E%3Cg transform=%22translate(32 32) scale(.92) rotate(-8) translate(-32 -32)%22 fill=%22none%22 stroke=%22%23c9a35b%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2229.5%22 stroke-width=%222.8%22/%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2218.5%22 stroke-width=%221.2%22/%3E%3Cpath id=%22r%22 d=%22M32 11.399999999999999 a20.6 20.6 0 1 1 -0.01 0%22 stroke=%22none%22/%3E%3Ctext font-family=%22monospace%22 font-weight=%22700%22 font-size=%225.3%22 fill=%22%23c9a35b%22 stroke=%22none%22%3E%3CtextPath href=%22%23r%22 textLength=%22127.49%22 lengthAdjust=%22spacing%22%3ELARPENATOR %E2%9C%A6 TRADING JOURNAL %E2%9C%A6 %3C/textPath%3E%3C/text%3E%3Ctext x=%2232%22 y=%2236.8%22 text-anchor=%22middle%22 font-family=%22Arial Narrow,Arial,sans-serif%22 font-weight=%22800%22 font-size=%2212.5%22 fill=%22%23c9a35b%22 stroke=%22none%22%3E3000%3C/text%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
   :root {
     --bg: #090909;
@@ -2730,6 +2731,11 @@
           <p style="font-size:12px; color:var(--ink-faint); margin:8px 0 0;">Zooms the whole app in or out. This device only — doesn't sync to the iPhone app.</p>
         </div>
         <div class="field" style="margin-top:16px;">
+          <label for="tz-select">Time zone</label>
+          <select id="tz-select" style="margin-top:6px; max-width:340px;"></select>
+          <p id="tz-note" style="font-size:12px; color:var(--ink-faint); margin:8px 0 0; line-height:1.5;"></p>
+        </div>
+        <div class="field" style="margin-top:16px;">
           <label>Intro animation</label>
           <div class="mode-switch" id="intro-toggle" style="margin-top:6px; width:max-content;">
             <button class="mode-btn" data-intro="on" type="button">Play on launch</button>
@@ -3033,8 +3039,76 @@
   let btCurrentView = 'new';
   let btStatsPeriod = 'all';
 
-  const todayDate = new Date();
-  const todayStr = toDateStr(todayDate);
+
+  // ---------- time zone + trading day ----------
+  // Your time zone (Settings, synced; defaults to this device's) decides what "today" is. The trading day
+  // runs until New York closes when that lands in your morning (about 6-7 AM in Melbourne), so a New York
+  // premarket or trade after midnight still counts for the evening before. Elsewhere it turns at midnight.
+  const TZ_KEY = 'lvd_timezone';
+  const SESSION_MARKETS = { asia: { tz: 'Asia/Tokyo', open: 9 * 60 }, london: { tz: 'Europe/London', open: 8 * 60 }, ny: { tz: 'America/New_York', open: 9 * 60 + 30 } };
+  const TZ_CHOICES = [
+    ['Australia/Melbourne', 'Melbourne'], ['Australia/Sydney', 'Sydney'], ['Australia/Brisbane', 'Brisbane'], ['Australia/Adelaide', 'Adelaide'],
+    ['Australia/Perth', 'Perth'], ['Pacific/Auckland', 'Auckland'], ['Asia/Tokyo', 'Tokyo'], ['Asia/Hong_Kong', 'Hong Kong'], ['Asia/Singapore', 'Singapore'],
+    ['Asia/Kolkata', 'India'], ['Asia/Dubai', 'Dubai'], ['Africa/Johannesburg', 'Johannesburg'], ['Europe/London', 'London'], ['Europe/Berlin', 'Berlin / Paris'],
+    ['America/New_York', 'New York'], ['America/Toronto', 'Toronto'], ['America/Chicago', 'Chicago'], ['America/Denver', 'Denver'], ['America/Los_Angeles', 'Los Angeles'], ['America/Sao_Paulo', 'São Paulo']
+  ];
+  function deviceTimeZone() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; } }
+  function userTimeZone() {
+    let tz = null;
+    try { tz = localStorage.getItem(TZ_KEY); } catch (e) {}
+    if (tz && tz !== 'device') { try { new Intl.DateTimeFormat('en', { timeZone: tz }); return tz; } catch (e) {} }
+    return deviceTimeZone();
+  }
+  function zonedParts(date, tz) {
+    const p = new Intl.DateTimeFormat('en-GB', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short', hourCycle: 'h23' }).formatToParts(date);
+    const g = t => (p.find(x => x.type === t) || {}).value;
+    return { y: +g('year'), m: +g('month'), d: +g('day'), h: (+g('hour')) % 24, min: +g('minute'), wd: g('weekday') };
+  }
+  function tzOffsetMin(date, tz) {
+    const z = zonedParts(date, tz);
+    return Math.round((Date.UTC(z.y, z.m - 1, z.d, z.h, z.min) - Math.floor(date.getTime() / 60000) * 60000) / 60000);
+  }
+  // when the trading day turns over, in minutes after local midnight (0 = midnight)
+  function tradingRolloverMin(now, tz) {
+    const nyCloseUtc = 16 * 60 - tzOffsetMin(now, 'America/New_York');
+    const local = ((nyCloseUtc + tzOffsetMin(now, tz)) % 1440 + 1440) % 1440;
+    return local <= 12 * 60 ? local : 0;
+  }
+  function tradingDateStr(now) {
+    now = now || new Date();
+    const tz = userTimeZone();
+    const z = zonedParts(new Date(now.getTime() - tradingRolloverMin(now, tz) * 60000), tz);
+    return `${z.y}-${String(z.m).padStart(2, '0')}-${String(z.d).padStart(2, '0')}`;
+  }
+  function dateFromStr(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+  // minutes until a session opens in its own market; a session that opened under 90 minutes ago counts as "now"
+  function minutesToSessionOpen(sess, now) {
+    const m = SESSION_MARKETS[sess], z = zonedParts(now, m.tz);
+    let diff = m.open - (z.h * 60 + z.min);
+    if (diff < -90) diff += 1440;
+    return diff;
+  }
+  function fmtClock(min) { const h = Math.floor(min / 60), m = min % 60; return new Date(2000, 0, 1, h, m).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); }
+  function tzOptionsHTML() {
+    const now = new Date(), dev = deviceTimeZone();
+    const off = tz => { const o = tzOffsetMin(now, tz), s = o < 0 ? '-' : '+', a = Math.abs(o); return 'UTC' + s + Math.floor(a / 60) + (a % 60 ? ':' + String(a % 60).padStart(2, '0') : ''); };
+    const cur = (() => { try { return localStorage.getItem(TZ_KEY) || 'device'; } catch (e) { return 'device'; } })();
+    const devLabel = (TZ_CHOICES.find(c => c[0] === dev) || [dev, dev.split('/').pop().replace(/_/g, ' ')])[1];
+    return `<option value="device"${cur === 'device' ? ' selected' : ''}>This device (${devLabel}, ${off(dev)})</option>` +
+      TZ_CHOICES.map(([id, name]) => `<option value="${id}"${cur === id ? ' selected' : ''}>${name} (${off(id)})</option>`).join('');
+  }
+  function tzNoteText() {
+    const tz = userTimeZone(), roll = tradingRolloverMin(new Date(), tz);
+    const opens = ['asia', 'london', 'ny'].map(s => {
+      const m = SESSION_MARKETS[s], now = new Date();
+      const utc = m.open - tzOffsetMin(now, m.tz), local = ((utc + tzOffsetMin(now, tz)) % 1440 + 1440) % 1440;
+      return `${SESSION_LABELS[s]} ${fmtClock(local)}`;
+    }).join(' · ');
+    return `Session opens in your time: ${opens}. ` + (roll ? `Your trading day runs until New York closes at ${fmtClock(roll)}, so anything before then counts for the day before.` : 'Your trading day turns over at midnight.');
+  }
+
+  let todayStr = tradingDateStr();
+  let todayDate = dateFromStr(todayStr);
   calYear = todayDate.getFullYear();
   calMonth = todayDate.getMonth();
   algoCalYear = todayDate.getFullYear();
@@ -3117,7 +3191,10 @@
   }
   // the first session on this date without a note, so a new note starts on the right one
   function defaultPmSession(dateStr) {
-    return PM_SESSIONS.find(s => !premarketEntries.some(p => p.date === dateStr && p.session === s)) || 'ny';
+    const now = new Date();
+    let order = PM_SESSIONS.slice();
+    if (!dateStr || dateStr === todayStr) order.sort((a, b) => minutesToSessionOpen(a, now) - minutesToSessionOpen(b, now));
+    return order.find(s => !premarketEntries.some(p => p.date === dateStr && p.session === s)) || order[0];
   }
   function pmSessionBoxesHTML(dateStr) {
     const t = premarketTicks[dateStr] || {};
@@ -3183,7 +3260,7 @@
     document.getElementById('section-' + name).classList.add('active');
     if (name === 'dashboard') renderDashboard();
     if (name === 'new') renderLogPreview();
-    if (name === 'premarket') renderPremarketList();
+    if (name === 'premarket') { renderPremarketList(); refreshPmDefault(); }
     if (name === 'checklist') renderChecklistManage();
     if (name === 'entries') renderEntries();
     if (name === 'calendar') renderCalendar();
@@ -4448,13 +4525,13 @@
       return;
     }
     const now = Date.now();
-    const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
-    const dayKey = d => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    const tz = userTimeZone();
+    const dayKey = d => { const z = zonedParts(d, tz); return `${z.y}-${String(z.m).padStart(2, '0')}-${String(z.d).padStart(2, '0')}`; };
     const todayKey = dayKey(new Date());
-    const tmr = new Date(startToday); tmr.setDate(tmr.getDate() + 1);
+    const tmr = new Date(now + 24 * 3600 * 1000);
     const upcoming = newsState.events
       .map(ev => ({ ...ev, t: new Date(ev.date) }))
-      .filter(ev => !isNaN(ev.t) && ev.t >= startToday)
+      .filter(ev => !isNaN(ev.t) && dayKey(ev.t) >= todayKey)
       .sort((a, b) => a.t - b.t);
     if (!upcoming.length) {
       list.innerHTML = `<div class="news-empty">No high-impact US news left this week.</div>`;
@@ -4462,10 +4539,10 @@
       let lastDay = '', nextMarked = false;
       list.innerHTML = upcoming.map(ev => {
         const k = dayKey(ev.t);
-        const dayLabel = k === todayKey ? 'Today' : k === dayKey(tmr) ? 'Tomorrow' : ev.t.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+        const dayLabel = k === todayKey ? 'Today' : k === dayKey(tmr) ? 'Tomorrow' : ev.t.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', timeZone: tz });
         const head = k !== lastDay ? `<div class="news-day">${dayLabel}</div>` : '';
         lastDay = k;
-        const time = ev.t.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        const time = ev.t.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', timeZone: tz });
         const diff = ev.t - now;
         let when = '';
         if (diff <= 0) when = '<span class="news-when past">released</span>';
@@ -4475,7 +4552,7 @@
       }).join('');
     }
     const mins = Math.max(0, Math.round((now - newsState.fetchedAt) / 60000));
-    foot.textContent = `Your local time · updated ${mins < 1 ? 'just now' : mins < 60 ? mins + ' min ago' : Math.round(mins / 60) + 'h ago'}${newsState.error ? ' · refresh failed' : ''}`;
+    foot.textContent = `Times in ${(TZ_CHOICES.find(c => c[0] === tz) || [tz, tz.split('/').pop().replace(/_/g, ' ')])[1]} · updated ${mins < 1 ? 'just now' : mins < 60 ? mins + ' min ago' : Math.round(mins / 60) + 'h ago'}${newsState.error ? ' · refresh failed' : ''}`;
   }
   document.getElementById('news-refresh-btn').addEventListener('click', () => refreshNews(true));
   refreshNews(false);
@@ -6493,6 +6570,12 @@
     renderPremarketList();
   });
 
+  function refreshPmDefault() {
+    if (pmEditingId) return;
+    const untouched = !document.getElementById('pm-overview').value.trim() && [...document.querySelectorAll('#pm-scenarios-list input, #pm-scenarios-list textarea')].every(x => !x.value.trim());
+    if (untouched) setPmSession(defaultPmSession(pmDateInput.value));
+  }
+
   function resetPmForm() {
     pmForm.reset();
     pmDateInput.value = todayStr;
@@ -7982,7 +8065,7 @@
     savePremarketEntries = function () { _localSavePremarket(); LvdSync.pushCollection('premarketEntries'); };
 
     function settingsSnapshot() {
-      return { rulebook, goals, weeklyReviews, mistakeTags, checklistCategories, focusRules, focusIndex, milestone, algoPnl, premarketTicks };
+      return { rulebook, goals, weeklyReviews, mistakeTags, checklistCategories, focusRules, focusIndex, milestone, algoPnl, premarketTicks, timeZone: localStorage.getItem(TZ_KEY) || 'device' };
     }
     function applySettingsSnapshot(s) {
       if (s.rulebook) rulebook = s.rulebook;
@@ -7994,6 +8077,7 @@
       if (typeof s.focusIndex === 'number') focusIndex = s.focusIndex;
       if (s.milestone) milestone = s.milestone;
       if (s.algoPnl) algoPnl = s.algoPnl;
+      if (typeof s.timeZone === 'string') { if (s.timeZone === 'device') localStorage.removeItem(TZ_KEY); else localStorage.setItem(TZ_KEY, s.timeZone); setTimeout(() => { checkTradingDay(); renderTimeZoneSetting(); renderNews(); }, 0); }
       if (s.premarketTicks && typeof s.premarketTicks === 'object') { premarketTicks = s.premarketTicks; localStorage.setItem(PM_TICKS_KEY, JSON.stringify(premarketTicks)); }
       localStorage.setItem(RULEBOOK_KEY, JSON.stringify(rulebook));
       localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
@@ -8384,6 +8468,34 @@
     renderMotionToggle();
   }));
   renderMotionToggle();
+
+  function checkTradingDay() {
+    const t = tradingDateStr();
+    if (t === todayStr) return;
+    const prev = todayStr;
+    todayStr = t; todayDate = dateFromStr(t);
+    ['f-date', 'pm-date'].forEach(id => { const el = document.getElementById(id); if (el && el.value === prev) el.value = todayStr; });
+    refreshPmDefault();
+    renderDashboard();
+    if (activeTab === 'premarket') renderPremarketList();
+  }
+  setInterval(checkTradingDay, 60 * 1000);
+  window.addEventListener('focus', checkTradingDay);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkTradingDay(); });
+
+  function renderTimeZoneSetting() {
+    document.getElementById('tz-select').innerHTML = tzOptionsHTML();
+    document.getElementById('tz-note').textContent = tzNoteText();
+  }
+  document.getElementById('tz-select').addEventListener('change', ev => {
+    try { localStorage.setItem(TZ_KEY, ev.target.value); } catch (e) {}
+    if (window.LvdSync && LvdSync.isSupported) LvdSync.pushSettings();
+    checkTradingDay();
+    renderTimeZoneSetting();
+    renderNews();
+    showToast('Time zone set');
+  });
+  renderTimeZoneSetting();
 
   function renderAmbientToggle() {
     let off = false;

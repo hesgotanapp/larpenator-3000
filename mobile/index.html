@@ -13,7 +13,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
   :root {
     --bg: #090909; --surface: #111112; --surface-2: #161617; --surface-3: #1d1d1f;
@@ -682,6 +683,7 @@
       <h1>Account</h1>
       <div class="card" style="padding: 6px 12px;">
         <div class="more-item" style="display:block"><span>Colour style</span><div class="chip-row" id="palette-chips" style="margin-top:10px"></div></div>
+        <div class="more-item" style="display:block"><span>Time zone</span><select id="tz-select" style="margin-top:10px"></select><div id="tz-note" style="font-size:12px;font-weight:400;color:var(--ink-faint);margin-top:6px;line-height:1.45"></div></div>
         <div class="more-item" id="intro-pref"><span>Intro animation</span><span class="chev" id="intro-pref-state">On</span></div>
         <div class="more-item" id="ambient-pref"><span>Background motion</span><span class="chev" id="ambient-pref-state">On</span></div>
         <div class="more-item" id="motion-pref" style="display:block"><div style="display:flex;justify-content:space-between"><span>Animations</span><span class="chev" id="motion-pref-state">Always play</span></div><div id="motion-pref-note" style="font-size:12px;font-weight:400;color:var(--ink-faint);margin-top:4px"></div></div>

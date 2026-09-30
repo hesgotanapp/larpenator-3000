@@ -58,7 +58,7 @@
     localStorage.setItem(KEYS.premarketTicks, JSON.stringify(premarketTicks));
   }
   function settingsSnapshot() {
-    return { rulebook, goals, weeklyReviews, mistakeTags, checklistCategories, focusRules, focusIndex, milestone, algoPnl, premarketTicks };
+    return { rulebook, goals, weeklyReviews, mistakeTags, checklistCategories, focusRules, focusIndex, milestone, algoPnl, premarketTicks, timeZone: localStorage.getItem(TZ_KEY) || 'device' };
   }
   function applySettingsSnapshot(s) {
     if (s.rulebook) rulebook = s.rulebook;
@@ -71,6 +71,7 @@
     if (s.milestone) milestone = s.milestone;
     if (s.algoPnl) algoPnl = s.algoPnl;
     if (s.premarketTicks && typeof s.premarketTicks === 'object') premarketTicks = s.premarketTicks;
+    if (typeof s.timeZone === 'string') { if (s.timeZone === 'device') localStorage.removeItem(TZ_KEY); else localStorage.setItem(TZ_KEY, s.timeZone); setTimeout(() => { checkTradingDay(); renderTimeZoneSetting(); }, 0); }
     persistSettings();
   }
 
@@ -101,7 +102,10 @@
   }
   // the first session on this date without a note, so a new note starts on the right one
   function defaultPmSession(dateStr) {
-    return PM_SESSIONS.find(s => !premarketEntries.some(p => p.date === dateStr && p.session === s)) || 'ny';
+    const now = new Date();
+    let order = PM_SESSIONS.slice();
+    if (!dateStr || dateStr === todayStr) order.sort((a, b) => minutesToSessionOpen(a, now) - minutesToSessionOpen(b, now));
+    return order.find(s => !premarketEntries.some(p => p.date === dateStr && p.session === s)) || order[0];
   }
   function pmSessionBoxesHTML(dateStr) {
     const t = premarketTicks[dateStr] || {};
@@ -212,8 +216,76 @@
     toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
   }
 
-  const todayDate = new Date();
-  const todayStr = toDateStr(todayDate);
+
+  // ---------- time zone + trading day ----------
+  // Your time zone (Settings, synced; defaults to this device's) decides what "today" is. The trading day
+  // runs until New York closes when that lands in your morning (about 6-7 AM in Melbourne), so a New York
+  // premarket or trade after midnight still counts for the evening before. Elsewhere it turns at midnight.
+  const TZ_KEY = 'lvd_timezone';
+  const SESSION_MARKETS = { asia: { tz: 'Asia/Tokyo', open: 9 * 60 }, london: { tz: 'Europe/London', open: 8 * 60 }, ny: { tz: 'America/New_York', open: 9 * 60 + 30 } };
+  const TZ_CHOICES = [
+    ['Australia/Melbourne', 'Melbourne'], ['Australia/Sydney', 'Sydney'], ['Australia/Brisbane', 'Brisbane'], ['Australia/Adelaide', 'Adelaide'],
+    ['Australia/Perth', 'Perth'], ['Pacific/Auckland', 'Auckland'], ['Asia/Tokyo', 'Tokyo'], ['Asia/Hong_Kong', 'Hong Kong'], ['Asia/Singapore', 'Singapore'],
+    ['Asia/Kolkata', 'India'], ['Asia/Dubai', 'Dubai'], ['Africa/Johannesburg', 'Johannesburg'], ['Europe/London', 'London'], ['Europe/Berlin', 'Berlin / Paris'],
+    ['America/New_York', 'New York'], ['America/Toronto', 'Toronto'], ['America/Chicago', 'Chicago'], ['America/Denver', 'Denver'], ['America/Los_Angeles', 'Los Angeles'], ['America/Sao_Paulo', 'São Paulo']
+  ];
+  function deviceTimeZone() { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch (e) { return 'UTC'; } }
+  function userTimeZone() {
+    let tz = null;
+    try { tz = localStorage.getItem(TZ_KEY); } catch (e) {}
+    if (tz && tz !== 'device') { try { new Intl.DateTimeFormat('en', { timeZone: tz }); return tz; } catch (e) {} }
+    return deviceTimeZone();
+  }
+  function zonedParts(date, tz) {
+    const p = new Intl.DateTimeFormat('en-GB', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', weekday: 'short', hourCycle: 'h23' }).formatToParts(date);
+    const g = t => (p.find(x => x.type === t) || {}).value;
+    return { y: +g('year'), m: +g('month'), d: +g('day'), h: (+g('hour')) % 24, min: +g('minute'), wd: g('weekday') };
+  }
+  function tzOffsetMin(date, tz) {
+    const z = zonedParts(date, tz);
+    return Math.round((Date.UTC(z.y, z.m - 1, z.d, z.h, z.min) - Math.floor(date.getTime() / 60000) * 60000) / 60000);
+  }
+  // when the trading day turns over, in minutes after local midnight (0 = midnight)
+  function tradingRolloverMin(now, tz) {
+    const nyCloseUtc = 16 * 60 - tzOffsetMin(now, 'America/New_York');
+    const local = ((nyCloseUtc + tzOffsetMin(now, tz)) % 1440 + 1440) % 1440;
+    return local <= 12 * 60 ? local : 0;
+  }
+  function tradingDateStr(now) {
+    now = now || new Date();
+    const tz = userTimeZone();
+    const z = zonedParts(new Date(now.getTime() - tradingRolloverMin(now, tz) * 60000), tz);
+    return `${z.y}-${String(z.m).padStart(2, '0')}-${String(z.d).padStart(2, '0')}`;
+  }
+  function dateFromStr(s) { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+  // minutes until a session opens in its own market; a session that opened under 90 minutes ago counts as "now"
+  function minutesToSessionOpen(sess, now) {
+    const m = SESSION_MARKETS[sess], z = zonedParts(now, m.tz);
+    let diff = m.open - (z.h * 60 + z.min);
+    if (diff < -90) diff += 1440;
+    return diff;
+  }
+  function fmtClock(min) { const h = Math.floor(min / 60), m = min % 60; return new Date(2000, 0, 1, h, m).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); }
+  function tzOptionsHTML() {
+    const now = new Date(), dev = deviceTimeZone();
+    const off = tz => { const o = tzOffsetMin(now, tz), s = o < 0 ? '-' : '+', a = Math.abs(o); return 'UTC' + s + Math.floor(a / 60) + (a % 60 ? ':' + String(a % 60).padStart(2, '0') : ''); };
+    const cur = (() => { try { return localStorage.getItem(TZ_KEY) || 'device'; } catch (e) { return 'device'; } })();
+    const devLabel = (TZ_CHOICES.find(c => c[0] === dev) || [dev, dev.split('/').pop().replace(/_/g, ' ')])[1];
+    return `<option value="device"${cur === 'device' ? ' selected' : ''}>This device (${devLabel}, ${off(dev)})</option>` +
+      TZ_CHOICES.map(([id, name]) => `<option value="${id}"${cur === id ? ' selected' : ''}>${name} (${off(id)})</option>`).join('');
+  }
+  function tzNoteText() {
+    const tz = userTimeZone(), roll = tradingRolloverMin(new Date(), tz);
+    const opens = ['asia', 'london', 'ny'].map(s => {
+      const m = SESSION_MARKETS[s], now = new Date();
+      const utc = m.open - tzOffsetMin(now, m.tz), local = ((utc + tzOffsetMin(now, tz)) % 1440 + 1440) % 1440;
+      return `${SESSION_LABELS[s]} ${fmtClock(local)}`;
+    }).join(' · ');
+    return `Session opens in your time: ${opens}. ` + (roll ? `Your trading day runs until New York closes at ${fmtClock(roll)}, so anything before then counts for the day before.` : 'Your trading day turns over at midnight.');
+  }
+
+  let todayStr = tradingDateStr();
+  let todayDate = dateFromStr(todayStr);
   let calYear = todayDate.getFullYear(), calMonth = todayDate.getMonth();
   let reviewWeekStart = startOfWeek(todayDate);
   let activeChecklistCat = 'continuation';
@@ -1189,6 +1261,29 @@
     renderDashboard();
   });
   renderPalettePref();
+  // the day can turn over while the app sits in the background
+  function checkTradingDay() {
+    const t = tradingDateStr();
+    if (t === todayStr) return;
+    todayStr = t; todayDate = dateFromStr(t);
+    renderDashboard(); renderCalendar();
+  }
+  setInterval(checkTradingDay, 60 * 1000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkTradingDay(); });
+  window.addEventListener('focus', checkTradingDay);
+  function renderTimeZoneSetting() {
+    document.getElementById('tz-select').innerHTML = tzOptionsHTML();
+    document.getElementById('tz-note').textContent = tzNoteText();
+  }
+  document.getElementById('tz-select').addEventListener('change', ev => {
+    try { localStorage.setItem(TZ_KEY, ev.target.value); } catch (e) {}
+    if (window.LvdSync && LvdSync.isSupported) LvdSync.pushSettings();
+    checkTradingDay();
+    renderTimeZoneSetting();
+    showToast('Time zone set');
+  });
+  renderTimeZoneSetting();
+
   function renderMotionPref() {
     const pref = window.lvdMotion ? window.lvdMotion.pref() : 'system';
     const reduces = window.lvdMotion && window.lvdMotion.deviceReduces();
