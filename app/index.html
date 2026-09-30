@@ -7287,12 +7287,14 @@
     const markEmpty = () => editor.classList.toggle('is-empty', !editor.textContent.trim() && !editor.querySelector('img, li, hr'));
     markEmpty();
     titleInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); editor.focus(); } });
-    titleInput.addEventListener('blur', () => renameNote(note, titleInput.value));
+    // always act on the note as it is now in the store (sync may have refreshed it)
+    const liveNote = () => getNote(note.id) || note;
+    titleInput.addEventListener('blur', () => renameNote(liveNote(), titleInput.value));
 
     const scheduleSave = () => {
       markEmpty();
       clearTimeout(noteSaveTimer);
-      noteSaveTimer = setTimeout(() => { noteSaveTimer = null; commitNoteBody(note, editorToMd(editor)); }, 500);
+      noteSaveTimer = setTimeout(() => { noteSaveTimer = null; commitNoteBody(liveNote(), editorToMd(editor)); }, 500);
     };
     editor.addEventListener('input', () => { convertTypedLinks(editor); updateNoteSuggest(editor); scheduleSave(); });
     editor.addEventListener('blur', () => { setTimeout(() => { if (!document.querySelector('.nt-suggest:hover')) closeNoteSuggest(); }, 150); flushNoteSave(); });
@@ -7335,14 +7337,14 @@
       const blockBtn = e.target.closest('[data-block]');
       if (blockBtn) { aaMenu.hidden = true; restoreSelection(); document.execCommand('formatBlock', false, blockBtn.dataset.block); scheduleSave(); return; }
       const moveBtn = e.target.closest('[data-move]');
-      if (moveBtn) { moreMenu.hidden = true; flushNoteSave(); moveNoteToFolder(note, moveBtn.dataset.move || null); return; }
+      if (moveBtn) { moreMenu.hidden = true; flushNoteSave(); moveNoteToFolder(liveNote(), moveBtn.dataset.move || null); return; }
       const b = e.target.closest('[data-cmd]'); if (!b) return;
       const cmd = b.dataset.cmd;
       if (cmd === 'aa') { aaMenu.hidden = !aaMenu.hidden; moreMenu.hidden = true; return; }
       if (cmd === 'more') { moreMenu.hidden = !moreMenu.hidden; aaMenu.hidden = true; return; }
       aaMenu.hidden = true; moreMenu.hidden = true;
-      if (cmd === 'pin') { flushNoteSave(); note.pinned = !note.pinned; note.updatedAt = Date.now(); saveNotes(); renderNotesAll(); return; }
-      if (cmd === 'delete') { deleteNote(note); return; }
+      if (cmd === 'pin') { flushNoteSave(); const n = liveNote(); n.pinned = !n.pinned; n.updatedAt = Date.now(); saveNotes(); renderNotesAll(); return; }
+      if (cmd === 'delete') { deleteNote(liveNote()); return; }
       if (cmd === 'image') { document.getElementById('nt-image-input').click(); return; }
       restoreSelection();
       if (cmd === 'bold' || cmd === 'italic') document.execCommand(cmd);
@@ -8590,12 +8592,14 @@
     const noteFits = n => JSON.stringify(n).length < NOTE_SYNC_LIMIT;
     const _localSaveNotes = saveNotes;
     saveNotes = function () { _localSaveNotes(); LvdSync.pushCollection('notes'); LvdSync.pushCollection('noteFolders'); };
+    // update notes in place so an open editor keeps pointing at the same note object
+    const mergeNotes = (list, arr) => { const byId = new Map(list.map(n => [n.id, n])); return arr.map(r => { const l = byId.get(r.id); if (!l) return r; Object.keys(l).forEach(k => { if (!(k in r)) delete l[k]; }); return Object.assign(l, r); }); };
     LvdSync.registerCollection('notes', () => notesStore.notes.filter(noteFits), (arr) => {
       const localOnly = notesStore.notes.filter(n => !noteFits(n) && !arr.some(a => a.id === n.id));
-      notesStore.notes = arr.concat(localOnly);
+      notesStore.notes = mergeNotes(notesStore.notes, arr).concat(localOnly);
       _localSaveNotes();
     }, rerenderNotesAfterSync);
-    LvdSync.registerCollection('noteFolders', () => notesStore.folders || [], (arr) => { notesStore.folders = arr; _localSaveNotes(); }, rerenderNotesAfterSync);
+    LvdSync.registerCollection('noteFolders', () => notesStore.folders || [], (arr) => { notesStore.folders = mergeNotes(notesStore.folders || [], arr); _localSaveNotes(); }, rerenderNotesAfterSync);
     LvdSync.registerCollection('premarketEntries', () => premarketEntries, (arr) => { premarketEntries = arr; _localSavePremarket(); }, rerenderAfterRemoteSync);
 
     // background-photo pools sync as their own per-item collections (one small doc

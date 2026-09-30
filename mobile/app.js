@@ -1717,8 +1717,10 @@
     syncRegistered = true;
     let entriesRerenderTimer = null;
     LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; persistEntries(); }, () => { clearTimeout(entriesRerenderTimer); entriesRerenderTimer = setTimeout(() => { renderDashboard(); renderEntriesList(); renderCalendar(); }, 150); });
-    LvdSync.registerCollection('notes', () => notesStore.notes.filter(n => JSON.stringify(n).length < 900000), (arr) => { const localOnly = notesStore.notes.filter(n => JSON.stringify(n).length >= 900000 && !arr.some(a => a.id === n.id)); notesStore.notes = arr.concat(localOnly); persistNotes(); }, rerenderNotesAfterSync);
-    LvdSync.registerCollection('noteFolders', () => notesStore.folders, (arr) => { notesStore.folders = arr; persistNotes(); }, rerenderNotesAfterSync);
+    // update notes in place so an open editor keeps pointing at the same note object
+    const mergeNotes = (list, arr) => { const byId = new Map(list.map(n => [n.id, n])); return arr.map(r => { const l = byId.get(r.id); if (!l) return r; Object.keys(l).forEach(k => { if (!(k in r)) delete l[k]; }); return Object.assign(l, r); }); };
+    LvdSync.registerCollection('notes', () => notesStore.notes.filter(n => JSON.stringify(n).length < 900000), (arr) => { const localOnly = notesStore.notes.filter(n => JSON.stringify(n).length >= 900000 && !arr.some(a => a.id === n.id)); notesStore.notes = mergeNotes(notesStore.notes, arr).concat(localOnly); persistNotes(); }, rerenderNotesAfterSync);
+    LvdSync.registerCollection('noteFolders', () => notesStore.folders, (arr) => { notesStore.folders = mergeNotes(notesStore.folders, arr); persistNotes(); }, rerenderNotesAfterSync);
     LvdSync.registerCollection('premarketEntries', () => premarketEntries, (arr) => { premarketEntries = arr; persistPremarket(); }, renderPremarketScreen);
     LvdSync.registerCollection('achievements', () => achievements, (arr) => { achievements = arr; persistAchievements(); }, renderAchievements);
     // background-photo pools (one small doc per photo, keyed on a hash of the data URL)
