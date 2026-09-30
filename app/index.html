@@ -1835,6 +1835,19 @@
   <div class="intro-skip">Click or press any key to skip</div>
 </div>
 <script>
+  // ask the desktop app to write localStorage to disk shortly after every change, so nothing
+  // is lost if the app is closed straight away
+  (function () {
+    const api = window.larpenatorDesktop;
+    if (!api || typeof api.flushStorage !== "function") return;
+    let t = null;
+    const schedule = () => { clearTimeout(t); t = setTimeout(() => { try { api.flushStorage(); } catch (e) {} }, 400); };
+    const set = Storage.prototype.setItem, remove = Storage.prototype.removeItem;
+    Storage.prototype.setItem = function (k, v) { const r = set.call(this, k, v); if (this === window.localStorage) schedule(); return r; };
+    Storage.prototype.removeItem = function (k) { const r = remove.call(this, k); if (this === window.localStorage) schedule(); return r; };
+  })();
+</script>
+<script>
   window.lvdMotion = {
     stash: [],
     pref: function () { try { return localStorage.getItem('lvd_motion') || 'always'; } catch (e) { return 'always'; } },
@@ -7464,6 +7477,9 @@
     // keep the list preview and order current without disturbing the editor
     if (notesCurrentView === 'list') renderNotesList();
   }
+  // closing the window mid-edit: save the note straight away instead of waiting for the typing pause
+  window.addEventListener('beforeunload', () => { flushNoteSave(); });
+  window.__lvdBeforeClose = () => { flushNoteSave(); return 1; };
   function flushNoteSave() {
     if (!noteSaveTimer) return;
     clearTimeout(noteSaveTimer);

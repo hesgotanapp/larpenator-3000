@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, dialog, protocol, net, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, dialog, protocol, net, ipcMain, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
@@ -68,15 +68,32 @@ function createWindow() {
     win.show();
   });
   ['resized', 'moved', 'maximize', 'unmaximize'].forEach(ev => win.on(ev, saveBounds));
-  win.on('close', saveBounds);
+  // Chromium writes localStorage to disk in delayed batches and doesn't always finish before
+  // the app quits, which lost recent changes (notes aren't cloud-synced, so they vanished).
+  // Before the window goes: snapshot the backup file, then force the pending writes to disk.
+  let closeReady = false;
+  win.on('close', (e) => {
+    saveBounds();
+    if (closeReady) return;
+    e.preventDefault();
+    const done = () => { if (closeReady) return; closeReady = true; flushStorage(); setTimeout(() => { if (win && !win.isDestroyed()) win.close(); }, 150); };
+    // let the page save anything still waiting (e.g. a note mid-typing) before snapshotting and flushing
+    const pending = win.webContents.executeJavaScript('window.__lvdBeforeClose ? window.__lvdBeforeClose() : 0').catch(() => {});
+    Promise.race([pending.then(() => writeAutoBackup(true)), new Promise(r => setTimeout(r, 1500))]).then(done, done);
+  });
   win.on('closed', () => { win = null; });
 }
 
 // Belt-and-braces: periodically snapshot all lvd_ localStorage keys to a JSON
 // file in userData, so data survives even a corrupted Chromium profile.
 let backupBusy = false;
-async function writeAutoBackup() {
-  if (!win || win.isDestroyed() || backupBusy) return;
+function flushStorage() {
+  try { session.defaultSession.flushStorageData(); } catch (e) { /* non-fatal */ }
+}
+ipcMain.on('lvd-flush-storage', flushStorage);
+
+async function writeAutoBackup(force) {
+  if (!win || win.isDestroyed() || (backupBusy && !force)) return;
   backupBusy = true;
   try {
     const json = await win.webContents.executeJavaScript(
@@ -289,6 +306,8 @@ app.whenReady().then(() => {
   wireBgFolderWatchers();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
+
+app.on('before-quit', flushStorage);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
