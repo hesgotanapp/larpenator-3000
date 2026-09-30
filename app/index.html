@@ -1708,6 +1708,123 @@
   .pm-sess-badge { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .4px; text-transform: uppercase; padding: 2px 7px; border-radius: 5px; border: 1px solid var(--border-strong); color: var(--ink-dim); }
   .pm-sessions { padding: 10px 0 12px; border-bottom: 1px solid var(--border); }
   #pm-session-toggle button.selected { background: var(--surface-3); border-color: var(--border-strong); color: var(--ink); }
+  /* ================= notes: iPhone-style folders · list · note ================= */
+  .notes-app { display: grid; grid-template-columns: 210px 300px minmax(0, 1fr); height: calc(100vh - 200px); min-height: 540px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .notes-app[hidden], .notes-graph-view[hidden] { display: none; }
+  .nt-folders { background: color-mix(in srgb, var(--bg) 70%, var(--surface)); border-right: 1px solid var(--border); padding: 12px 10px; overflow: auto; display: flex; flex-direction: column; gap: 2px; }
+  .nt-fold { position: relative; display: flex; align-items: center; gap: 9px; padding: 7px 9px; border-radius: 8px; color: var(--ink-dim); cursor: pointer; font-size: 13.5px; user-select: none; transition: background .15s, color .15s; }
+  .nt-fold svg { width: 16px; height: 16px; flex: 0 0 auto; }
+  .nt-fold > span:not(.dot):not(.nt-pin-ic) { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nt-fold em { font-style: normal; font: 500 11px var(--font-mono); color: var(--ink-faint); }
+  .nt-fold:hover { background: var(--surface-2); color: var(--ink); }
+  .nt-fold.on { background: var(--surface-3); color: var(--ink); }
+  .nt-fold.drop { background: color-mix(in srgb, var(--accent) 22%, var(--surface-2)); color: var(--ink); }
+  .nt-fold .dot { width: 9px; height: 9px; border-radius: 3px; flex: 0 0 auto; }
+  .nt-pin-ic { color: var(--amber); display: grid; }
+  .nt-fold-x { display: none; background: none; border: 0; color: var(--ink-faint); cursor: pointer; font-size: 11px; padding: 0 2px; }
+  .nt-fold:hover .nt-fold-x { display: block; }
+  .nt-fold:hover em { display: none; }
+  .nt-fold-x:hover { color: var(--red); }
+  .nt-fold-h { display: flex; align-items: center; justify-content: space-between; margin: 14px 8px 4px; font: 600 10.5px var(--font-mono); letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-faint); }
+  .nt-fold-input { flex: 1; min-width: 0; background: var(--field-bg, var(--bg)); border: 1px solid var(--accent); border-radius: 6px; padding: 3px 7px; color: var(--ink); font: 13px var(--font-body); outline: none; }
+  .nt-fold-empty { padding: 4px 9px 6px; font-size: 12px; color: var(--ink-faint); line-height: 1.45; }
+  .nt-map { color: var(--accent); }
+  .nt-iconbtn { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 5px; border-radius: 7px; display: grid; place-items: center; font: 600 15px var(--font-body); line-height: 1; }
+  .nt-iconbtn:hover { background: var(--surface-2); }
+  .nt-iconbtn svg { width: 19px; height: 19px; }
+  .nt-iconbtn.sm { padding: 0 5px; font-size: 16px; }
+  .nt-list { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; background: var(--surface); }
+  .nt-list-top { padding: 12px 12px 8px; display: grid; gap: 10px; }
+  .nt-list-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .nt-list-row h2 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nt-search { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border-radius: 9px; padding: 7px 10px; color: var(--ink-faint); cursor: text; }
+  .nt-search svg { width: 14px; height: 14px; flex: 0 0 auto; }
+  .nt-search input { background: none; border: 0; outline: 0; padding: 0; color: var(--ink); font: 13.5px var(--font-body); width: 100%; box-shadow: none; }
+  .nt-list-scroll { overflow: auto; padding: 0 8px 12px; flex: 1; }
+  .nt-grp { font: 600 11.5px var(--font-body); color: var(--ink-dim); margin: 12px 6px 4px; }
+  .nt-item { padding: 9px 10px; border-radius: 9px; cursor: pointer; display: grid; gap: 1px; position: relative; }
+  .nt-item + .nt-item::before { content: ''; position: absolute; left: 10px; right: 10px; top: 0; border-top: 1px solid var(--border); }
+  .nt-item:hover { background: var(--surface-2); }
+  .nt-item.on { background: color-mix(in srgb, var(--accent) 20%, var(--surface-2)); }
+  .nt-item.on::before, .nt-item.on + .nt-item::before, .nt-item:hover::before, .nt-item:hover + .nt-item::before { border-color: transparent; }
+  .nt-item .t { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nt-item .p { font-size: 12.5px; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nt-item .p b { font-weight: 500; color: var(--ink); opacity: .75; margin-right: 6px; }
+  .nt-item .f { font: 500 10.5px var(--font-mono); color: var(--c); margin-top: 2px; }
+  .nt-item.dragging { opacity: .45; }
+  .nt-list-empty { padding: 30px 14px; text-align: center; color: var(--ink-faint); font-size: 13px; line-height: 1.5; }
+  .nt-editor { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--surface); position: relative; }
+  .nt-toolbar { display: flex; align-items: center; gap: 2px; padding: 8px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .nt-sp { flex: 1; }
+  .nt-tb { background: none; border: 0; color: var(--ink-dim); height: 30px; min-width: 32px; border-radius: 7px; cursor: pointer; display: grid; place-items: center; font: 600 13.5px var(--font-body); padding: 0 7px; }
+  .nt-tb:hover { background: var(--surface-2); color: var(--ink); }
+  .nt-tb.on { color: var(--amber); }
+  .nt-tb svg { width: 17px; height: 17px; }
+  .nt-menu-wrap { position: relative; }
+  .nt-menu { position: absolute; top: 34px; left: 0; z-index: 30; min-width: 170px; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 10px; padding: 5px; box-shadow: 0 16px 40px rgba(0,0,0,.4); display: grid; gap: 1px; animation: menuDown .2s cubic-bezier(.2,.8,.2,1) both; }
+  .nt-menu[hidden] { display: none; }
+  .nt-menu.right { left: auto; right: 0; }
+  .nt-menu button { background: none; border: 0; color: var(--ink); text-align: left; padding: 7px 10px; border-radius: 7px; cursor: pointer; font: 13.5px var(--font-body); display: flex; align-items: center; gap: 8px; }
+  .nt-menu button:hover { background: var(--surface-3); }
+  .nt-menu button.danger { color: var(--red); }
+  .nt-menu .lbl { font: 600 10px var(--font-mono); letter-spacing: 1px; text-transform: uppercase; color: var(--ink-faint); padding: 6px 10px 2px; }
+  .nt-menu hr { border: 0; border-top: 1px solid var(--border); margin: 4px 2px; }
+  .nt-menu .m-t { font-size: 20px; font-weight: 700; } .nt-menu .m-h { font-size: 16px; font-weight: 700; } .nt-menu .m-s { font-size: 14px; font-weight: 600; }
+  .nt-ed-scroll { overflow: auto; flex: 1; padding: 16px 40px 60px; }
+  .nt-date { text-align: center; color: var(--ink-faint); font-size: 12px; margin-bottom: 12px; }
+  .nt-title { display: block; width: 100%; max-width: 680px; margin: 0 auto 6px; background: none; border: 0; outline: 0; box-shadow: none; padding: 0; color: var(--ink); font: 700 28px/1.2 var(--font-body); letter-spacing: -.5px; }
+  .nt-title::placeholder { color: var(--ink-faint); }
+  .nt-body { max-width: 680px; margin: 0 auto; outline: none; font-size: 15px; line-height: 1.65; min-height: 200px; color: var(--ink); caret-color: var(--accent); word-wrap: break-word; }
+  .nt-body:empty::before, .nt-body.is-empty::before { content: attr(data-placeholder); color: var(--ink-faint); pointer-events: none; position: absolute; }
+  .nt-body h1 { font-size: 24px; line-height: 1.25; margin: 14px 0 6px; letter-spacing: -.4px; }
+  .nt-body h2 { font-size: 19px; margin: 14px 0 4px; letter-spacing: -.2px; }
+  .nt-body h3 { font-size: 16px; margin: 12px 0 2px; }
+  .nt-body ul, .nt-body ol { margin: 2px 0; padding-left: 24px; }
+  .nt-body ul.nt-chk { list-style: none; padding-left: 0; }
+  .nt-body ul.nt-chk li { position: relative; padding: 2px 0 2px 30px; }
+  .nt-body ul.nt-chk li::before { content: ''; position: absolute; left: 1px; top: 5px; width: 17px; height: 17px; border-radius: 50%; border: 1.6px solid var(--ink-faint); cursor: pointer; transition: background .2s, border-color .2s, transform .25s cubic-bezier(.3,1.8,.5,1); }
+  .nt-body ul.nt-chk li[data-done="1"]::before { background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.5l2.6 2.5L10 3' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 11px no-repeat; border-color: var(--accent); }
+  .nt-body ul.nt-chk li[data-done="1"] { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--ink-faint) 70%, transparent); }
+  .nt-body ul.nt-chk li.just::before { transform: scale(1.2); }
+  .nt-body blockquote { margin: 8px 0; padding: 6px 14px; border-left: 3px solid var(--accent); background: var(--surface-2); border-radius: 0 8px 8px 0; color: var(--ink-dim); }
+  .nt-body hr { border: 0; border-top: 1px solid var(--border-strong); margin: 14px 0; }
+  .nt-body pre { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; font: 13px var(--font-mono); white-space: pre-wrap; }
+  .nt-body code { font-family: var(--font-mono); font-size: .9em; background: var(--surface-2); border-radius: 4px; padding: 1px 5px; }
+  .nt-img { margin: 6px 0 10px; }
+  .nt-img img { display: block; max-width: 100%; border-radius: 10px; border: 1px solid var(--border); cursor: zoom-in; }
+  .nt-link { color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); border-radius: 5px; padding: 0 5px; cursor: pointer; white-space: nowrap; user-select: all; }
+  .nt-link::before { content: '↗ '; font-size: 11px; opacity: .7; }
+  .nt-link:hover { background: color-mix(in srgb, var(--accent) 24%, transparent); }
+  .nt-link.dangling { color: var(--ink-dim); background: var(--surface-2); border: 1px dashed var(--border-strong); }
+  .nt-backlinks { max-width: 680px; margin: 30px auto 0; border-top: 1px solid var(--border); padding-top: 12px; }
+  .nt-backlinks h6 { margin: 0 0 8px; font: 600 10.5px var(--font-mono); letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-faint); }
+  .nt-bl { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; margin: 0 6px 6px 0; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); font: 12.5px var(--font-body); color: var(--ink); cursor: pointer; }
+  .nt-bl:hover { border-color: var(--accent); }
+  .nt-bl i { width: 7px; height: 7px; border-radius: 50%; background: var(--c, var(--accent)); }
+  .nt-bl-empty { color: var(--ink-faint); font-size: 12.5px; }
+  .nt-empty { margin: auto; text-align: center; color: var(--ink-faint); display: grid; gap: 12px; justify-items: center; padding: 30px; }
+  .nt-empty svg { width: 40px; height: 40px; opacity: .5; }
+  .nt-suggest { position: fixed; z-index: 950; min-width: 220px; max-width: 320px; max-height: 260px; overflow: auto; background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 10px; padding: 5px; box-shadow: 0 18px 44px rgba(0,0,0,.45); }
+  .nt-suggest button { display: flex; width: 100%; align-items: center; gap: 8px; background: none; border: 0; color: var(--ink); text-align: left; padding: 7px 10px; border-radius: 7px; cursor: pointer; font: 13.5px var(--font-body); }
+  .nt-suggest button.sel, .nt-suggest button:hover { background: var(--surface-3); }
+  .nt-suggest button i { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--accent)); flex: 0 0 auto; }
+  .nt-suggest .new { color: var(--accent); }
+  @media (max-width: 1180px) { .notes-app { grid-template-columns: 180px 250px minmax(0, 1fr); } .nt-ed-scroll { padding: 14px 24px 50px; } }
+
+  /* ================= brain map: Nebula (3D) + Constellation (2D) ================= */
+  .notes-graph-card { padding: 0; overflow: hidden; border-radius: var(--radius); }
+  .notes-graph-wrap { position: relative; height: calc(100vh - 200px); min-height: 520px; background: radial-gradient(1000px 640px at 50% 45%, #121827, #05060a 72%); }
+  .graph-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .graph-labels span { position: absolute; transform: translate(-50%, 8px); font: 500 12px var(--font-body); white-space: nowrap; color: rgba(232,236,241,.9); text-shadow: 0 1px 6px rgba(0,0,0,.95); transition: opacity .2s; }
+  .graph-labels span.h { font-weight: 700; color: #fff; }
+  .graph-back { position: absolute; top: 12px; left: 14px; z-index: 3; background: rgba(15,18,24,.7); border: 1px solid rgba(255,255,255,.12); color: #e8ecf1; border-radius: 8px; padding: 6px 12px; font: 500 12.5px var(--font-body); cursor: pointer; backdrop-filter: blur(8px); }
+  .graph-back:hover { border-color: rgba(255,255,255,.3); }
+  .graph-mode-toggle { background: rgba(15,18,24,.7); border-color: rgba(255,255,255,.12); backdrop-filter: blur(8px); }
+  .graph-mode-toggle button { color: #8b94a3; }
+  .graph-mode-toggle button.active { background: rgba(255,255,255,.1); color: #fff; }
+  .graph-legend { position: absolute; left: 14px; bottom: 34px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: #8b94a3; z-index: 2; pointer-events: none; }
+  .graph-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+  .graph-hint { color: #5d6674; }
 </style>
 </head>
 <body>
@@ -2616,36 +2733,33 @@
 
     <!-- NOTES -->
     <section class="section" id="section-notes">
-      <div class="page-head"><h1>Notes</h1><p>Your trading knowledge base — link ideas with [[wiki links]] and watch the web grow.</p></div>
+      <div class="page-head"><h1>Notes</h1><p>Your trading notebook — folders, checklists, and ideas linked with [[wiki links]].</p></div>
 
-      <div class="subnav" id="notes-subnav">
-        <div class="subnav-item active" data-notesview="list">Notes</div>
-        <div class="subnav-item" data-notesview="graph">Graph</div>
-      </div>
-
-      <div class="subview active" id="notes-view-list">
-        <div class="notes-layout">
-          <div class="card notes-list-pane">
-            <div class="notes-list-head">
-              <input type="text" id="note-search" placeholder="Search notes...">
-              <button class="btn small cyan" id="note-new-btn" title="New note">+ New</button>
-            </div>
-            <div class="notes-list" id="notes-list"></div>
+      <div class="notes-app" id="notes-app">
+        <aside class="nt-folders" id="nt-folders"></aside>
+        <div class="nt-list">
+          <div class="nt-list-top">
+            <div class="nt-list-row"><h2 id="nt-list-title">All notes</h2><button class="nt-iconbtn" id="note-new-btn" type="button" title="New note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></button></div>
+            <label class="nt-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="text" id="note-search" placeholder="Search" autocomplete="off"></label>
           </div>
-          <div class="notes-editor-pane" id="notes-editor-pane"></div>
+          <div class="nt-list-scroll" id="notes-list"></div>
         </div>
+        <div class="nt-editor" id="notes-editor-pane"></div>
       </div>
 
-      <div class="subview" id="notes-view-graph">
+      <div class="notes-graph-view" id="notes-view-graph" hidden>
         <div class="card notes-graph-card">
           <div class="notes-graph-wrap" id="notes-graph-wrap">
             <canvas id="notes-graph-canvas" style="display:none;"></canvas>
             <canvas id="notes-graph-canvas3d"></canvas>
+            <div class="graph-labels" id="graph-labels"></div>
+            <button class="graph-back" id="graph-back" type="button">← Notes</button>
             <div class="graph-mode-toggle" id="graph-mode-toggle">
-              <button data-gmode="2d">2D</button>
-              <button data-gmode="3d" class="active">3D</button>
+              <button data-gmode="2d" type="button">2D</button>
+              <button data-gmode="3d" type="button" class="active">3D</button>
             </div>
-            <div class="graph-hint" id="graph-hint">drag to orbit · scroll to zoom · click a node to open it</div>
+            <div class="graph-legend" id="graph-legend"></div>
+            <div class="graph-hint" id="graph-hint">drag to spin · scroll to zoom · click a star to open it</div>
           </div>
         </div>
       </div>
@@ -6780,75 +6894,208 @@
     return html || '<p style="color:var(--ink-faint)">Empty note — switch to Edit to start writing.</p>';
   }
 
-  // -- section rendering --
-  document.querySelectorAll('#notes-subnav .subnav-item').forEach(item => {
-    item.addEventListener('click', () => switchNotesView(item.dataset.notesview));
-  });
+  // ---------- notes: iPhone-style folders · list · note ----------
+  // Notes stay stored as markdown (so older notes, exports and [[links]] keep working); the editor
+  // shows them as formatted text and turns them back into markdown when saving.
+  if (!Array.isArray(notesStore.folders)) notesStore.folders = [];
+  let notesFolder = 'all';           // 'all' | 'pinned' | a folder id
+  let noteFolderEditing = null;      // folder id being renamed, or 'new'
+  const FOLDER_COLORS = ['#3ddc97', '#7fb0e8', '#b39cf0', '#e8b25c', '#f07167', '#5fd3e0', '#f29bc8', '#a3d977'];
+  const NT_ICONS = {
+    all: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+    pin: '<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M15 3l6 6-3 1-4 4 1 5-2 2-4-4-5 5-1-1 5-5-4-4 2-2 5 1 4-4z"/></svg>',
+    graph: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="10" cy="18" r="2.5"/><path d="M8.3 7l7.4.8M7 8.3l2.2 7.4M16.4 10l-4.8 6"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/></svg>',
+    ul: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>',
+    ol: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 6h10M10 12h10M10 18h10"/><path d="M4 5h1.5v4M3.5 9h3M3.5 14.5c0-1 2.8-1 2.8 0 0 1-2.8 2-2.8 3h3" stroke-width="1.4"/></svg>',
+    link: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+    image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg>',
+    more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+    note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>'
+  };
+  function folderById(id) { return notesStore.folders.find(f => f.id === id); }
+  function nextFolderColor() { return FOLDER_COLORS[notesStore.folders.length % FOLDER_COLORS.length]; }
+  function noteColor(n) { const f = n && folderById(n.folderId); return f ? f.color : null; }
+
+  // -- section --
   function switchNotesView(view) {
     flushNoteSave();
+    closeNoteSuggest();
     notesCurrentView = view;
-    document.querySelectorAll('#notes-subnav .subnav-item').forEach(i => i.classList.toggle('active', i.dataset.notesview === view));
-    document.getElementById('notes-view-list').classList.toggle('active', view === 'list');
-    document.getElementById('notes-view-graph').classList.toggle('active', view === 'graph');
+    document.getElementById('notes-app').hidden = view !== 'list';
+    document.getElementById('notes-view-graph').hidden = view !== 'graph';
     if (view === 'graph') initGraphView();
-    else { stopNotesGraph(); stop3DGraph(); renderNotesList(); renderNoteEditor(); }
+    else { stopNotesGraph(); stop3DGraph(); renderNotesAll(); }
   }
   function renderNotesSection() {
     if (notesCurrentView === 'graph') initGraphView();
-    else { renderNotesList(); renderNoteEditor(); }
+    else renderNotesAll();
   }
+  function renderNotesAll() { renderNoteFolders(); renderNotesList(); renderNoteEditor(); }
+  function notesGraphVisible() { return notesCurrentView === 'graph' && document.getElementById('section-notes').classList.contains('active'); }
 
-  let notesGraphMode = '3d';
-  document.querySelectorAll('#graph-mode-toggle button').forEach(b => b.addEventListener('click', () => {
-    if (notesGraphMode === b.dataset.gmode) return;
-    notesGraphMode = b.dataset.gmode;
-    document.querySelectorAll('#graph-mode-toggle button').forEach(x => x.classList.toggle('active', x === b));
-    initGraphView();
-  }));
-  function initGraphView() {
-    document.getElementById('notes-graph-canvas').style.display = notesGraphMode === '2d' ? 'block' : 'none';
-    document.getElementById('notes-graph-canvas3d').style.display = notesGraphMode === '3d' ? 'block' : 'none';
-    document.getElementById('graph-hint').textContent = notesGraphMode === '3d'
-      ? 'drag to orbit · scroll to zoom · click a node to open it'
-      : 'drag nodes · scroll to zoom · drag background to pan · click a node to open it';
-    if (notesGraphMode === '3d') { stopNotesGraph(); init3DGraph(); }
-    else { stop3DGraph(); initNotesGraph(); }
-  }
-  function openGraphNode(nd) {
-    if (nd.ghost) {
-      const note = createNote(nd.title, '');
-      showToast('Note created: ' + note.title);
-      notesStore.lastOpenedId = note.id;
-      saveNotes();
-      switchNotesView('list');
-    } else {
-      openNoteById(nd.id);
+  // -- folders column --
+  function renderNoteFolders() {
+    const el = document.getElementById('nt-folders');
+    const count = fid => notesStore.notes.filter(n => n.folderId === fid).length;
+    const folderRow = f => noteFolderEditing === f.id
+      ? `<div class="nt-fold on"><span class="dot" style="background:${f.color}"></span><input class="nt-fold-input" data-rename="${f.id}" value="${escAttr(f.name)}"></div>`
+      : `<div class="nt-fold${notesFolder === f.id ? ' on' : ''}" data-folder="${f.id}" title="Double-click to rename · drop notes here to move them"><span class="dot" style="background:${f.color}"></span><span>${escapeHtml(f.name)}</span><em>${count(f.id)}</em><button class="nt-fold-x" type="button" data-folder-del="${f.id}" title="Delete folder">✕</button></div>`;
+    el.innerHTML = `
+      <div class="nt-fold${notesFolder === 'all' ? ' on' : ''}" data-folder="all">${NT_ICONS.all}<span>All notes</span><em>${notesStore.notes.length}</em></div>
+      <div class="nt-fold${notesFolder === 'pinned' ? ' on' : ''}" data-folder="pinned"><span class="nt-pin-ic">${NT_ICONS.pin}</span><span>Pinned</span><em>${notesStore.notes.filter(n => n.pinned).length}</em></div>
+      <div class="nt-fold-h"><span>Folders</span><button class="nt-iconbtn sm" type="button" id="nt-folder-add" title="New folder">+</button></div>
+      ${notesStore.folders.map(folderRow).join('')}
+      ${noteFolderEditing === 'new' ? `<div class="nt-fold on"><span class="dot" style="background:${nextFolderColor()}"></span><input class="nt-fold-input" data-rename="new" placeholder="Folder name"></div>` : ''}
+      ${!notesStore.folders.length && noteFolderEditing !== 'new' ? '<div class="nt-fold-empty">Group notes into folders, like Setups or Psychology. Press + to add one.</div>' : ''}
+      <div class="nt-fold-h"><span>View</span></div>
+      <div class="nt-fold nt-map" data-open-map>${NT_ICONS.graph}<span>Brain map</span></div>`;
+    const inp = el.querySelector('.nt-fold-input');
+    if (inp) {
+      let finished = false;
+      const done = save => {
+        if (finished) return; finished = true;
+        const name = inp.value.trim(), id = inp.dataset.rename;
+        if (save && name) {
+          if (id === 'new') { const f = { id: 'f_' + Date.now().toString(36), name, color: nextFolderColor() }; notesStore.folders.push(f); notesFolder = f.id; }
+          else { const f = folderById(id); if (f) f.name = name; }
+          saveNotes();
+        }
+        noteFolderEditing = null;
+        renderNoteFolders(); renderNotesList();
+      };
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); done(true); } if (e.key === 'Escape') done(false); });
+      inp.addEventListener('blur', () => done(true));
+      inp.focus(); inp.select();
     }
   }
+  (function bindNoteFolders() {
+    const el = document.getElementById('nt-folders');
+    el.addEventListener('click', ev => {
+      const del = ev.target.closest('[data-folder-del]');
+      if (del) {
+        ev.stopPropagation();
+        const f = folderById(del.dataset.folderDel); if (!f) return;
+        const n = notesStore.notes.filter(x => x.folderId === f.id).length;
+        if (!confirm(`Delete the folder "${f.name}"?${n ? `\n\nIts ${n} note${n === 1 ? '' : 's'} will stay in All notes.` : ''}`)) return;
+        notesStore.notes.forEach(x => { if (x.folderId === f.id) delete x.folderId; });
+        notesStore.folders = notesStore.folders.filter(x => x.id !== f.id);
+        if (notesFolder === f.id) notesFolder = 'all';
+        saveNotes(); renderNotesAll();
+        return;
+      }
+      if (ev.target.closest('#nt-folder-add')) { noteFolderEditing = 'new'; renderNoteFolders(); return; }
+      if (ev.target.closest('[data-open-map]')) { switchNotesView('graph'); return; }
+      const row = ev.target.closest('[data-folder]');
+      if (!row) return;
+      flushNoteSave();
+      notesFolder = row.dataset.folder;
+      const list = notesInView();
+      if (list.length && !list.some(n => n.id === notesStore.lastOpenedId)) notesStore.lastOpenedId = list[0].id;
+      renderNotesAll();
+    });
+    el.addEventListener('dblclick', ev => {
+      const row = ev.target.closest('[data-folder]');
+      if (!row || row.dataset.folder === 'all' || row.dataset.folder === 'pinned') return;
+      noteFolderEditing = row.dataset.folder; renderNoteFolders();
+    });
+    // drag a note from the list onto a folder to move it
+    el.addEventListener('dragover', ev => { const row = ev.target.closest('[data-folder]'); if (!row || row.dataset.folder === 'pinned') return; ev.preventDefault(); el.querySelectorAll('.drop').forEach(x => x.classList.remove('drop')); row.classList.add('drop'); });
+    el.addEventListener('dragleave', ev => { const row = ev.target.closest('[data-folder]'); if (row && !row.contains(ev.relatedTarget)) row.classList.remove('drop'); });
+    el.addEventListener('drop', ev => {
+      const row = ev.target.closest('[data-folder]'); el.querySelectorAll('.drop').forEach(x => x.classList.remove('drop'));
+      if (!row) return; ev.preventDefault();
+      const note = getNote(ev.dataTransfer.getData('text/lvd-note')); if (!note) return;
+      moveNoteToFolder(note, row.dataset.folder === 'all' ? null : row.dataset.folder);
+    });
+  })();
+  function moveNoteToFolder(note, fid) {
+    if (fid) note.folderId = fid; else delete note.folderId;
+    saveNotes();
+    const f = folderById(fid);
+    showToast(f ? `Moved to ${f.name}` : 'Removed from folder');
+    renderNotesAll();
+  }
 
+  // -- note list --
+  function notesInView() {
+    let list = notesStore.notes.filter(n => notesFolder === 'all' ? true : notesFolder === 'pinned' ? n.pinned : n.folderId === notesFolder);
+    if (noteSearchQuery) list = list.filter(n => (n.title + '\n' + n.body).toLowerCase().includes(noteSearchQuery));
+    return list.sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+  function notePreviewText(n) {
+    return (n.body || '').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[\[([^\[\]\n]+)\]\]/g, '$1').replace(/^\s*[-*]\s+\[[ xX]\]\s*/gm, '').replace(/^[#>\s*-]+/gm, '').replace(/[*_`]/g, '').replace(/\s+/g, ' ').trim();
+  }
+  function noteWhen(t) {
+    const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+    if (diffDays <= 0) return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return d.toLocaleDateString(undefined, { weekday: 'long' });
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: d.getFullYear() === today.getFullYear() ? undefined : '2-digit' });
+  }
+  function noteGroup(t) {
+    const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+    if (diffDays <= 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return 'Previous 7 days';
+    if (diffDays < 30) return 'Previous 30 days';
+    return d.toLocaleDateString(undefined, { month: 'long', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' });
+  }
+  function renderNotesList() {
+    const el = document.getElementById('notes-list');
+    const f = folderById(notesFolder);
+    document.getElementById('nt-list-title').textContent = notesFolder === 'all' ? 'All notes' : notesFolder === 'pinned' ? 'Pinned' : (f ? f.name : 'Notes');
+    const list = notesInView();
+    if (!list.length) {
+      el.innerHTML = `<div class="nt-list-empty">${noteSearchQuery ? 'Nothing matches that search.' : notesFolder === 'pinned' ? 'Pin a note from its ⋯ menu to keep it at the top.' : notesStore.notes.length ? 'No notes in this folder yet.<br>Press the pencil to write one here.' : 'No notes yet.<br>Press the pencil to write your first one.'}</div>`;
+      return;
+    }
+    const pinnedFirst = notesFolder !== 'pinned' && !noteSearchQuery;
+    const groups = [];
+    if (pinnedFirst) { const p = list.filter(n => n.pinned); if (p.length) groups.push(['Pinned', p]); }
+    list.filter(n => !(pinnedFirst && n.pinned)).forEach(n => { const g = noteGroup(n.updatedAt), last = groups[groups.length - 1]; if (last && last[0] === g) last[1].push(n); else groups.push([g, [n]]); });
+    el.innerHTML = groups.map(([g, ns]) => `<div class="nt-grp">${g}</div>` + ns.map(n => {
+      const nf = notesFolder === 'all' ? folderById(n.folderId) : null;
+      const prev = notePreviewText(n);
+      return `<div class="nt-item${n.id === notesStore.lastOpenedId ? ' on' : ''}" data-note-id="${n.id}" draggable="true"><span class="t">${escapeHtml(n.title)}</span><span class="p"><b>${noteWhen(n.updatedAt)}</b>${escapeHtml(prev.slice(0, 90)) || 'No additional text'}</span>${nf ? `<span class="f" style="--c:${nf.color}">${escapeHtml(nf.name)}</span>` : ''}</div>`;
+    }).join('')).join('');
+  }
+  (function bindNotesList() {
+    const el = document.getElementById('notes-list');
+    el.addEventListener('click', ev => { const row = ev.target.closest('.nt-item'); if (row) openNoteById(row.dataset.noteId); });
+    el.addEventListener('dragstart', ev => { const row = ev.target.closest('.nt-item'); if (!row) return; ev.dataTransfer.setData('text/lvd-note', row.dataset.noteId); ev.dataTransfer.effectAllowed = 'move'; row.classList.add('dragging'); });
+    el.addEventListener('dragend', ev => { const row = ev.target.closest('.nt-item'); if (row) row.classList.remove('dragging'); });
+  })();
   document.getElementById('note-search').addEventListener('input', (e) => {
     noteSearchQuery = e.target.value.trim().toLowerCase();
     renderNotesList();
   });
-  document.getElementById('note-new-btn').addEventListener('click', () => {
+  document.getElementById('note-new-btn').addEventListener('click', newNoteHere);
+  function newNoteHere() {
     flushNoteSave();
+    if (notesCurrentView !== 'list') switchNotesView('list');
     const note = createNote('', '');
+    if (notesFolder !== 'all' && notesFolder !== 'pinned' && folderById(notesFolder)) note.folderId = notesFolder;
     notesStore.lastOpenedId = note.id;
     saveNotes();
-    noteEditorMode = 'edit';
-    renderNotesList();
-    renderNoteEditor(true);
-  });
+    noteSearchQuery = ''; document.getElementById('note-search').value = '';
+    renderNotesAll();
+    const t = document.getElementById('note-title-input'); if (t) { t.focus(); t.select(); }
+  }
+  document.getElementById('graph-back').addEventListener('click', () => switchNotesView('list'));
 
   function openNoteById(id) {
     flushNoteSave();
+    const n = getNote(id);
+    if (!n) return;
     notesStore.lastOpenedId = id;
     saveNotes();
-    // open notes with content in preview so their links are immediately clickable
-    const n = getNote(id);
-    noteEditorMode = (n && n.body && n.body.trim()) ? 'preview' : 'edit';
+    // if the note isn't in the folder being shown, show it in All notes
+    if (!notesInView().some(x => x.id === id)) { notesFolder = 'all'; noteSearchQuery = ''; const s = document.getElementById('note-search'); if (s) s.value = ''; }
     if (notesCurrentView !== 'list') switchNotesView('list');
-    else { renderNotesList(); renderNoteEditor(); }
+    else renderNotesAll();
   }
   function openNoteByTitle(title, createIfMissing) {
     let note = findNoteByTitle(title);
@@ -6859,159 +7106,363 @@
     }
     openNoteById(note.id);
   }
-
-  function renderNotesList() {
-    const el = document.getElementById('notes-list');
-    let notes = [...notesStore.notes];
-    if (noteSearchQuery) notes = notes.filter(n => (n.title + '\n' + n.body).toLowerCase().includes(noteSearchQuery));
-    notes.sort((a, b) => b.updatedAt - a.updatedAt);
-    const pinned = notes.filter(n => n.pinned);
-    const rest = notes.filter(n => !n.pinned);
-    if (!notes.length) {
-      el.innerHTML = `<div class="notes-empty-list">${notesStore.notes.length ? 'Nothing matches that search.' : 'No notes yet — create your first one.'}</div>`;
-      return;
-    }
-    const item = n => `
-      <div class="note-list-item${n.id === notesStore.lastOpenedId ? ' active' : ''}" data-note-id="${n.id}">
-        ${n.pinned ? '<span class="pin-ic">◆</span>' : ''}
-        <span class="t">${escapeHtml(n.title)}</span>
-        <span class="d">${fmtDateShort(toDateStr(new Date(n.updatedAt)))}</span>
-      </div>`;
-    el.innerHTML =
-      (pinned.length ? `<div class="notes-list-label">Pinned</div>` + pinned.map(item).join('') : '') +
-      (pinned.length && rest.length ? `<div class="notes-list-label">Notes</div>` : '') +
-      rest.map(item).join('');
-    el.querySelectorAll('.note-list-item').forEach(row => row.addEventListener('click', () => openNoteById(row.dataset.noteId)));
+  function openGraphNode(nd) {
+    if (nd.ghost) {
+      const note = createNote(nd.title, '');
+      showToast('Note created: ' + note.title);
+      notesStore.lastOpenedId = note.id;
+      saveNotes();
+      switchNotesView('list');
+    } else openNoteById(nd.id);
   }
 
-  function renderNoteEditor(focusTitle) {
+  // -- markdown <-> editor --
+  function edInline(raw) {
+    const fmt = s => escapeHtml(s)
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
+      .replace(/(^|[^*\w])\*([^*\n]+)\*(?!\w)/g, '$1<i>$2</i>');
+    let out = '', last = 0, m;
+    const re = /\[\[([^\[\]\n]+)\]\]/g;
+    while ((m = re.exec(raw))) {
+      out += fmt(raw.slice(last, m.index));
+      const t = m[1].trim();
+      out += `<span class="nt-link${findNoteByTitle(t) ? '' : ' dangling'}" contenteditable="false" data-link="${escAttr(t)}">${escapeHtml(t)}</span>`;
+      last = m.index + m[0].length;
+    }
+    return out + fmt(raw.slice(last));
+  }
+  function mdToEditorHtml(src) {
+    const lines = (src || '').split('\n');
+    let html = '', list = null, inCode = false, code = [];
+    const close = () => { if (list) { html += `</${list.tag}>`; list = null; } };
+    const open = (tag, cls) => { if (!list || list.key !== tag + cls) { close(); html += `<${tag}${cls ? ` class="${cls}"` : ''}>`; list = { tag, key: tag + cls }; } };
+    for (const raw of lines) {
+      if (raw.trim().startsWith('```')) {
+        if (inCode) { html += `<pre>${escapeHtml(code.join('\n'))}</pre>`; code = []; inCode = false; } else { close(); inCode = true; }
+        continue;
+      }
+      if (inCode) { code.push(raw); continue; }
+      let m;
+      if ((m = raw.match(/^\s*[-*]\s+\[( |x|X)\]\s?(.*)$/))) { open('ul', 'nt-chk'); html += `<li data-done="${m[1] === ' ' ? '0' : '1'}">${edInline(m[2]) || '<br>'}</li>`; continue; }
+      if ((m = raw.match(/^\s*[-*]\s+(.*)$/))) { open('ul', ''); html += `<li>${edInline(m[1]) || '<br>'}</li>`; continue; }
+      if ((m = raw.match(/^\s*\d+[.)]\s+(.*)$/))) { open('ol', ''); html += `<li>${edInline(m[1]) || '<br>'}</li>`; continue; }
+      close();
+      if ((m = raw.match(/^(#{1,3})\s+(.*)$/))) { html += `<h${m[1].length}>${edInline(m[2]) || '<br>'}</h${m[1].length}>`; continue; }
+      if ((m = raw.match(/^>\s?(.*)$/))) { html += `<blockquote>${edInline(m[1]) || '<br>'}</blockquote>`; continue; }
+      if (/^\s*(---|\*\*\*)\s*$/.test(raw)) { html += '<hr>'; continue; }
+      if ((m = raw.match(/^!\[[^\]]*\]\((data:image\/[^)\s]+)\)\s*$/))) { html += `<div class="nt-img" contenteditable="false"><img src="${m[1]}" alt=""></div>`; continue; }
+      html += `<div>${edInline(raw) || '<br>'}</div>`;
+    }
+    if (inCode) html += `<pre>${escapeHtml(code.join('\n'))}</pre>`;
+    close();
+    return html;
+  }
+  const NT_BLOCK = /^(DIV|P|UL|OL|H1|H2|H3|H4|BLOCKQUOTE|PRE|HR|LI)$/;
+  function editorToMd(root) {
+    const out = [];
+    const inl = node => {
+      let s = '';
+      node.childNodes.forEach(c => {
+        if (c.nodeType === 3) { s += c.nodeValue.replace(/ /g, ' ').replace(/​/g, ''); return; }
+        if (c.nodeType !== 1) return;
+        const tag = c.tagName;
+        if (c.classList.contains('nt-link')) s += '[[' + c.dataset.link + ']]';
+        else if (tag === 'B' || tag === 'STRONG') { const t = inl(c); s += t.trim() ? '**' + t.trim() + '**' + (/\s$/.test(t) ? ' ' : '') : t; }
+        else if (tag === 'I' || tag === 'EM') { const t = inl(c); s += t.trim() ? '*' + t.trim() + '*' + (/\s$/.test(t) ? ' ' : '') : t; }
+        else if (tag === 'CODE') s += '`' + c.textContent + '`';
+        else if (tag === 'BR') s += '\n';
+        else if (tag === 'IMG') s += '\n![](' + c.getAttribute('src') + ')\n';
+        else if (NT_BLOCK.test(tag)) s += '\n' + inl(c) + '\n';
+        else s += inl(c);
+      });
+      return s;
+    };
+    let buf = null;
+    const flush = () => { if (buf !== null) { buf.replace(/\n$/, '').split('\n').forEach(l => out.push(l)); buf = null; } };
+    const block = el => {
+      if (el.nodeType === 3 || (el.nodeType === 1 && !NT_BLOCK.test(el.tagName) && !el.classList.contains('nt-img') && el.tagName !== 'IMG')) {
+        const holder = document.createElement('span'); holder.appendChild(el.cloneNode(true));
+        buf = (buf || '') + inl(holder);
+        return;
+      }
+      if (el.nodeType !== 1) return;
+      flush();
+      const tag = el.tagName;
+      if (tag === 'UL' || tag === 'OL') {
+        let i = 1;
+        [...el.children].filter(c => c.tagName === 'LI').forEach(li => {
+          const text = inl(li).replace(/\n+/g, ' ').trim();
+          if (el.classList.contains('nt-chk')) out.push(`- [${li.dataset.done === '1' ? 'x' : ' '}] ${text}`);
+          else if (tag === 'OL') out.push(`${i++}. ${text}`);
+          else out.push(`- ${text}`);
+        });
+        return;
+      }
+      if (/^H[1-4]$/.test(tag)) { out.push('#'.repeat(Math.min(3, +tag[1])) + ' ' + inl(el).replace(/\n+/g, ' ').trim()); return; }
+      if (tag === 'BLOCKQUOTE') { inl(el).replace(/\n+$/, '').split('\n').forEach(l => out.push('> ' + l)); return; }
+      if (tag === 'HR') { out.push('---'); return; }
+      if (tag === 'PRE') { out.push('```', ...el.textContent.split('\n'), '```'); return; }
+      if (tag === 'IMG') { out.push('![](' + el.getAttribute('src') + ')'); return; }
+      if (el.classList.contains('nt-img')) { const img = el.querySelector('img'); if (img) out.push('![](' + img.getAttribute('src') + ')'); return; }
+      if ([...el.childNodes].some(c => c.nodeType === 1 && (NT_BLOCK.test(c.tagName) || c.classList.contains('nt-img')))) { el.childNodes.forEach(block); flush(); return; }
+      inl(el).replace(/\n$/, '').split('\n').forEach(l => out.push(l));
+    };
+    root.childNodes.forEach(block);
+    flush();
+    return out.join('\n').replace(/\s+$/, '');
+  }
+
+  // -- editor --
+  function noteFullDate(t) {
+    const d = new Date(t);
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) + ' at ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  }
+  function renderNoteEditor() {
     const pane = document.getElementById('notes-editor-pane');
     const note = getNote(notesStore.lastOpenedId);
+    closeNoteSuggest();
     if (!note) {
-      pane.innerHTML = `<div class="card"><div class="empty-state"><div class="glyph">✎</div><p>Select a note on the left, or create a new one.<br>Type [[Note Title]] inside any note to link ideas together.</p></div></div>`;
+      pane.innerHTML = `<div class="nt-empty">${NT_ICONS.note}<div>${notesStore.notes.length ? 'Pick a note, or start a new one.' : 'Your notebook is empty.'}</div><button class="btn small" type="button" id="nt-empty-new">New note</button></div>`;
+      document.getElementById('nt-empty-new').addEventListener('click', newNoteHere);
       return;
     }
+    const f = folderById(note.folderId);
     const backlinks = backlinksFor(note);
     pane.innerHTML = `
-      <div class="note-head">
-        <input class="note-title-input" id="note-title-input" value="${escAttr(note.title)}" spellcheck="false">
-        <div class="note-tools">
-          <span class="note-save-flash" id="note-save-flash">Saved</span>
-          <div class="note-mode-toggle">
-            <button class="note-mode-btn${noteEditorMode === 'edit' ? ' active' : ''}" data-notemode="edit">Edit</button>
-            <button class="note-mode-btn${noteEditorMode === 'preview' ? ' active' : ''}" data-notemode="preview">Preview</button>
-          </div>
-          <button class="link-btn" id="note-pin-btn" title="${note.pinned ? 'Unpin' : 'Pin to top'}">${note.pinned ? '◆ Pinned' : '◇ Pin'}</button>
-          <button class="link-btn" id="note-delete-btn" title="Delete note">✕</button>
-        </div>
+      <div class="nt-toolbar">
+        <div class="nt-menu-wrap"><button class="nt-tb" type="button" data-cmd="aa" title="Text style">Aa</button>
+          <div class="nt-menu" id="nt-aa-menu" hidden>
+            <button type="button" data-block="h1"><span class="m-t">Title</span></button>
+            <button type="button" data-block="h2"><span class="m-h">Heading</span></button>
+            <button type="button" data-block="h3"><span class="m-s">Subheading</span></button>
+            <button type="button" data-block="div">Body</button>
+            <button type="button" data-block="blockquote">❝ Quote</button>
+          </div></div>
+        <button class="nt-tb" type="button" data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button class="nt-tb" type="button" data-cmd="italic" title="Italic (Ctrl+I)"><i style="font-family:Georgia,serif">I</i></button>
+        <button class="nt-tb" type="button" data-cmd="checklist" title="Checklist">${NT_ICONS.check}</button>
+        <button class="nt-tb" type="button" data-cmd="ul" title="Bulleted list">${NT_ICONS.ul}</button>
+        <button class="nt-tb" type="button" data-cmd="ol" title="Numbered list">${NT_ICONS.ol}</button>
+        <button class="nt-tb" type="button" data-cmd="link" title="Link another note ([[)">${NT_ICONS.link}</button>
+        <button class="nt-tb" type="button" data-cmd="image" title="Add a picture (or paste one)">${NT_ICONS.image}</button>
+        <span class="nt-sp"></span>
+        <span class="note-save-flash" id="note-save-flash">Saved</span>
+        <button class="nt-tb${note.pinned ? ' on' : ''}" type="button" data-cmd="pin" title="${note.pinned ? 'Unpin' : 'Pin to the top'}">${NT_ICONS.pin}</button>
+        <div class="nt-menu-wrap"><button class="nt-tb" type="button" data-cmd="more" title="More">${NT_ICONS.more}</button>
+          <div class="nt-menu right" id="nt-more-menu" hidden>
+            <div class="lbl">Move to folder</div>
+            ${notesStore.folders.map(x => `<button type="button" data-move="${x.id}"><i style="width:9px;height:9px;border-radius:3px;background:${x.color}"></i>${escapeHtml(x.name)}${x.id === note.folderId ? ' ✓' : ''}</button>`).join('')}
+            <button type="button" data-move="">No folder${!note.folderId ? ' ✓' : ''}</button>
+            <hr><button type="button" class="danger" data-cmd="delete">Delete note</button>
+          </div></div>
       </div>
-      ${noteEditorMode === 'edit'
-        ? `<textarea class="note-editor" id="note-editor" placeholder="Write in markdown. Link other notes with [[Note Title]].">${escapeHtml(note.body)}</textarea>
-           <div class="note-outlinks" id="note-outlinks">${outlinkChipsHtml(note.body)}</div>`
-        : `<div class="note-preview" id="note-preview">${renderMarkdown(note.body)}</div>`}
-      <div class="note-meta-row"><span>created ${fmtDateShort(toDateStr(new Date(note.createdAt)))}</span><span>updated ${fmtDateShort(toDateStr(new Date(note.updatedAt)))}</span></div>
-      <div class="backlinks-panel">
-        <div class="backlinks-head">Linked mentions <span class="count">${backlinks.length}</span></div>
-        ${backlinks.length
-          ? backlinks.map(b => `<div class="backlink-item" data-note-id="${b.id}"><div class="bt">${escapeHtml(b.title)}</div><div class="bs">${escapeHtml(backlinkSnippet(b.body, note.title))}</div></div>`).join('')
-          : `<div class="backlinks-empty">No other notes link here yet. Reference this note anywhere with [[${escapeHtml(note.title)}]].</div>`}
+      <div class="nt-ed-scroll" id="nt-ed-scroll">
+        <div class="nt-date">${noteFullDate(note.updatedAt)}${f ? ` · <span style="color:${f.color}">${escapeHtml(f.name)}</span>` : ''}</div>
+        <input class="nt-title" id="note-title-input" value="${escAttr(note.title)}" placeholder="Title" spellcheck="false">
+        <div class="nt-body" id="note-editor" contenteditable="true" spellcheck="true" data-placeholder="Start writing — type [[ to link another note">${mdToEditorHtml(note.body)}</div>
+        <div class="nt-backlinks"><h6>Linked from ${backlinks.length}</h6>${backlinks.length
+          ? backlinks.map(b => `<button class="nt-bl" type="button" data-note-id="${b.id}" title="${escAttr(backlinkSnippet(b.body, note.title))}" style="--c:${noteColor(b) || 'var(--accent)'}"><i></i>${escapeHtml(b.title)}</button>`).join('')
+          : `<span class="nt-bl-empty">No other notes link here yet. Mention it anywhere with [[${escapeHtml(note.title)}]].</span>`}</div>
       </div>
-    `;
-
-    const titleInput = document.getElementById('note-title-input');
-    titleInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); titleInput.blur(); } });
-    titleInput.addEventListener('blur', () => renameNote(note, titleInput.value));
-    if (focusTitle) { titleInput.focus(); titleInput.select(); }
-
-    pane.querySelectorAll('.note-mode-btn').forEach(btn => btn.addEventListener('click', () => {
-      flushNoteSave();
-      noteEditorMode = btn.dataset.notemode;
-      renderNoteEditor();
-    }));
-    document.getElementById('note-pin-btn').addEventListener('click', () => {
-      note.pinned = !note.pinned;
-      note.updatedAt = Date.now();
-      saveNotes();
-      renderNotesList();
-      renderNoteEditor();
-    });
-    document.getElementById('note-delete-btn').addEventListener('click', () => {
-      const blCount = backlinksFor(note).length;
-      const warn = blCount ? `\n\n${blCount} other note${blCount === 1 ? '' : 's'} link to it — those links will become dangling.` : '';
-      if (!confirm(`Delete "${note.title}"? This cannot be undone.${warn}`)) return;
-      notesStore.notes = notesStore.notes.filter(n => n.id !== note.id);
-      if (notesStore.lastOpenedId === note.id) notesStore.lastOpenedId = null;
-      saveNotes();
-      showToast('Note deleted');
-      renderNotesList();
-      renderNoteEditor();
-    });
+      <input type="file" id="nt-image-input" accept="image/*" hidden>`;
 
     const editor = document.getElementById('note-editor');
-    if (editor) {
-      editor.addEventListener('input', () => {
-        clearTimeout(noteSaveTimer);
-        noteSaveTimer = setTimeout(() => commitNoteBody(note, editor.value), 500);
-      });
-      editor.addEventListener('blur', () => flushNoteSave());
-      editor.addEventListener('click', (e) => {
-        if (!e.ctrlKey && !e.metaKey) return;
-        const t = linkTokenAt(editor.value, editor.selectionStart);
-        if (t) { flushNoteSave(); openNoteByTitle(t, true); }
-      });
-      bindOutlinkChips();
-    }
-    const preview = document.getElementById('note-preview');
-    if (preview) bindWikiLinks(preview);
-    pane.querySelectorAll('.backlink-item').forEach(b => b.addEventListener('click', () => openNoteById(b.dataset.noteId)));
-  }
+    const titleInput = document.getElementById('note-title-input');
+    try { document.execCommand('defaultParagraphSeparator', false, 'div'); } catch (e) {}
+    const markEmpty = () => editor.classList.toggle('is-empty', !editor.textContent.trim() && !editor.querySelector('img, li, hr'));
+    markEmpty();
+    titleInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); editor.focus(); } });
+    titleInput.addEventListener('blur', () => renameNote(note, titleInput.value));
 
-  function linkTokenAt(body, pos) {
-    const re = /\[\[([^\[\]\n]+)\]\]/g;
-    let m;
-    while ((m = re.exec(body || ''))) {
-      if (pos >= m.index && pos <= m.index + m[0].length) return m[1].trim();
-    }
+    const scheduleSave = () => {
+      markEmpty();
+      clearTimeout(noteSaveTimer);
+      noteSaveTimer = setTimeout(() => { noteSaveTimer = null; commitNoteBody(note, editorToMd(editor)); }, 500);
+    };
+    editor.addEventListener('input', () => { convertTypedLinks(editor); updateNoteSuggest(editor); scheduleSave(); });
+    editor.addEventListener('blur', () => { setTimeout(() => { if (!document.querySelector('.nt-suggest:hover')) closeNoteSuggest(); }, 150); flushNoteSave(); });
+    editor.addEventListener('keydown', e => {
+      if (noteSuggest && noteSuggestKey(e)) return;
+      // Enter on an empty checklist/list item ends the list, like iPhone Notes
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const li = selectionBlock(editor, 'LI');
+        if (li && !li.textContent.trim()) { e.preventDefault(); const list = li.parentElement; document.execCommand(list.tagName === 'OL' ? 'insertOrderedList' : 'insertUnorderedList'); scheduleSave(); }
+        else if (li && li.parentElement.classList.contains('nt-chk')) setTimeout(() => { const n = selectionBlock(editor, 'LI'); if (n && n !== li) n.dataset.done = '0'; }, 0);
+      }
+    });
+    editor.addEventListener('click', e => {
+      const chip = e.target.closest('.nt-link');
+      if (chip) { flushNoteSave(); openNoteByTitle(chip.dataset.link, true); return; }
+      const img = e.target.closest('.nt-img img');
+      if (img && typeof openLightbox === 'function') { openLightbox(img.src); return; }
+      const li = e.target.closest('ul.nt-chk > li');
+      if (li && e.clientX - li.getBoundingClientRect().left < 26) {
+        li.dataset.done = li.dataset.done === '1' ? '0' : '1';
+        li.classList.remove('just'); void li.offsetWidth; li.classList.add('just');
+        scheduleSave();
+      }
+    });
+    editor.addEventListener('paste', e => {
+      const items = [...(e.clipboardData || {}).items || []];
+      const imgItem = items.find(it => it.type.indexOf('image') === 0);
+      e.preventDefault();
+      if (imgItem) { insertNoteImage(editor, imgItem.getAsFile(), scheduleSave); return; }
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      if (text) document.execCommand('insertText', false, text);
+    });
+
+    const aaMenu = document.getElementById('nt-aa-menu'), moreMenu = document.getElementById('nt-more-menu');
+    let savedRange = null;
+    const keepSelection = () => { const s = window.getSelection(); if (s.rangeCount && editor.contains(s.anchorNode)) savedRange = s.getRangeAt(0).cloneRange(); };
+    const restoreSelection = () => { editor.focus(); if (savedRange) { const s = window.getSelection(); s.removeAllRanges(); s.addRange(savedRange); } };
+    pane.querySelector('.nt-toolbar').addEventListener('mousedown', e => { if (e.target.closest('button')) { keepSelection(); e.preventDefault(); } });
+    pane.querySelector('.nt-toolbar').addEventListener('click', e => {
+      const blockBtn = e.target.closest('[data-block]');
+      if (blockBtn) { aaMenu.hidden = true; restoreSelection(); document.execCommand('formatBlock', false, blockBtn.dataset.block); scheduleSave(); return; }
+      const moveBtn = e.target.closest('[data-move]');
+      if (moveBtn) { moreMenu.hidden = true; flushNoteSave(); moveNoteToFolder(note, moveBtn.dataset.move || null); return; }
+      const b = e.target.closest('[data-cmd]'); if (!b) return;
+      const cmd = b.dataset.cmd;
+      if (cmd === 'aa') { aaMenu.hidden = !aaMenu.hidden; moreMenu.hidden = true; return; }
+      if (cmd === 'more') { moreMenu.hidden = !moreMenu.hidden; aaMenu.hidden = true; return; }
+      aaMenu.hidden = true; moreMenu.hidden = true;
+      if (cmd === 'pin') { flushNoteSave(); note.pinned = !note.pinned; note.updatedAt = Date.now(); saveNotes(); renderNotesAll(); return; }
+      if (cmd === 'delete') { deleteNote(note); return; }
+      if (cmd === 'image') { document.getElementById('nt-image-input').click(); return; }
+      restoreSelection();
+      if (cmd === 'bold' || cmd === 'italic') document.execCommand(cmd);
+      else if (cmd === 'ul') { document.execCommand('insertUnorderedList'); caretToLineEnd(editor); }
+      else if (cmd === 'ol') { document.execCommand('insertOrderedList'); caretToLineEnd(editor); }
+      else if (cmd === 'checklist') { toggleChecklist(editor); caretToLineEnd(editor); }
+      else if (cmd === 'link') { document.execCommand('insertText', false, '[['); updateNoteSuggest(editor); }
+      scheduleSave();
+    });
+    document.getElementById('nt-image-input').addEventListener('change', ev => {
+      const file = ev.target.files && ev.target.files[0]; ev.target.value = '';
+      if (file) { restoreSelection(); insertNoteImage(editor, file, scheduleSave); }
+    });
+    pane.querySelectorAll('.nt-bl').forEach(b => b.addEventListener('click', () => openNoteById(b.dataset.noteId)));
+  }
+  document.addEventListener('mousedown', e => {
+    if (!e.target.closest('.nt-menu-wrap')) document.querySelectorAll('.nt-menu').forEach(m => { m.hidden = true; });
+  });
+
+  function selectionBlock(root, tag) {
+    const s = window.getSelection(); if (!s.rangeCount) return null;
+    let n = s.anchorNode;
+    while (n && n !== root) { if (n.nodeType === 1 && n.tagName === tag) return n; n = n.parentNode; }
     return null;
   }
-  function outlinkChipsHtml(body) {
-    const titles = [...new Set(extractLinks(body).map(t => t))];
-    if (!titles.length) return `<span class="note-outlinks-hint">Link other notes with [[Note Title]] — links appear here, or Ctrl+Click one in the text.</span>`;
-    return `<span class="note-outlinks-hint">Links in this note:</span>` +
-      titles.map(t => `<button class="note-outlink${findNoteByTitle(t) ? '' : ' dangling'}" data-outlink="${escAttr(t)}">${escapeHtml(t)}</button>`).join('');
+  // turning a line into a list item can leave the cursor at the start of it; put it back at the end
+  function caretToLineEnd(editor) {
+    const li = selectionBlock(editor, 'LI');
+    if (!li) return;
+    const s = window.getSelection(), r = document.createRange();
+    r.selectNodeContents(li); r.collapse(false);
+    s.removeAllRanges(); s.addRange(r);
   }
-  function bindOutlinkChips() {
-    const row = document.getElementById('note-outlinks');
-    if (!row) return;
-    row.querySelectorAll('.note-outlink').forEach(btn => btn.addEventListener('click', () => {
-      const div = document.createElement('div');
-      div.innerHTML = btn.dataset.outlink;
-      flushNoteSave();
-      openNoteByTitle(div.textContent, true);
-    }));
+  function toggleChecklist(editor) {
+    const li = selectionBlock(editor, 'LI');
+    if (li && li.parentElement.classList.contains('nt-chk')) { document.execCommand('insertUnorderedList'); return; }
+    if (li && li.parentElement.tagName === 'UL') { li.parentElement.classList.add('nt-chk'); li.parentElement.querySelectorAll(':scope > li').forEach(x => { if (!x.dataset.done) x.dataset.done = '0'; }); return; }
+    if (li) document.execCommand('insertOrderedList');
+    document.execCommand('insertUnorderedList');
+    const now = selectionBlock(editor, 'LI');
+    if (now && now.parentElement.tagName === 'UL') { now.parentElement.classList.add('nt-chk'); now.parentElement.querySelectorAll(':scope > li').forEach(x => { if (!x.dataset.done) x.dataset.done = '0'; }); }
+  }
+  function insertNoteImage(editor, file, after) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const src = compressImage(img, 1200);
+        editor.focus();
+        document.execCommand('insertHTML', false, `<div class="nt-img" contenteditable="false"><img src="${src}" alt=""></div><div><br></div>`);
+        after();
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   }
 
-  function bindWikiLinks(container) {
-    container.querySelectorAll('.wiki-link').forEach(el => el.addEventListener('click', () => {
-      const div = document.createElement('div');
-      div.innerHTML = el.dataset.wikilink;
-      openNoteByTitle(div.textContent, true);
-    }));
+  // [[ link picker, and turning typed [[Title]] into a link chip
+  let noteSuggest = null;
+  function linkChip(title) {
+    const s = document.createElement('span');
+    s.className = 'nt-link' + (findNoteByTitle(title) ? '' : ' dangling');
+    s.contentEditable = 'false'; s.dataset.link = title; s.textContent = title;
+    return s;
   }
+  function convertTypedLinks(editor) {
+    const s = window.getSelection(); if (!s.rangeCount) return;
+    const node = s.anchorNode;
+    if (!node || node.nodeType !== 3 || !editor.contains(node)) return;
+    const m = node.nodeValue.match(/\[\[([^\[\]\n]+)\]\]/);
+    if (!m) return;
+    const r = document.createRange();
+    r.setStart(node, m.index); r.setEnd(node, m.index + m[0].length); r.deleteContents();
+    const chip = linkChip(m[1].trim()), space = document.createTextNode(' ');
+    r.insertNode(space); r.insertNode(chip);
+    const c = document.createRange(); c.setStartAfter(space); c.collapse(true); s.removeAllRanges(); s.addRange(c);
+    closeNoteSuggest();
+  }
+  function updateNoteSuggest(editor) {
+    const s = window.getSelection();
+    if (!s.rangeCount || !s.isCollapsed) return closeNoteSuggest();
+    const node = s.anchorNode;
+    if (!node || node.nodeType !== 3 || !editor.contains(node)) return closeNoteSuggest();
+    const before = node.nodeValue.slice(0, s.anchorOffset);
+    const m = before.match(/\[\[([^\[\]\n]*)$/);
+    if (!m) return closeNoteSuggest();
+    const q = m[1].trim().toLowerCase();
+    const current = getNote(notesStore.lastOpenedId);
+    const matches = notesStore.notes.filter(n => n !== current && (!q || n.title.toLowerCase().includes(q))).sort((a, b) => (a.title.toLowerCase().startsWith(q) ? 0 : 1) - (b.title.toLowerCase().startsWith(q) ? 0 : 1) || b.updatedAt - a.updatedAt).slice(0, 8);
+    const opts = matches.map(n => ({ title: n.title, color: noteColor(n) }));
+    if (m[1].trim() && !findNoteByTitle(m[1].trim())) opts.push({ title: m[1].trim(), isNew: true });
+    if (!opts.length) return closeNoteSuggest();
+    if (!noteSuggest) { noteSuggest = { el: document.createElement('div'), sel: 0 }; noteSuggest.el.className = 'nt-suggest'; document.body.appendChild(noteSuggest.el); noteSuggest.el.addEventListener('mousedown', ev => { ev.preventDefault(); const b = ev.target.closest('button'); if (b) pickNoteSuggest(+b.dataset.i); }); }
+    noteSuggest.opts = opts; noteSuggest.node = node; noteSuggest.start = s.anchorOffset - m[0].length; noteSuggest.end = s.anchorOffset;
+    noteSuggest.sel = Math.min(noteSuggest.sel, opts.length - 1);
+    noteSuggest.el.innerHTML = opts.map((o, i) => `<button type="button" data-i="${i}" class="${i === noteSuggest.sel ? 'sel' : ''}${o.isNew ? ' new' : ''}">${o.isNew ? '+ Create' : `<i style="--c:${o.color || 'var(--accent)'}"></i>`} ${escapeHtml(o.title)}</button>`).join('');
+    const r = document.createRange(); r.setStart(node, s.anchorOffset); r.collapse(true);
+    const rect = r.getBoundingClientRect();
+    noteSuggest.el.style.left = Math.min(rect.left, window.innerWidth - 330) + 'px';
+    noteSuggest.el.style.top = (rect.bottom + 6) + 'px';
+  }
+  function noteSuggestKey(e) {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); noteSuggest.sel = (noteSuggest.sel + (e.key === 'ArrowDown' ? 1 : -1) + noteSuggest.opts.length) % noteSuggest.opts.length; [...noteSuggest.el.children].forEach((b, i) => b.classList.toggle('sel', i === noteSuggest.sel)); return true; }
+    if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); pickNoteSuggest(noteSuggest.sel); return true; }
+    if (e.key === 'Escape') { closeNoteSuggest(); return true; }
+    return false;
+  }
+  function pickNoteSuggest(i) {
+    const o = noteSuggest && noteSuggest.opts[i]; if (!o) return;
+    const { node, start, end } = noteSuggest;
+    const editor = document.getElementById('note-editor');
+    closeNoteSuggest();
+    if (!node || !node.parentNode) return;
+    const r = document.createRange(); r.setStart(node, start); r.setEnd(node, Math.min(end, node.nodeValue.length)); r.deleteContents();
+    const chip = linkChip(o.title), space = document.createTextNode(' ');
+    r.insertNode(space); r.insertNode(chip);
+    const s = window.getSelection(), c = document.createRange(); c.setStartAfter(space); c.collapse(true); s.removeAllRanges(); s.addRange(c);
+    if (editor) editor.dispatchEvent(new Event('input'));
+  }
+  function closeNoteSuggest() { if (noteSuggest) { noteSuggest.el.remove(); noteSuggest = null; } }
 
   function commitNoteBody(note, value) {
     if (note.body === value) return;
     note.body = value;
     note.updatedAt = Date.now();
     saveNotes();
-    const outlinks = document.getElementById('note-outlinks');
-    if (outlinks) { outlinks.innerHTML = outlinkChipsHtml(note.body); bindOutlinkChips(); }
     const flash = document.getElementById('note-save-flash');
     if (flash) {
       flash.classList.add('show');
       clearTimeout(noteSaveFlashTimer);
       noteSaveFlashTimer = setTimeout(() => flash.classList.remove('show'), 1200);
     }
+    // keep the list preview and order current without disturbing the editor
+    if (notesCurrentView === 'list') renderNotesList();
   }
   function flushNoteSave() {
     if (!noteSaveTimer) return;
@@ -7019,26 +7470,37 @@
     noteSaveTimer = null;
     const editor = document.getElementById('note-editor');
     const note = getNote(notesStore.lastOpenedId);
-    if (editor && note) commitNoteBody(note, editor.value);
+    if (editor && note) commitNoteBody(note, editorToMd(editor));
+  }
+  function deleteNote(note) {
+    flushNoteSave();
+    const blCount = backlinksFor(note).length;
+    const warn = blCount ? `\n\n${blCount} other note${blCount === 1 ? '' : 's'} link to it — those links will stop working.` : '';
+    if (!confirm(`Delete "${note.title}"? This cannot be undone.${warn}`)) return;
+    const list = notesInView(), idx = list.findIndex(n => n.id === note.id);
+    notesStore.notes = notesStore.notes.filter(n => n.id !== note.id);
+    const next = list[idx + 1] || list[idx - 1];
+    notesStore.lastOpenedId = next && next.id !== note.id ? next.id : null;
+    saveNotes();
+    showToast('Note deleted');
+    renderNotesAll();
   }
 
   function renameNote(note, newTitle) {
     newTitle = String(newTitle).trim();
-    if (!newTitle || newTitle === note.title) { renderNoteEditor(); return; }
+    if (!newTitle || newTitle === note.title) { const t = document.getElementById('note-title-input'); if (t && !newTitle) t.value = note.title; return; }
     const clash = findNoteByTitle(newTitle);
-    if (clash && clash.id !== note.id) { showToast('A note with that title already exists'); renderNoteEditor(); return; }
+    if (clash && clash.id !== note.id) { showToast('A note with that title already exists'); const t = document.getElementById('note-title-input'); if (t) t.value = note.title; return; }
+    flushNoteSave();
     const re = new RegExp('\\[\\[\\s*' + escapeRegExp(note.title) + '\\s*\\]\\]', 'gi');
     const affected = notesStore.notes.filter(n => n.id !== note.id && re.test(n.body) && (re.lastIndex = 0, true));
     let rewrite = false;
-    if (affected.length) {
-      rewrite = confirm(`Also update ${affected.length} linked mention${affected.length === 1 ? '' : 's'} of [[${note.title}]] to the new title?`);
-    }
+    if (affected.length) rewrite = confirm(`Also update ${affected.length} linked mention${affected.length === 1 ? '' : 's'} of [[${note.title}]] to the new title?`);
     if (rewrite) affected.forEach(n => { n.body = n.body.replace(re, '[[' + newTitle + ']]'); n.updatedAt = Date.now(); });
     note.title = newTitle;
     note.updatedAt = Date.now();
     saveNotes();
     renderNotesList();
-    renderNoteEditor();
     if (affected.length && rewrite) showToast(`Renamed — ${affected.length} mention${affected.length === 1 ? '' : 's'} updated`);
   }
 
@@ -7053,28 +7515,52 @@
       showToast('Note created for this trade');
     }
     notesStore.lastOpenedId = note.id;
+    notesFolder = 'all';
     saveNotes();
-    noteEditorMode = 'edit';
     switchTab('notes');
     if (notesCurrentView !== 'list') switchNotesView('list');
   }
 
-  // -- graph view (canvas force simulation) --
+  // ---------- brain map: shared ----------
+  let notesGraphMode = '3d';
+  document.querySelectorAll('#graph-mode-toggle button').forEach(b => b.addEventListener('click', () => {
+    if (notesGraphMode === b.dataset.gmode) return;
+    notesGraphMode = b.dataset.gmode;
+    document.querySelectorAll('#graph-mode-toggle button').forEach(x => x.classList.toggle('active', x === b));
+    initGraphView();
+  }));
+  // re-measure whenever the map's frame changes size (window resize, maximise, display scale)
+  let graphResizeTimer = null;
+  new ResizeObserver(() => {
+    if (!notesGraphVisible()) return;
+    clearTimeout(graphResizeTimer);
+    graphResizeTimer = setTimeout(() => { if (notesGraphVisible()) initGraphView(); }, 120);
+  }).observe(document.getElementById('notes-graph-wrap'));
+  function initGraphView() {
+    document.getElementById('notes-graph-canvas').style.display = notesGraphMode === '2d' ? 'block' : 'none';
+    document.getElementById('notes-graph-canvas3d').style.display = notesGraphMode === '3d' ? 'block' : 'none';
+    document.getElementById('graph-labels').innerHTML = '';
+    document.getElementById('graph-hint').textContent = notesGraphMode === '3d'
+      ? 'drag to spin · scroll to zoom · click a star to open it'
+      : 'drag stars · drag the background to pan · scroll to zoom · click to open';
+    const used = notesStore.folders.filter(f => notesStore.notes.some(n => n.folderId === f.id));
+    document.getElementById('graph-legend').innerHTML = used.map(f => `<span><i style="background:${f.color}"></i>${escapeHtml(f.name)}</span>`).join('') + (used.length && notesStore.notes.some(n => !n.folderId) ? '<span><i style="background:#c9d2e0"></i>No folder</span>' : '');
+    if (notesGraphMode === '3d') { stopNotesGraph(); init3DGraph(); }
+    else { stop3DGraph(); initNotesGraph(); }
+  }
   const graphPosCache = {};
   let graph = null;
-
   function buildGraphData() {
-    const nodes = notesStore.notes.map(n => ({ id: n.id, title: n.title, pinned: !!n.pinned, ghost: false }));
+    // notes without a folder are silver-white, so they never look like a folder colour
+    const nodes = notesStore.notes.map(n => ({ id: n.id, title: n.title, pinned: !!n.pinned, ghost: false, color: noteColor(n) || '#c9d2e0' }));
     const byTitle = {};
     nodes.forEach(nd => { byTitle[nd.title.trim().toLowerCase()] = nd; });
-    const ghosts = {};
-    const linkSet = new Set();
-    const links = [];
+    const ghosts = {}, linkSet = new Set(), links = [];
     notesStore.notes.forEach(n => {
       extractLinks(n.body).forEach(t => {
         const key = t.toLowerCase();
         let target = byTitle[key] || ghosts[key];
-        if (!target) target = ghosts[key] = { id: 'ghost:' + key, title: t, pinned: false, ghost: true };
+        if (!target) target = ghosts[key] = { id: 'ghost:' + key, title: t, pinned: false, ghost: true, color: '#8b94a3' };
         const lk = [n.id, target.id].sort().join('|');
         if (n.id === target.id || linkSet.has(lk)) return;
         linkSet.add(lk);
@@ -7084,7 +7570,6 @@
     const all = nodes.concat(Object.values(ghosts));
     const deg = {};
     links.forEach(l => { deg[l.a] = (deg[l.a] || 0) + 1; deg[l.b] = (deg[l.b] || 0) + 1; });
-    // golden-angle spiral for initial placement; reuse cached positions across rebuilds
     all.forEach((nd, i) => {
       const cached = graphPosCache[nd.id];
       const r = 40 + 26 * Math.sqrt(i), th = i * 2.39996;
@@ -7092,7 +7577,8 @@
       nd.y = cached ? cached.y : Math.sin(th) * r;
       nd.vx = 0; nd.vy = 0;
       nd.deg = deg[nd.id] || 0;
-      nd.r = nd.ghost ? 4 : 5 + Math.min(9, nd.deg * 1.6);
+      nd.r = nd.ghost ? 3.5 : 4.5 + Math.min(8, Math.sqrt(nd.deg) * 2.6);
+      nd.phase = i * 1.7;
     });
     const byId = {};
     all.forEach(nd => { byId[nd.id] = nd; });
@@ -7100,93 +7586,87 @@
     links.forEach(l => { (adj[l.a] = adj[l.a] || new Set()).add(l.b); (adj[l.b] = adj[l.b] || new Set()).add(l.a); });
     return { nodes: all, links, byId, adj };
   }
-
   function graphColors() {
     const cs = getComputedStyle(document.documentElement);
     const v = name => cs.getPropertyValue(name).trim();
-    const accent = v('--accent');
-    return { green: accent, cyan: accent, ink: v('--ink'), inkDim: v('--ink-dim'), inkFaint: v('--ink-faint'), surface: v('--surface') };
+    const accent = document.documentElement.dataset.palette === 'paper' ? '#c9a35b' : v('--accent');
+    return { green: accent, cyan: accent, ink: '#e8ecf1', inkDim: '#8b94a3', inkFaint: '#5d6674', surface: '#0b0e14' };
+  }
+  function hexToRgba(hex, a) {
+    let h = String(hex || '').trim();
+    if (h.startsWith('rgb')) return h.replace(/rgba?\(([^)]+)\)/, (m, p) => `rgba(${p.split(',').slice(0, 3).join(',')},${a})`);
+    h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join('');
+    const n = parseInt(h, 16) || 0;
+    return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
   }
 
+  // ---------- 2D: Constellation ----------
   function initNotesGraph() {
     stopNotesGraph();
     const canvas = document.getElementById('notes-graph-canvas');
     const wrap = document.getElementById('notes-graph-wrap');
     const rect = wrap.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.max(1, Math.round(rect.width * dpr));
     canvas.height = Math.max(1, Math.round(rect.height * dpr));
     const data = buildGraphData();
     graph = {
-      canvas, ctx: canvas.getContext('2d'), dpr,
-      w: rect.width, h: rect.height,
+      canvas, ctx: canvas.getContext('2d'), dpr, w: rect.width, h: rect.height,
       nodes: data.nodes, links: data.links, byId: data.byId, adj: data.adj,
-      zoom: 1, panX: 0, panY: 0,
-      alpha: 1, hover: null, dragNode: null, panning: false,
-      downX: 0, downY: 0, moved: false, raf: 0,
-      colors: graphColors()
+      zoom: 1, panX: 0, panY: 0, alpha: 1, hover: null, dragNode: null, panning: false,
+      downX: 0, downY: 0, moved: false, raf: 0, colors: graphColors(), fade: {}, t0: performance.now()
     };
     if (!canvas._graphBound) { bindGraphEvents(canvas); canvas._graphBound = true; }
-    // warm up the layout so the first paint isn't the raw spiral
-    for (let i = 0; i < 80 && graph.alpha > 0.02; i++) graphTick();
+    for (let i = 0; i < 120 && graph.alpha > 0.02; i++) graphTick();
+    // fit the whole map in the frame
+    if (graph.nodes.length) {
+      const xs = graph.nodes.map(n => n.x), ys = graph.nodes.map(n => n.y);
+      const bw = Math.max(...xs) - Math.min(...xs) || 1, bh = Math.max(...ys) - Math.min(...ys) || 1;
+      graph.zoom = Math.max(0.4, Math.min(2.4, Math.min((graph.w - 180) / bw, (graph.h - 160) / bh)));
+      graph.panX = -((Math.max(...xs) + Math.min(...xs)) / 2) * graph.zoom;
+      graph.panY = -((Math.max(...ys) + Math.min(...ys)) / 2) * graph.zoom - 10;
+    }
     graphLoop();
   }
   function stopNotesGraph() {
     if (graph && graph.raf) cancelAnimationFrame(graph.raf);
     if (graph) graph.raf = 0;
   }
-
   function graphToWorld(px, py) {
     return { x: (px - graph.w / 2 - graph.panX) / graph.zoom, y: (py - graph.h / 2 - graph.panY) / graph.zoom };
   }
   function graphNodeAt(px, py) {
     const p = graphToWorld(px, py);
     for (let i = graph.nodes.length - 1; i >= 0; i--) {
-      const n = graph.nodes[i];
-      const dx = p.x - n.x, dy = p.y - n.y;
-      const hitR = n.r + 4 / graph.zoom;
+      const n = graph.nodes[i], dx = p.x - n.x, dy = p.y - n.y, hitR = n.r + 7 / graph.zoom;
       if (dx * dx + dy * dy <= hitR * hitR) return n;
     }
     return null;
   }
-
   function bindGraphEvents(canvas) {
-    graph._bound = true;
     canvas.addEventListener('pointerdown', (e) => {
       if (!graph) return;
-      const r = canvas.getBoundingClientRect();
-      const px = e.clientX - r.left, py = e.clientY - r.top;
+      const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
       graph.downX = px; graph.downY = py; graph.moved = false;
       const n = graphNodeAt(px, py);
       if (n) { graph.dragNode = n; graph.alpha = Math.max(graph.alpha, 0.35); }
       else { graph.panning = true; canvas.classList.add('dragging'); }
       canvas.setPointerCapture(e.pointerId);
-      graphLoop();
     });
     canvas.addEventListener('pointermove', (e) => {
       if (!graph) return;
-      const r = canvas.getBoundingClientRect();
-      const px = e.clientX - r.left, py = e.clientY - r.top;
+      const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
       if (Math.abs(px - graph.downX) + Math.abs(py - graph.downY) > 4) graph.moved = true;
-      if (graph.dragNode) {
-        const p = graphToWorld(px, py);
-        graph.dragNode.x = p.x; graph.dragNode.y = p.y;
-        graph.dragNode.vx = 0; graph.dragNode.vy = 0;
-        graph.alpha = Math.max(graph.alpha, 0.3);
-      } else if (graph.panning) {
-        if (graph._lastPX !== undefined) { graph.panX += px - graph._lastPX; graph.panY += py - graph._lastPY; }
-        graph._lastPX = px; graph._lastPY = py;
-      }
-      const hov = (!graph.dragNode && !graph.panning) ? graphNodeAt(px, py) : graph.dragNode;
-      if (hov !== graph.hover) graph.hover = hov;
-      canvas.classList.toggle('pointing', !!hov && !graph.panning);
-      graphLoop();
+      if (graph.dragNode) { const p = graphToWorld(px, py); graph.dragNode.x = p.x; graph.dragNode.y = p.y; graph.dragNode.vx = 0; graph.dragNode.vy = 0; graph.alpha = Math.max(graph.alpha, 0.3); }
+      else if (graph.panning) { if (graph._lastPX !== undefined) { graph.panX += px - graph._lastPX; graph.panY += py - graph._lastPY; } graph._lastPX = px; graph._lastPY = py; }
+      graph.hover = (!graph.dragNode && !graph.panning) ? graphNodeAt(px, py) : graph.dragNode;
+      canvas.classList.toggle('pointing', !!graph.hover && !graph.panning);
     });
-    const endPointer = (e) => {
+    canvas.addEventListener('pointerleave', () => { if (graph && !graph.dragNode) graph.hover = null; });
+    const endPointer = () => {
       if (!graph) return;
       const wasNode = graph.dragNode, moved = graph.moved;
-      graph.dragNode = null; graph.panning = false;
-      graph._lastPX = undefined; graph._lastPY = undefined;
+      graph.dragNode = null; graph.panning = false; graph._lastPX = undefined; graph._lastPY = undefined;
       canvas.classList.remove('dragging');
       if (wasNode && !moved) openGraphNode(wasNode);
     };
@@ -7195,20 +7675,13 @@
     canvas.addEventListener('wheel', (e) => {
       if (!graph) return;
       e.preventDefault();
-      const r = canvas.getBoundingClientRect();
-      const px = e.clientX - r.left, py = e.clientY - r.top;
+      const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
       const before = graphToWorld(px, py);
       graph.zoom = Math.max(0.25, Math.min(3.5, graph.zoom * (e.deltaY < 0 ? 1.12 : 0.89)));
       const after = graphToWorld(px, py);
-      graph.panX += (after.x - before.x) * graph.zoom;
-      graph.panY += (after.y - before.y) * graph.zoom;
-      graphLoop();
+      graph.panX += (after.x - before.x) * graph.zoom; graph.panY += (after.y - before.y) * graph.zoom;
     }, { passive: false });
-    window.addEventListener('resize', () => {
-      if (notesCurrentView === 'graph' && document.getElementById('section-notes').classList.contains('active')) initGraphView();
-    });
   }
-
   function graphTick() {
     const nodes = graph.nodes, links = graph.links;
     const repulsion = 1600, spring = 0.045, rest = 95, gravity = 0.012, damping = 0.82;
@@ -7216,127 +7689,106 @@
       const a = nodes[i];
       for (let j = i + 1; j < nodes.length; j++) {
         const b = nodes[j];
-        let dx = a.x - b.x, dy = a.y - b.y;
-        let d2 = dx * dx + dy * dy;
-        if (d2 < 1) { dx = (Math.random() - 0.5); dy = (Math.random() - 0.5); d2 = 1; }
+        let dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy;
+        if (d2 < 1) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = 1; }
         if (d2 > 160000) continue;
-        const f = repulsion / d2;
-        const d = Math.sqrt(d2);
-        const fx = (dx / d) * f, fy = (dy / d) * f;
+        const f = repulsion / d2, d = Math.sqrt(d2), fx = (dx / d) * f, fy = (dy / d) * f;
         a.vx += fx; a.vy += fy; b.vx -= fx; b.vy -= fy;
       }
     }
     links.forEach(l => {
-      const a = graph.byId[l.a], b = graph.byId[l.b];
-      const dx = b.x - a.x, dy = b.y - a.y;
-      const d = Math.max(1, Math.sqrt(dx * dx + dy * dy));
-      const f = (d - rest) * spring;
-      const fx = (dx / d) * f, fy = (dy / d) * f;
+      const a = graph.byId[l.a], b = graph.byId[l.b], dx = b.x - a.x, dy = b.y - a.y, d = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+      const f = (d - rest) * spring, fx = (dx / d) * f, fy = (dy / d) * f;
       a.vx += fx; a.vy += fy; b.vx -= fx; b.vy -= fy;
     });
     nodes.forEach(n => {
       if (n === graph.dragNode) return;
-      n.vx -= n.x * gravity; n.vy -= n.y * gravity;
-      n.vx *= damping; n.vy *= damping;
+      n.vx -= n.x * gravity; n.vy -= n.y * gravity; n.vx *= damping; n.vy *= damping;
       n.x += n.vx * graph.alpha; n.y += n.vy * graph.alpha;
       graphPosCache[n.id] = { x: n.x, y: n.y };
     });
     graph.alpha = Math.max(0, graph.alpha - 0.004);
   }
-
   function graphDraw() {
-    const { ctx, dpr, w, h, colors } = graph;
+    const { ctx, dpr, w, h } = graph;
+    const t = (performance.now() - graph.t0) / 1000, still = reducedMotion();
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     ctx.translate(w / 2 + graph.panX, h / 2 + graph.panY);
     ctx.scale(graph.zoom, graph.zoom);
-    const hover = graph.hover;
-    const neighbors = hover ? (graph.adj[hover.id] || new Set()) : null;
-
+    const hover = graph.hover, neighbors = hover ? (graph.adj[hover.id] || new Set()) : null;
+    // smooth fade in/out of the hover highlight
+    graph.nodes.forEach(n => { const target = !hover ? 1 : (n === hover || neighbors.has(n.id)) ? 1 : 0.14; const cur = graph.fade[n.id] ?? 1; graph.fade[n.id] = cur + (target - cur) * 0.18; });
+    ctx.lineCap = 'round';
     graph.links.forEach(l => {
-      const a = graph.byId[l.a], b = graph.byId[l.b];
-      const touched = hover && (l.a === hover.id || l.b === hover.id);
-      ctx.strokeStyle = touched ? colors.cyan : 'rgba(255,255,255,0.34)';
-      ctx.globalAlpha = hover ? (touched ? 1 : 0.1) : 0.85;
-      ctx.lineWidth = (touched ? 2 : 1.4) / graph.zoom;
+      const a = graph.byId[l.a], b = graph.byId[l.b], touched = hover && (l.a === hover.id || l.b === hover.id);
+      const dim = Math.min(graph.fade[a.id], graph.fade[b.id]);
+      const g = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+      g.addColorStop(0, hexToRgba(a.color, touched ? 0.9 : 0.3 * dim)); g.addColorStop(1, hexToRgba(b.color, touched ? 0.9 : 0.3 * dim));
+      ctx.strokeStyle = g; ctx.lineWidth = (touched ? 1.7 : 1) / graph.zoom;
       ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
     });
-
     graph.nodes.forEach(n => {
-      const isHover = hover === n;
-      const isNeighbor = neighbors && neighbors.has(n.id);
-      ctx.globalAlpha = hover ? (isHover || isNeighbor ? 1 : 0.15) : 1;
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      const isHover = hover === n, a = Math.max(graph.fade[n.id], 0.14);
+      ctx.globalAlpha = a;
       if (n.ghost) {
-        ctx.strokeStyle = colors.cyan; ctx.lineWidth = 1.2 / graph.zoom;
-        ctx.globalAlpha *= 0.7;
-        ctx.stroke();
+        ctx.strokeStyle = hexToRgba(n.color, 0.6); ctx.lineWidth = 1 / graph.zoom; ctx.setLineDash([2 / graph.zoom, 3 / graph.zoom]);
+        ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 1.4, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
       } else {
-        ctx.fillStyle = isHover ? colors.cyan : (n.deg > 0 ? colors.green : colors.inkDim);
-        ctx.fill();
-        if (n.pinned) { ctx.strokeStyle = colors.green; ctx.lineWidth = 1.4 / graph.zoom; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 3 / graph.zoom, 0, Math.PI * 2); ctx.stroke(); }
+        const tw = still ? 1 : 0.85 + 0.15 * Math.sin(t * 1.6 + n.phase);
+        const haloR = n.r * 5 * tw * (isHover ? 1.3 : 1);
+        const halo = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, haloR);
+        halo.addColorStop(0, hexToRgba(n.color, 0.42)); halo.addColorStop(1, hexToRgba(n.color, 0));
+        ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(n.x, n.y, haloR, 0, Math.PI * 2); ctx.fill();
+        const cr = n.r * (isHover ? 1.3 : 1);
+        const core = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, cr);
+        core.addColorStop(0, '#ffffff'); core.addColorStop(0.45, n.color); core.addColorStop(1, hexToRgba(n.color, 0.25));
+        ctx.fillStyle = core; ctx.beginPath(); ctx.arc(n.x, n.y, cr, 0, Math.PI * 2); ctx.fill();
+        if (n.pinned) { ctx.strokeStyle = hexToRgba('#e8b25c', 0.8); ctx.lineWidth = 1.2 / graph.zoom; ctx.beginPath(); ctx.arc(n.x, n.y, cr + 4 / graph.zoom, 0, Math.PI * 2); ctx.stroke(); }
       }
-      const showLabel = graph.zoom >= 0.7 || isHover || isNeighbor;
+      const showLabel = isHover || (neighbors && neighbors.has(n.id)) || (!hover && (n.deg >= 3 || graph.zoom >= 1.25 || graph.nodes.length <= 12));
       if (showLabel) {
-        ctx.globalAlpha = hover ? (isHover || isNeighbor ? 1 : 0.1) : Math.min(1, Math.max(0, (graph.zoom - 0.55) * 2.2));
-        ctx.fillStyle = isHover ? colors.ink : colors.inkDim;
-        ctx.font = `${(isHover ? 12 : 11) / graph.zoom}px 'Plus Jakarta Sans', sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.fillText(n.title.length > 28 ? n.title.slice(0, 27) + '…' : n.title, n.x, n.y + n.r + 14 / graph.zoom);
+        ctx.globalAlpha = isHover ? 1 : Math.max(0.2, a) * 0.92;
+        ctx.font = `${isHover ? 600 : 500} ${12 / graph.zoom}px Geist, 'Plus Jakarta Sans', sans-serif`;
+        ctx.textAlign = 'center'; ctx.fillStyle = n.ghost ? '#8b94a3' : '#e8ecf1';
+        ctx.shadowColor = 'rgba(0,0,0,.95)'; ctx.shadowBlur = 6;
+        ctx.fillText(n.title.length > 30 ? n.title.slice(0, 29) + '…' : n.title, n.x, n.y + n.r + 15 / graph.zoom);
+        ctx.shadowBlur = 0;
       }
     });
     ctx.globalAlpha = 1;
-
     if (!graph.nodes.length) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = colors.inkFaint;
-      ctx.font = `13px 'Plus Jakarta Sans', sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText('No notes yet — create some notes and link them with [[wiki links]] to grow the web.', w / 2, h / 2);
+      ctx.fillStyle = '#8b94a3'; ctx.font = "13px Geist, 'Plus Jakarta Sans', sans-serif"; ctx.textAlign = 'center';
+      ctx.fillText('No notes yet — write some and link them with [[wiki links]] to grow the map.', w / 2, h / 2);
     }
   }
-
   function graphLoop() {
-    if (!graph) return;
-    // draw immediately so the first paint (and throttled tabs) never wait on rAF
-    graphDraw();
-    if (graph.raf) return;
+    if (!graph || graph.raf) return;
     const step = () => {
       graph.raf = 0;
+      if (!notesGraphVisible() || notesGraphMode !== '2d') return;
       if (graph.alpha > 0.02) graphTick();
       graphDraw();
-      const active = graph.alpha > 0.02 || graph.dragNode || graph.panning;
-      if (active) graph.raf = requestAnimationFrame(step);
+      graph.raf = requestAnimationFrame(step);
     };
+    graphDraw();
     graph.raf = requestAnimationFrame(step);
   }
 
-  // -- 3D graph view (three.js, embedded) --
+  // ---------- 3D: Nebula ----------
   const graphPosCache3D = {};
   let g3 = null;
-
-  function makeLabelSprite(text, color) {
-    const t = text.length > 26 ? text.slice(0, 25) + '…' : text;
-    const c = document.createElement('canvas');
-    let ctx = c.getContext('2d');
-    const font = '600 26px "Plus Jakarta Sans", sans-serif';
-    ctx.font = font;
-    const w = Math.ceil(ctx.measureText(t).width) + 16;
-    c.width = w; c.height = 40;
-    ctx = c.getContext('2d');
-    ctx.font = font;
-    ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
-    ctx.fillStyle = color;
-    ctx.fillText(t, w / 2, 21);
-    const tex = new THREE.CanvasTexture(c);
-    tex.minFilter = THREE.LinearFilter;
-    const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, opacity: 0.85 }));
-    const s = 0.55;
-    spr.scale.set(w * s, 40 * s, 1);
-    return spr;
+  let nebulaGlowTex = null;
+  function nebulaGlow() {
+    if (nebulaGlowTex) return nebulaGlowTex;
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.18, 'rgba(255,255,255,.55)'); g.addColorStop(0.45, 'rgba(255,255,255,.12)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+    nebulaGlowTex = new THREE.CanvasTexture(c);
+    return nebulaGlowTex;
   }
-
   function init3DGraph() {
     if (typeof THREE === 'undefined') { showToast('3D engine failed to load — using 2D'); notesGraphMode = '2d'; initNotesGraph(); return; }
     stop3DGraph();
@@ -7344,30 +7796,34 @@
     const wrap = document.getElementById('notes-graph-wrap');
     const rect = wrap.getBoundingClientRect();
     if (!g3) {
+      // some machines can't start WebGL (graphics driver or GPU blocked) — show the 2D map instead of breaking
+      let renderer = null;
+      try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { renderer = null; }
+      if (!renderer) {
+        showToast("3D isn't available on this computer right now — showing the 2D map");
+        notesGraphMode = '2d';
+        document.querySelectorAll('#graph-mode-toggle button').forEach(x => x.classList.toggle('active', x.dataset.gmode === '2d'));
+        document.getElementById('notes-graph-canvas').style.display = 'block';
+        canvas.style.display = 'none';
+        initNotesGraph();
+        return;
+      }
       g3 = {
-        renderer: new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }),
-        camera: new THREE.PerspectiveCamera(60, 1, 1, 8000),
-        raycaster: new THREE.Raycaster(),
-        pointer: new THREE.Vector2(),
-        theta: 0.6, phi: 1.15, dist: 0,
-        raf: 0, hover: null, rotating: false, moved: false
+        renderer,
+        camera: new THREE.PerspectiveCamera(50, 1, 1, 8000),
+        raycaster: new THREE.Raycaster(), pointer: new THREE.Vector2(),
+        theta: 0.6, phi: 1.2, dist: 0, raf: 0, hover: null, rotating: false, moved: false
       };
       bind3DEvents(canvas);
     }
-    g3.renderer.setPixelRatio(window.devicePixelRatio || 1);
+    g3.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     g3.renderer.setSize(rect.width, rect.height, false);
     g3.w = rect.width; g3.h = rect.height;
     g3.camera.aspect = rect.width / Math.max(1, rect.height);
     g3.camera.updateProjectionMatrix();
-
     if (g3.scene) dispose3DScene();
     g3.scene = new THREE.Scene();
-    g3.scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.55);
-    dirLight.position.set(1, 2, 1.5);
-    g3.scene.add(dirLight);
 
-    const colors = graphColors();
     const data = buildGraphData();
     g3.nodes = data.nodes; g3.links = data.links; g3.byId = data.byId; g3.adj = data.adj;
     const N = Math.max(1, g3.nodes.length);
@@ -7375,80 +7831,82 @@
       const cached = graphPosCache3D[n.id];
       if (cached) { n.x = cached.x; n.y = cached.y; n.z = cached.z; }
       else {
-        // Fibonacci sphere for even initial spread
-        const ph = Math.acos(1 - 2 * (i + 0.5) / N), th = Math.PI * (1 + Math.sqrt(5)) * i;
-        const R = 130 + 22 * Math.sqrt(N);
+        const ph = Math.acos(1 - 2 * (i + 0.5) / N), th = Math.PI * (1 + Math.sqrt(5)) * i, R = 130 + 22 * Math.sqrt(N);
         n.x = R * Math.sin(ph) * Math.cos(th); n.y = R * Math.cos(ph); n.z = R * Math.sin(ph) * Math.sin(th);
       }
       n.vx = 0; n.vy = 0; n.vz = 0;
     });
-    if (!g3.dist) g3.dist = Math.max(420, 70 * Math.sqrt(N) + 260);
+    if (!g3.dist) g3.dist = Math.max(380, 62 * Math.sqrt(N) + 240);
 
-    const sphereGeo = new THREE.SphereGeometry(1, 20, 14);
-    g3.meshes = [];
+    // star field
+    let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const starPos = [];
+    for (let i = 0; i < 1500; i++) { const r = 900 + rnd() * 1600, th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1); starPos.push(r * Math.sin(ph) * Math.cos(th), r * Math.sin(ph) * Math.sin(th), r * Math.cos(ph)); }
+    const starGeo = new THREE.BufferGeometry(); starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+    g3.scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xaab8ff, size: 2.2, sizeAttenuation: true, transparent: true, opacity: 0.7, depthWrite: false })));
+
+    const coreGeo = new THREE.SphereGeometry(1, 32, 24), glow = nebulaGlow();
+    const labels = document.getElementById('graph-labels');
+    labels.innerHTML = '';
     g3.nodes.forEach(n => {
-      let mesh;
-      if (n.ghost) {
-        mesh = new THREE.Mesh(sphereGeo, new THREE.MeshBasicMaterial({ color: new THREE.Color(colors.cyan), wireframe: true, transparent: true, opacity: 0.45 }));
-      } else {
-        mesh = new THREE.Mesh(sphereGeo, new THREE.MeshLambertMaterial({ color: new THREE.Color(n.deg > 0 ? colors.green : colors.inkDim) }));
-      }
-      mesh.scale.setScalar(n.r * 1.6);
+      const col = new THREE.Color(n.color);
+      const mesh = new THREE.Mesh(coreGeo, new THREE.MeshBasicMaterial({ color: col.clone().lerp(new THREE.Color('#ffffff'), n.ghost ? 0.2 : 0.55), transparent: true, opacity: n.ghost ? 0.5 : 1 }));
+      n.s3 = n.ghost ? 5 : 7 + Math.sqrt(n.deg) * 4.2;
+      mesh.scale.setScalar(n.s3 * 0.42);
       mesh.userData.node = n;
       g3.scene.add(mesh);
-      n._mesh = mesh;
-      const label = makeLabelSprite(n.title, n.pinned ? colors.green : colors.inkDim);
-      g3.scene.add(label);
-      n._labelSprite = label;
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: col, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: n.ghost ? 0.35 : 0.9 }));
+      g3.scene.add(sprite);
+      n._mesh = mesh; n._glow = sprite;
+      const lab = document.createElement('span'); lab.textContent = n.title.length > 30 ? n.title.slice(0, 29) + '…' : n.title; lab.style.opacity = 0; labels.appendChild(lab);
+      n._label = lab;
     });
-
     g3.linkGeo = new THREE.BufferGeometry();
     g3.linkGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(g3.links.length * 6), 3));
-    g3.lines = new THREE.LineSegments(g3.linkGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.32 }));
+    g3.lines = new THREE.LineSegments(g3.linkGeo, new THREE.LineBasicMaterial({ color: 0x8fa6ff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }));
     g3.scene.add(g3.lines);
     g3.hlGeo = new THREE.BufferGeometry();
     g3.hlGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(g3.links.length * 6), 3));
-    g3.hlLines = new THREE.LineSegments(g3.hlGeo, new THREE.LineBasicMaterial({ color: new THREE.Color(colors.cyan), transparent: true, opacity: 0.85 }));
+    g3.hlLines = new THREE.LineSegments(g3.hlGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false }));
     g3.hlLines.visible = false;
     g3.scene.add(g3.hlLines);
 
-    g3.alpha = 1;
-    for (let i = 0; i < 100 && g3.alpha > 0.02; i++) tick3D();
+    g3.alpha = 1; g3.t0 = performance.now();
+    for (let i = 0; i < 120 && g3.alpha > 0.02; i++) tick3D();
+    // frame the whole map unless you have zoomed yourself
+    if (!g3.userZoomed) {
+      const radius = Math.max(60, ...g3.nodes.map(n => Math.hypot(n.x, n.y, n.z))) + 40;
+      g3.dist = radius / Math.tan(25 * Math.PI / 180) * 1.05;
+    }
     draw3D();
     loop3D();
   }
-
   function dispose3DScene() {
     g3.scene.traverse(o => {
       if (o.geometry) o.geometry.dispose();
-      if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); }
+      if (o.material) { if (o.material.map && o.material.map !== nebulaGlowTex) o.material.map.dispose(); o.material.dispose(); }
     });
     g3.scene = null;
   }
   function stop3DGraph() {
     if (g3 && g3.raf) { cancelAnimationFrame(g3.raf); g3.raf = 0; }
   }
-
   function tick3D() {
     const nodes = g3.nodes, repulsion = 2600, spring = 0.04, rest = 110, gravity = 0.012, damping = 0.82;
     for (let i = 0; i < nodes.length; i++) {
       const a = nodes[i];
       for (let j = i + 1; j < nodes.length; j++) {
         const b = nodes[j];
-        let dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z;
-        let d2 = dx * dx + dy * dy + dz * dz;
+        let dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z, d2 = dx * dx + dy * dy + dz * dz;
         if (d2 < 1) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; dz = Math.random() - 0.5; d2 = 1; }
         if (d2 > 250000) continue;
-        const d = Math.sqrt(d2), f = repulsion / d2;
-        const fx = (dx / d) * f, fy = (dy / d) * f, fz = (dz / d) * f;
+        const d = Math.sqrt(d2), f = repulsion / d2, fx = (dx / d) * f, fy = (dy / d) * f, fz = (dz / d) * f;
         a.vx += fx; a.vy += fy; a.vz += fz; b.vx -= fx; b.vy -= fy; b.vz -= fz;
       }
     }
     g3.links.forEach(l => {
-      const a = g3.byId[l.a], b = g3.byId[l.b];
-      const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
-      const d = Math.max(1, Math.sqrt(dx * dx + dy * dy + dz * dz));
-      const f = (d - rest) * spring;
+      const a = g3.byId[l.a], b = g3.byId[l.b], dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
+      const d = Math.max(1, Math.sqrt(dx * dx + dy * dy + dz * dz)), f = (d - rest) * spring;
       const fx = (dx / d) * f, fy = (dy / d) * f, fz = (dz / d) * f;
       a.vx += fx; a.vy += fy; a.vz += fz; b.vx -= fx; b.vy -= fy; b.vz -= fz;
     });
@@ -7460,65 +7918,58 @@
     });
     g3.alpha = Math.max(0, g3.alpha - 0.004);
   }
-
   function draw3D() {
     if (!g3 || !g3.scene) return;
-    const p = Math.max(0.08, Math.min(Math.PI - 0.08, g3.phi));
-    g3.phi = p;
-    g3.camera.position.set(
-      g3.dist * Math.sin(p) * Math.cos(g3.theta),
-      g3.dist * Math.cos(p),
-      g3.dist * Math.sin(p) * Math.sin(g3.theta)
-    );
+    const t = (performance.now() - (g3.t0 || 0)) / 1000, still = reducedMotion();
+    g3.phi = Math.max(0.08, Math.min(Math.PI - 0.08, g3.phi));
+    g3.camera.position.set(g3.dist * Math.sin(g3.phi) * Math.cos(g3.theta), g3.dist * Math.cos(g3.phi), g3.dist * Math.sin(g3.phi) * Math.sin(g3.theta));
     g3.camera.lookAt(0, 0, 0);
-
-    const hover = g3.hover;
-    const neighbors = hover ? (g3.adj[hover.id] || new Set()) : null;
-    g3.nodes.forEach(n => {
+    g3.camera.updateMatrixWorld();
+    const hover = g3.hover, neighbors = hover ? (g3.adj[hover.id] || new Set()) : null;
+    const v = new THREE.Vector3();
+    g3.nodes.forEach((n, i) => {
+      const isHover = hover === n, lit = !hover || isHover || neighbors.has(n.id);
       n._mesh.position.set(n.x, n.y, n.z);
-      const isHover = hover === n;
-      const emphasized = isHover || (neighbors && neighbors.has(n.id));
-      n._mesh.scale.setScalar(n.r * 1.6 * (isHover ? 1.3 : 1));
-      n._mesh.material.opacity = hover && !emphasized ? (n.ghost ? 0.12 : 0.25) : (n.ghost ? 0.45 : 1);
-      n._mesh.material.transparent = true;
-      n._labelSprite.position.set(n.x, n.y - n.r * 1.6 - 12, n.z);
-      // labels fade out as the camera pulls away
+      n._mesh.scale.setScalar(n.s3 * 0.42 * (isHover ? 1.35 : 1));
+      n._mesh.material.opacity = (n.ghost ? 0.5 : 1) * (lit ? 1 : 0.3);
+      const pulse = still ? 1 : 1 + 0.12 * Math.sin(t * 1.3 + i);
+      n._glow.position.set(n.x, n.y, n.z);
+      n._glow.scale.setScalar(n.s3 * 6.5 * pulse * (isHover ? 1.4 : 1));
+      n._glow.material.opacity = (n.ghost ? 0.35 : 0.9) * (lit ? 1 : 0.22);
+      v.set(n.x, n.y, n.z).project(g3.camera);
       const camDist = g3.camera.position.distanceTo(n._mesh.position);
-      const distFade = Math.max(0, Math.min(1, (1150 - camDist) / (1150 - 480)));
-      n._labelSprite.material.opacity = isHover ? 1 : (hover ? (emphasized ? 1 : 0.08) : 0.85) * distFade;
+      const near = Math.max(0, Math.min(1, (g3.dist * 1.35 - camDist) / (g3.dist * 0.5)));
+      const show = v.z < 1 && (isHover || (hover && neighbors.has(n.id)) || (!hover && (n.deg >= 3 || g3.nodes.length <= 12)));
+      n._label.style.left = ((v.x + 1) / 2 * g3.w) + 'px';
+      n._label.style.top = ((1 - v.y) / 2 * g3.h + n.s3 * 0.6) + 'px';
+      n._label.style.opacity = show ? (isHover ? 1 : 0.85 * Math.max(0.35, near)) : 0;
+      n._label.classList.toggle('h', isHover);
     });
-
-    const pos = g3.linkGeo.attributes.position.array;
-    const hlPos = g3.hlGeo.attributes.position.array;
+    const pos = g3.linkGeo.attributes.position.array, hlPos = g3.hlGeo.attributes.position.array;
     let hlCount = 0;
     g3.links.forEach((l, i) => {
       const a = g3.byId[l.a], b = g3.byId[l.b];
-      pos[i * 6] = a.x; pos[i * 6 + 1] = a.y; pos[i * 6 + 2] = a.z;
-      pos[i * 6 + 3] = b.x; pos[i * 6 + 4] = b.y; pos[i * 6 + 5] = b.z;
+      pos[i * 6] = a.x; pos[i * 6 + 1] = a.y; pos[i * 6 + 2] = a.z; pos[i * 6 + 3] = b.x; pos[i * 6 + 4] = b.y; pos[i * 6 + 5] = b.z;
       if (hover && (l.a === hover.id || l.b === hover.id)) {
-        hlPos[hlCount * 6] = a.x; hlPos[hlCount * 6 + 1] = a.y; hlPos[hlCount * 6 + 2] = a.z;
-        hlPos[hlCount * 6 + 3] = b.x; hlPos[hlCount * 6 + 4] = b.y; hlPos[hlCount * 6 + 5] = b.z;
+        hlPos[hlCount * 6] = a.x; hlPos[hlCount * 6 + 1] = a.y; hlPos[hlCount * 6 + 2] = a.z; hlPos[hlCount * 6 + 3] = b.x; hlPos[hlCount * 6 + 4] = b.y; hlPos[hlCount * 6 + 5] = b.z;
         hlCount++;
       }
     });
     g3.linkGeo.attributes.position.needsUpdate = true;
     g3.linkGeo.computeBoundingSphere();
+    g3.lines.material.opacity = hover ? 0.08 : 0.22;
     g3.hlLines.visible = hlCount > 0;
     g3.hlGeo.setDrawRange(0, hlCount * 2);
     g3.hlGeo.attributes.position.needsUpdate = true;
-
     g3.renderer.render(g3.scene, g3.camera);
   }
-
   function pick3D() {
     g3.raycaster.setFromCamera(g3.pointer, g3.camera);
-    const meshes = g3.nodes.map(n => n._mesh);
-    const hit = g3.raycaster.intersectObjects(meshes, false)[0];
+    const hit = g3.raycaster.intersectObjects(g3.nodes.map(n => n._mesh), false)[0];
     if (hit) return hit.object.userData.node;
-    // fallback: nearest node within ~20 screen px, so small spheres stay easy to hit
-    const v = new THREE.Vector3();
-    const px = (g3.pointer.x + 1) / 2 * g3.w, py = (1 - g3.pointer.y) / 2 * g3.h;
-    let best = null, bestD = 20;
+    // nearest star within ~22px, so small ones stay easy to hit
+    const v = new THREE.Vector3(), px = (g3.pointer.x + 1) / 2 * g3.w, py = (1 - g3.pointer.y) / 2 * g3.h;
+    let best = null, bestD = 22;
     g3.nodes.forEach(n => {
       v.set(n.x, n.y, n.z).project(g3.camera);
       if (v.z > 1) return;
@@ -7527,7 +7978,6 @@
     });
     return best;
   }
-
   function bind3DEvents(canvas) {
     let lastX = 0, lastY = 0, downX = 0, downY = 0;
     const setPointer = (e) => {
@@ -7538,52 +7988,42 @@
     canvas.addEventListener('pointerdown', (e) => {
       g3.rotating = true; g3.moved = false;
       downX = lastX = e.clientX; downY = lastY = e.clientY;
-      canvas.classList.add('dragging');
-      canvas.setPointerCapture(e.pointerId);
+      canvas.classList.add('dragging'); canvas.setPointerCapture(e.pointerId);
     });
     canvas.addEventListener('pointermove', (e) => {
       if (g3.rotating) {
         if (Math.abs(e.clientX - downX) + Math.abs(e.clientY - downY) > 4) g3.moved = true;
-        g3.theta += (e.clientX - lastX) * 0.0055;
-        g3.phi -= (e.clientY - lastY) * 0.0055;
+        g3.theta += (e.clientX - lastX) * 0.0055; g3.phi -= (e.clientY - lastY) * 0.0055;
         lastX = e.clientX; lastY = e.clientY;
       } else {
         setPointer(e);
-        const h = pick3D();
-        g3.hover = h;
-        canvas.classList.toggle('pointing', !!h);
+        g3.hover = pick3D();
+        canvas.classList.toggle('pointing', !!g3.hover);
       }
-      draw3D();
-      loop3D();
     });
-    const endPointer3D = (e) => {
+    canvas.addEventListener('pointerleave', () => { if (!g3.rotating) g3.hover = null; });
+    canvas.addEventListener('pointerup', (e) => {
       const moved = g3.moved;
-      g3.rotating = false;
-      canvas.classList.remove('dragging');
-      if (!moved) {
-        setPointer(e);
-        const n = pick3D();
-        if (n) { openGraphNode(n); return; }
-      }
-      draw3D();
-    };
-    canvas.addEventListener('pointerup', endPointer3D);
+      g3.rotating = false; canvas.classList.remove('dragging');
+      if (!moved) { setPointer(e); const n = pick3D(); if (n) openGraphNode(n); }
+    });
     canvas.addEventListener('pointercancel', () => { g3.rotating = false; canvas.classList.remove('dragging'); });
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       g3.dist = Math.max(120, Math.min(5000, g3.dist * (e.deltaY > 0 ? 1.1 : 0.9)));
-      draw3D();
+      g3.userZoomed = true;
     }, { passive: false });
   }
-
   function loop3D() {
     if (!g3 || g3.raf) return;
     const step = () => {
       g3.raf = 0;
-      if (!g3.scene) return;
+      if (!g3.scene || !notesGraphVisible() || notesGraphMode !== '3d') return;
       if (g3.alpha > 0.02) tick3D();
+      // drift slowly unless you're holding or pointing at it
+      if (!g3.rotating && !g3.hover && !reducedMotion()) g3.theta += 0.0012;
       draw3D();
-      if (g3.alpha > 0.02 || g3.rotating) g3.raf = requestAnimationFrame(step);
+      g3.raf = requestAnimationFrame(step);
     };
     g3.raf = requestAnimationFrame(step);
   }
