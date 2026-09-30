@@ -6970,8 +6970,8 @@
         if (finished) return; finished = true;
         const name = inp.value.trim(), id = inp.dataset.rename;
         if (save && name) {
-          if (id === 'new') { const f = { id: 'f_' + Date.now().toString(36), name, color: nextFolderColor() }; notesStore.folders.push(f); notesFolder = f.id; }
-          else { const f = folderById(id); if (f) f.name = name; }
+          if (id === 'new') { const f = { id: 'f_' + Date.now().toString(36), name, color: nextFolderColor(), updatedAt: Date.now() }; notesStore.folders.push(f); notesFolder = f.id; }
+          else { const f = folderById(id); if (f) { f.name = name; f.updatedAt = Date.now(); } }
           saveNotes();
         }
         noteFolderEditing = null;
@@ -6991,7 +6991,7 @@
         const f = folderById(del.dataset.folderDel); if (!f) return;
         const n = notesStore.notes.filter(x => x.folderId === f.id).length;
         if (!confirm(`Delete the folder "${f.name}"?${n ? `\n\nIts ${n} note${n === 1 ? '' : 's'} will stay in All notes.` : ''}`)) return;
-        notesStore.notes.forEach(x => { if (x.folderId === f.id) delete x.folderId; });
+        notesStore.notes.forEach(x => { if (x.folderId === f.id) { delete x.folderId; x.updatedAt = Date.now(); } });
         notesStore.folders = notesStore.folders.filter(x => x.id !== f.id);
         if (notesFolder === f.id) notesFolder = 'all';
         saveNotes(); renderNotesAll();
@@ -7024,6 +7024,7 @@
   })();
   function moveNoteToFolder(note, fid) {
     if (fid) note.folderId = fid; else delete note.folderId;
+    note.updatedAt = Date.now();
     saveNotes();
     const f = folderById(fid);
     showToast(f ? `Moved to ${f.name}` : 'Removed from folder');
@@ -7463,6 +7464,13 @@
   }
   function closeNoteSuggest() { if (noteSuggest) { noteSuggest.el.remove(); noteSuggest = null; } }
 
+  function rerenderNotesAfterSync() {
+    if (!document.getElementById('section-notes').classList.contains('active')) return;
+    if (notesCurrentView === 'graph') { initGraphView(); return; }
+    renderNoteFolders(); renderNotesList();
+    const editing = document.activeElement && (document.activeElement.id === 'note-editor' || document.activeElement.id === 'note-title-input');
+    if (!editing && !noteSaveTimer) renderNoteEditor();
+  }
   function commitNoteBody(note, value) {
     if (note.body === value) return;
     note.body = value;
@@ -8576,6 +8584,18 @@
     }
 
     LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; _localSaveEntries(); }, rerenderAfterRemoteSync);
+    // notes: one document per note, folders as their own small collection. A note too big for one
+    // cloud document (lots of pasted pictures) stays on this computer instead of failing to sync.
+    const NOTE_SYNC_LIMIT = 900000;
+    const noteFits = n => JSON.stringify(n).length < NOTE_SYNC_LIMIT;
+    const _localSaveNotes = saveNotes;
+    saveNotes = function () { _localSaveNotes(); LvdSync.pushCollection('notes'); LvdSync.pushCollection('noteFolders'); };
+    LvdSync.registerCollection('notes', () => notesStore.notes.filter(noteFits), (arr) => {
+      const localOnly = notesStore.notes.filter(n => !noteFits(n) && !arr.some(a => a.id === n.id));
+      notesStore.notes = arr.concat(localOnly);
+      _localSaveNotes();
+    }, rerenderNotesAfterSync);
+    LvdSync.registerCollection('noteFolders', () => notesStore.folders || [], (arr) => { notesStore.folders = arr; _localSaveNotes(); }, rerenderNotesAfterSync);
     LvdSync.registerCollection('premarketEntries', () => premarketEntries, (arr) => { premarketEntries = arr; _localSavePremarket(); }, rerenderAfterRemoteSync);
 
     // background-photo pools sync as their own per-item collections (one small doc

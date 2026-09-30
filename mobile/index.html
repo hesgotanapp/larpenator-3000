@@ -565,6 +565,55 @@
   .pm-box-sub { margin-top: 0; }
   .pm-box:hover { scale: 1; }
   .pm-box-name { font-size: 12.5px; }
+  /* ---------- notes ---------- */
+  .pn-search { display: flex; align-items: center; gap: 8px; background: var(--surface-2); border-radius: 11px; padding: 9px 12px; color: var(--ink-faint); margin: 0 0 10px; }
+  .pn-search svg { width: 15px; height: 15px; flex: 0 0 auto; }
+  .pn-search input { background: none; border: 0; padding: 0; min-height: 0; color: var(--ink); font-size: 15px; width: 100%; outline: none; }
+  .pn-folders { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; margin-bottom: 4px; }
+  .pn-folders .chip { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .pn-dot { display: inline-block; width: 8px; height: 8px; border-radius: 3px; margin-right: 6px; vertical-align: 0; }
+  .pn-folders .pn-dot { margin-right: 0; }
+  .pn-addf { color: var(--accent); }
+  .pn-grp { font-size: 13px; font-weight: 600; color: var(--ink-dim); margin: 14px 4px 6px; }
+  .pn-card { padding: 0 14px; margin-bottom: 4px; }
+  .pn-row { display: grid; gap: 1px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .pn-row:last-child { border-bottom: 0; }
+  .pn-row .t { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pn-row .p { font-size: 13px; color: var(--ink-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pn-row .p b { font-weight: 500; color: var(--ink); opacity: .8; margin-right: 6px; }
+  .pn-row .f { font-size: 11px; font-family: var(--font-mono); margin-top: 2px; }
+  .pn-editor { position: fixed; inset: 0; z-index: 120; background: var(--bg); display: flex; flex-direction: column; transform: translateX(100%); transition: transform .26s cubic-bezier(.2,.8,.2,1); }
+  .pn-editor.open { transform: none; }
+  .pn-editor[hidden] { display: none; }
+  .pn-bar { display: flex; align-items: center; gap: 4px; padding: calc(var(--safe-top) + 8px) 10px 6px; }
+  .pn-barbtn { background: none; border: 0; color: var(--accent); font-size: 16px; font-weight: 500; padding: 8px 8px; }
+  .pn-ic svg { width: 20px; height: 20px; display: block; }
+  #pn-pin { color: var(--ink-faint); } #pn-pin.on { color: var(--amber); }
+  .pn-tools { display: flex; gap: 4px; padding: 4px 12px 8px; border-bottom: 1px solid var(--border); }
+  .pn-tools button { flex: 1; background: var(--surface-2); border: 0; border-radius: 9px; color: var(--ink); height: 36px; display: grid; place-items: center; font-size: 14px; font-weight: 700; }
+  .pn-tools svg { width: 18px; height: 18px; }
+  .pn-scroll { flex: 1; overflow: auto; padding: 14px 18px calc(var(--safe-bottom) + 60px); -webkit-overflow-scrolling: touch; }
+  .pn-date { text-align: center; color: var(--ink-faint); font-size: 12px; margin-bottom: 10px; }
+  .pn-title { background: none; border: 0; padding: 0; min-height: 0; font-size: 26px; font-weight: 700; letter-spacing: -.4px; color: var(--ink); width: 100%; margin-bottom: 8px; outline: none; }
+  .pn-body { outline: none; font-size: 16px; line-height: 1.6; min-height: 240px; color: var(--ink); -webkit-user-select: text; user-select: text; }
+  .nt-body h1 { font-size: 22px; margin: 12px 0 4px; } .nt-body h2 { font-size: 19px; margin: 12px 0 4px; } .nt-body h3 { font-size: 16px; margin: 10px 0 2px; }
+  .nt-body ul, .nt-body ol { margin: 2px 0; padding-left: 24px; }
+  .nt-body ul.nt-chk { list-style: none; padding-left: 0; }
+  .nt-body ul.nt-chk li { position: relative; padding: 3px 0 3px 32px; }
+  .nt-body ul.nt-chk li::before { content: ''; position: absolute; left: 1px; top: 6px; width: 19px; height: 19px; border-radius: 50%; border: 1.6px solid var(--ink-faint); }
+  .nt-body ul.nt-chk li[data-done="1"]::before { background: var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.5l2.6 2.5L10 3' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat; border-color: var(--accent); }
+  .nt-body ul.nt-chk li[data-done="1"] { color: var(--ink-faint); text-decoration: line-through; }
+  .nt-body blockquote { margin: 8px 0; padding: 6px 12px; border-left: 3px solid var(--accent); background: var(--surface-2); border-radius: 0 8px 8px 0; color: var(--ink-dim); }
+  .nt-body pre { background: var(--surface-2); border-radius: 8px; padding: 10px; font-family: var(--font-mono); font-size: 13px; white-space: pre-wrap; }
+  .nt-body code { font-family: var(--font-mono); font-size: .9em; background: var(--surface-2); border-radius: 4px; padding: 1px 5px; }
+  .nt-body hr { border: 0; border-top: 1px solid var(--border-strong); margin: 12px 0; }
+  .nt-img img { display: block; max-width: 100%; border-radius: 10px; margin: 6px 0; }
+  .nt-link { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); border-radius: 5px; padding: 0 5px; white-space: nowrap; }
+  .nt-link::before { content: '↗ '; font-size: 11px; opacity: .7; }
+  .nt-link.dangling { color: var(--ink-dim); background: var(--surface-2); border: 1px dashed var(--border-strong); }
+  .pn-links { margin-top: 26px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .pn-links h6 { margin: 0 0 8px; font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-faint); }
+  .pn-bl { display: inline-block; margin: 0 6px 6px 0; padding: 6px 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--ink); font-size: 13px; }
 </style>
 </head>
 <body>
@@ -692,6 +741,13 @@
       <p class="subtitle" style="text-align:center; margin-top:20px;">Signed in as <span id="more-email"></span></p>
     </section>
 
+    <section class="screen" id="screen-notes">
+      <h1>Notes</h1>
+      <label class="pn-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="text" id="pn-search" placeholder="Search" autocomplete="off"></label>
+      <div class="chip-row pn-folders" id="pn-folders"></div>
+      <div id="pn-list"></div>
+    </section>
+
     <section class="screen" id="screen-achievements">
       <h1>Achievements</h1>
       <p class="subtitle">Payouts, funded passes, milestones — the wins worth remembering.</p>
@@ -753,6 +809,26 @@
   </div>
 
   <button id="fab" type="button" aria-label="New entry">+</button>
+  <div class="pn-editor" id="pn-editor" hidden>
+    <div class="pn-bar"><button type="button" id="pn-back" class="pn-barbtn">‹ Notes</button><span style="flex:1"></span>
+      <button type="button" id="pn-pin" class="pn-barbtn pn-ic" aria-label="Pin"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 3l6 6-3 1-4 4 1 5-2 2-4-4-5 5-1-1 5-5-4-4 2-2 5 1 4-4z"/></svg></button>
+      <button type="button" id="pn-more" class="pn-barbtn pn-ic" aria-label="More"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button></div>
+    <div class="pn-tools" id="pn-tools">
+      <button type="button" data-pcmd="h">Aa</button>
+      <button type="button" data-pcmd="bold"><b>B</b></button>
+      <button type="button" data-pcmd="checklist" aria-label="Checklist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.5L16 9.5"/></svg></button>
+      <button type="button" data-pcmd="ul" aria-label="List"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg></button>
+      <button type="button" data-pcmd="link" aria-label="Link a note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></button>
+      <button type="button" data-pcmd="image" aria-label="Add a picture"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 17l-5-5-9 8"/></svg></button>
+    </div>
+    <div class="pn-scroll" id="pn-scroll">
+      <div class="pn-date" id="pn-date"></div>
+      <input class="pn-title" id="pn-title" placeholder="Title" spellcheck="false">
+      <div class="pn-body nt-body" id="pn-body" contenteditable="true"></div>
+      <div class="pn-links" id="pn-links"></div>
+    </div>
+    <input type="file" id="pn-image" accept="image/*" hidden>
+  </div>
 
   <nav id="tabbar">
     <button class="tab-btn active" data-tab="today" type="button">

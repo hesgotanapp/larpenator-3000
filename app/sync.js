@@ -10,10 +10,8 @@
 //    single /users/{uid}/settings/main document for the small scalar stores.
 //  - Conflict handling: last-write-wins per item, compared by each item's
 //    updatedAt (stamped at push time), never a whole-array clobber.
-//  - v1 syncs: journal entries, premarket entries, and the settings bundle
-//    (rulebook, goals, checklists, weekly reviews, mistake tags, milestone,
-//    dashboard mode, algo P&L). Notes/backtests/achievements stay local-only
-//    for now and are unaffected either way.
+//  - Syncs journal entries, premarket entries, notes and note folders, photo
+//    pools, achievements and the settings bundle. Backtests stay local-only.
 // ---------------------------------------------------------------------------
 (function () {
   const cfg = window.LVD_FIREBASE_CONFIG;
@@ -53,6 +51,9 @@
   // ---- per-item collection sync (entries, premarketEntries, ...) ----
   function makeCollectionSync(collectionName, getArray, setArray, rerender) {
     let knownIds = new Set();
+    // what each item looked like when last uploaded (or received), so a save only
+    // uploads the items that actually changed instead of the whole collection
+    const lastPushed = new Map();
     let suppress = false;
     let unsubscribe = null;
 
@@ -65,11 +66,14 @@
         if (!item || item.id == null) return;
         const id = String(item.id);
         currentIds.add(id);
-        const stamped = Object.assign({}, item, { updatedAt: item.updatedAt || item.createdAt || Date.now() });
-        col.doc(id).set(clean(stamped)).catch(err => emitError('push:' + collectionName, err));
+        const stamped = clean(Object.assign({}, item, { updatedAt: item.updatedAt || item.createdAt || Date.now() }));
+        const json = JSON.stringify(stamped);
+        if (lastPushed.get(id) === json) return;
+        lastPushed.set(id, json);
+        col.doc(id).set(stamped).catch(err => { lastPushed.delete(id); emitError('push:' + collectionName, err); });
       });
       knownIds.forEach(id => {
-        if (!currentIds.has(id)) col.doc(id).delete().catch(err => emitError('delete:' + collectionName, err));
+        if (!currentIds.has(id)) { lastPushed.delete(id); col.doc(id).delete().catch(err => emitError('delete:' + collectionName, err)); }
       });
       knownIds = currentIds;
     }
@@ -91,7 +95,7 @@
             const local = byId.get(id);
             const remoteTime = remote.updatedAt || remote.createdAt || 0;
             const localTime = local ? (local.updatedAt || local.createdAt || 0) : -1;
-            if (!local || remoteTime >= localTime) { byId.set(id, remote); changed = true; }
+            if (!local || remoteTime >= localTime) { byId.set(id, remote); changed = true; lastPushed.set(id, JSON.stringify(clean(remote))); }
           }
         });
         if (changed) {
@@ -105,7 +109,7 @@
       // first push uploads anything that only exists locally so far
       pushAll();
     }
-    function stop() { if (unsubscribe) { unsubscribe(); unsubscribe = null; } knownIds = new Set(); }
+    function stop() { if (unsubscribe) { unsubscribe(); unsubscribe = null; } knownIds = new Set(); lastPushed.clear(); }
 
     return { start, stop, pushAll };
   }

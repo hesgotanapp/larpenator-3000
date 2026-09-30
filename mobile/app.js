@@ -298,7 +298,7 @@
     journal: [['entries', 'Entries'], ['calendar', 'Calendar']],
     review: [['weekly', 'Weekly review']],
     playbook: [['checklist', 'Checklist']],
-    library: [['achievements', 'Achievements'], ['more', 'Account']]
+    library: [['notes', 'Notes'], ['achievements', 'Achievements'], ['more', 'Account']]
   };
   const SCREEN_GROUP = {};
   Object.entries(TAB_GROUPS).forEach(([g, list]) => list.forEach(([sc]) => { SCREEN_GROUP[sc] = g; }));
@@ -330,6 +330,7 @@
     if (name === 'checklist') renderChecklistScreen();
     if (name === 'weekly') renderWeeklyScreen();
     if (name === 'achievements') renderAchievements();
+    if (name === 'notes') renderNotesScreen();
   }
   document.querySelectorAll('.more-item[data-goto]').forEach(el => {
     el.addEventListener('click', () => switchTab(el.dataset.goto));
@@ -357,9 +358,382 @@
   document.getElementById('fab').addEventListener('click', () => {
     const active = document.querySelector('.screen.active').id.replace('screen-', '');
     if (active === 'premarket') openPremarketForm();
+    else if (active === 'notes') newNoteFromPhone();
     else if (active === 'achievements') openAchievementForm();
     else openEntryForm();
   });
+
+  // ---------- notes (same notebook as the desktop app, synced through Cloud Sync) ----------
+  const NOTES_KEY = 'lvd_notes';
+  let notesStore = loadJSON(NOTES_KEY, { notes: [], folders: [], lastOpenedId: null });
+  if (Array.isArray(notesStore)) notesStore = { notes: notesStore, folders: [], lastOpenedId: null };
+  if (!Array.isArray(notesStore.notes)) notesStore.notes = [];
+  if (!Array.isArray(notesStore.folders)) notesStore.folders = [];
+  let pnFolder = 'all', pnQuery = '', pnOpenId = null, pnSaveTimer = null;
+  function persistNotes() { try { localStorage.setItem(NOTES_KEY, JSON.stringify(notesStore)); } catch (e) { showToast('Could not save — storage may be full'); } }
+  function saveNotes() {
+    persistNotes();
+    if (window.LvdSync && LvdSync.isSupported) { LvdSync.pushCollection('notes'); LvdSync.pushCollection('noteFolders'); }
+  }
+  function escAttr(str) { return escapeHtml(String(str)).replace(/"/g, '&quot;'); }
+  function getNote(id) { return notesStore.notes.find(n => n.id === id); }
+  function findNoteByTitle(title) { const t = String(title).trim().toLowerCase(); return notesStore.notes.find(n => n.title.trim().toLowerCase() === t); }
+  function folderById(id) { return notesStore.folders.find(f => f.id === id); }
+  function extractLinks(body) { const out = [], re = /\[\[([^\[\]\n]+)\]\]/g; let m; while ((m = re.exec(body || ''))) { const t = m[1].trim(); if (t) out.push(t); } return out; }
+  function backlinksFor(note) { const target = note.title.trim().toLowerCase(); return notesStore.notes.filter(n => n.id !== note.id && extractLinks(n.body).some(t => t.toLowerCase() === target)); }
+  function untitledTitle() { let i = 0, t = 'Untitled'; while (findNoteByTitle(t)) { i++; t = 'Untitled ' + i; } return t; }
+  function createNote(title, body) {
+    const note = { id: 'n_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: (title || '').trim() || untitledTitle(), body: body || '', pinned: false, createdAt: Date.now(), updatedAt: Date.now() };
+    notesStore.notes.push(note);
+    return note;
+  }
+
+  function notePreviewText(n) {
+    return (n.body || '').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[\[([^\[\]\n]+)\]\]/g, '$1').replace(/^\s*[-*]\s+\[[ xX]\]\s*/gm, '').replace(/^[#>\s*-]+/gm, '').replace(/[*_`]/g, '').replace(/\s+/g, ' ').trim();
+  }
+  function noteWhen(t) {
+    const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+    if (diffDays <= 0) return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return d.toLocaleDateString(undefined, { weekday: 'long' });
+    return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: d.getFullYear() === today.getFullYear() ? undefined : '2-digit' });
+  }
+  function noteGroup(t) {
+    const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((today - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+    if (diffDays <= 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return 'Previous 7 days';
+    if (diffDays < 30) return 'Previous 30 days';
+    return d.toLocaleDateString(undefined, { month: 'long', year: d.getFullYear() === today.getFullYear() ? undefined : 'numeric' });
+  }
+
+  // -- markdown <-> editor --
+  function edInline(raw) {
+    const fmt = s => escapeHtml(s)
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
+      .replace(/(^|[^*\w])\*([^*\n]+)\*(?!\w)/g, '$1<i>$2</i>');
+    let out = '', last = 0, m;
+    const re = /\[\[([^\[\]\n]+)\]\]/g;
+    while ((m = re.exec(raw))) {
+      out += fmt(raw.slice(last, m.index));
+      const t = m[1].trim();
+      out += `<span class="nt-link${findNoteByTitle(t) ? '' : ' dangling'}" contenteditable="false" data-link="${escAttr(t)}">${escapeHtml(t)}</span>`;
+      last = m.index + m[0].length;
+    }
+    return out + fmt(raw.slice(last));
+  }
+  function mdToEditorHtml(src) {
+    const lines = (src || '').split('\n');
+    let html = '', list = null, inCode = false, code = [];
+    const close = () => { if (list) { html += `</${list.tag}>`; list = null; } };
+    const open = (tag, cls) => { if (!list || list.key !== tag + cls) { close(); html += `<${tag}${cls ? ` class="${cls}"` : ''}>`; list = { tag, key: tag + cls }; } };
+    for (const raw of lines) {
+      if (raw.trim().startsWith('```')) {
+        if (inCode) { html += `<pre>${escapeHtml(code.join('\n'))}</pre>`; code = []; inCode = false; } else { close(); inCode = true; }
+        continue;
+      }
+      if (inCode) { code.push(raw); continue; }
+      let m;
+      if ((m = raw.match(/^\s*[-*]\s+\[( |x|X)\]\s?(.*)$/))) { open('ul', 'nt-chk'); html += `<li data-done="${m[1] === ' ' ? '0' : '1'}">${edInline(m[2]) || '<br>'}</li>`; continue; }
+      if ((m = raw.match(/^\s*[-*]\s+(.*)$/))) { open('ul', ''); html += `<li>${edInline(m[1]) || '<br>'}</li>`; continue; }
+      if ((m = raw.match(/^\s*\d+[.)]\s+(.*)$/))) { open('ol', ''); html += `<li>${edInline(m[1]) || '<br>'}</li>`; continue; }
+      close();
+      if ((m = raw.match(/^(#{1,3})\s+(.*)$/))) { html += `<h${m[1].length}>${edInline(m[2]) || '<br>'}</h${m[1].length}>`; continue; }
+      if ((m = raw.match(/^>\s?(.*)$/))) { html += `<blockquote>${edInline(m[1]) || '<br>'}</blockquote>`; continue; }
+      if (/^\s*(---|\*\*\*)\s*$/.test(raw)) { html += '<hr>'; continue; }
+      if ((m = raw.match(/^!\[[^\]]*\]\((data:image\/[^)\s]+)\)\s*$/))) { html += `<div class="nt-img" contenteditable="false"><img src="${m[1]}" alt=""></div>`; continue; }
+      html += `<div>${edInline(raw) || '<br>'}</div>`;
+    }
+    if (inCode) html += `<pre>${escapeHtml(code.join('\n'))}</pre>`;
+    close();
+    return html;
+  }
+  const NT_BLOCK = /^(DIV|P|UL|OL|H1|H2|H3|H4|BLOCKQUOTE|PRE|HR|LI)$/;
+  function editorToMd(root) {
+    const out = [];
+    const inl = node => {
+      let s = '';
+      node.childNodes.forEach(c => {
+        if (c.nodeType === 3) { s += c.nodeValue.replace(/ /g, ' ').replace(/​/g, ''); return; }
+        if (c.nodeType !== 1) return;
+        const tag = c.tagName;
+        if (c.classList.contains('nt-link')) s += '[[' + c.dataset.link + ']]';
+        else if (tag === 'B' || tag === 'STRONG') { const t = inl(c); s += t.trim() ? '**' + t.trim() + '**' + (/\s$/.test(t) ? ' ' : '') : t; }
+        else if (tag === 'I' || tag === 'EM') { const t = inl(c); s += t.trim() ? '*' + t.trim() + '*' + (/\s$/.test(t) ? ' ' : '') : t; }
+        else if (tag === 'CODE') s += '`' + c.textContent + '`';
+        else if (tag === 'BR') s += '\n';
+        else if (tag === 'IMG') s += '\n![](' + c.getAttribute('src') + ')\n';
+        else if (NT_BLOCK.test(tag)) s += '\n' + inl(c) + '\n';
+        else s += inl(c);
+      });
+      return s;
+    };
+    let buf = null;
+    const flush = () => { if (buf !== null) { buf.replace(/\n$/, '').split('\n').forEach(l => out.push(l)); buf = null; } };
+    const block = el => {
+      if (el.nodeType === 3 || (el.nodeType === 1 && !NT_BLOCK.test(el.tagName) && !el.classList.contains('nt-img') && el.tagName !== 'IMG')) {
+        const holder = document.createElement('span'); holder.appendChild(el.cloneNode(true));
+        buf = (buf || '') + inl(holder);
+        return;
+      }
+      if (el.nodeType !== 1) return;
+      flush();
+      const tag = el.tagName;
+      if (tag === 'UL' || tag === 'OL') {
+        let i = 1;
+        [...el.children].filter(c => c.tagName === 'LI').forEach(li => {
+          const text = inl(li).replace(/\n+/g, ' ').trim();
+          if (el.classList.contains('nt-chk')) out.push(`- [${li.dataset.done === '1' ? 'x' : ' '}] ${text}`);
+          else if (tag === 'OL') out.push(`${i++}. ${text}`);
+          else out.push(`- ${text}`);
+        });
+        return;
+      }
+      if (/^H[1-4]$/.test(tag)) { out.push('#'.repeat(Math.min(3, +tag[1])) + ' ' + inl(el).replace(/\n+/g, ' ').trim()); return; }
+      if (tag === 'BLOCKQUOTE') { inl(el).replace(/\n+$/, '').split('\n').forEach(l => out.push('> ' + l)); return; }
+      if (tag === 'HR') { out.push('---'); return; }
+      if (tag === 'PRE') { out.push('```', ...el.textContent.split('\n'), '```'); return; }
+      if (tag === 'IMG') { out.push('![](' + el.getAttribute('src') + ')'); return; }
+      if (el.classList.contains('nt-img')) { const img = el.querySelector('img'); if (img) out.push('![](' + img.getAttribute('src') + ')'); return; }
+      if ([...el.childNodes].some(c => c.nodeType === 1 && (NT_BLOCK.test(c.tagName) || c.classList.contains('nt-img')))) { el.childNodes.forEach(block); flush(); return; }
+      inl(el).replace(/\n$/, '').split('\n').forEach(l => out.push(l));
+    };
+    root.childNodes.forEach(block);
+    flush();
+    return out.join('\n').replace(/\s+$/, '');
+  }
+
+
+  function selectionBlock(root, tag) {
+    const s = window.getSelection(); if (!s.rangeCount) return null;
+    let n = s.anchorNode;
+    while (n && n !== root) { if (n.nodeType === 1 && n.tagName === tag) return n; n = n.parentNode; }
+    return null;
+  }
+  // turning a line into a list item can leave the cursor at the start of it; put it back at the end
+  function caretToLineEnd(editor) {
+    const li = selectionBlock(editor, 'LI');
+    if (!li) return;
+    const s = window.getSelection(), r = document.createRange();
+    r.selectNodeContents(li); r.collapse(false);
+    s.removeAllRanges(); s.addRange(r);
+  }
+  function toggleChecklist(editor) {
+    const li = selectionBlock(editor, 'LI');
+    if (li && li.parentElement.classList.contains('nt-chk')) { document.execCommand('insertUnorderedList'); return; }
+    if (li && li.parentElement.tagName === 'UL') { li.parentElement.classList.add('nt-chk'); li.parentElement.querySelectorAll(':scope > li').forEach(x => { if (!x.dataset.done) x.dataset.done = '0'; }); return; }
+    if (li) document.execCommand('insertOrderedList');
+    document.execCommand('insertUnorderedList');
+    const now = selectionBlock(editor, 'LI');
+    if (now && now.parentElement.tagName === 'UL') { now.parentElement.classList.add('nt-chk'); now.parentElement.querySelectorAll(':scope > li').forEach(x => { if (!x.dataset.done) x.dataset.done = '0'; }); }
+  }
+
+  function linkChip(title) {
+    const s = document.createElement('span');
+    s.className = 'nt-link' + (findNoteByTitle(title) ? '' : ' dangling');
+    s.contentEditable = 'false'; s.dataset.link = title; s.textContent = title;
+    return s;
+  }
+  function convertTypedLinks(editor) {
+    const s = window.getSelection(); if (!s.rangeCount) return;
+    const node = s.anchorNode;
+    if (!node || node.nodeType !== 3 || !editor.contains(node)) return;
+    const m = node.nodeValue.match(/\[\[([^\[\]\n]+)\]\]/);
+    if (!m) return;
+    const r = document.createRange();
+    r.setStart(node, m.index); r.setEnd(node, m.index + m[0].length); r.deleteContents();
+    const chip = linkChip(m[1].trim()), space = document.createTextNode(' ');
+    r.insertNode(space); r.insertNode(chip);
+    const c = document.createRange(); c.setStartAfter(space); c.collapse(true); s.removeAllRanges(); s.addRange(c);
+  }
+
+
+  // -- list screen --
+  function pnInView() {
+    let list = notesStore.notes.filter(n => pnFolder === 'all' ? true : pnFolder === 'pinned' ? n.pinned : n.folderId === pnFolder);
+    if (pnQuery) list = list.filter(n => (n.title + '\n' + n.body).toLowerCase().includes(pnQuery));
+    return list.sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+  function renderNotesScreen() {
+    const chips = [['all', 'All'], ['pinned', 'Pinned']].concat(notesStore.folders.map(f => [f.id, f.name, f.color]));
+    document.getElementById('pn-folders').innerHTML = chips.map(([id, name, c]) => `<button class="chip${pnFolder === id ? ' on' : ''}" data-pnf="${id}">${c ? `<i class="pn-dot" style="background:${c}"></i>` : ''}${escapeHtml(name)}</button>`).join('') + '<button class="chip pn-addf" data-pnf-add>+ Folder</button>';
+    const list = pnInView(), el = document.getElementById('pn-list');
+    if (!list.length) { el.innerHTML = `<div class="empty">${pnQuery ? 'Nothing matches that search.' : notesStore.notes.length ? 'No notes here yet.' : 'No notes yet — tap + to write one.'}</div>`; return; }
+    const pinnedFirst = pnFolder !== 'pinned' && !pnQuery, groups = [];
+    if (pinnedFirst) { const p = list.filter(n => n.pinned); if (p.length) groups.push(['Pinned', p]); }
+    list.filter(n => !(pinnedFirst && n.pinned)).forEach(n => { const g = noteGroup(n.updatedAt), last = groups[groups.length - 1]; if (last && last[0] === g) last[1].push(n); else groups.push([g, [n]]); });
+    el.innerHTML = groups.map(([g, ns]) => `<div class="pn-grp">${g}</div><div class="card pn-card">` + ns.map(n => {
+      const f = pnFolder === 'all' ? folderById(n.folderId) : null;
+      return `<div class="pn-row" data-pn="${n.id}"><span class="t">${escapeHtml(n.title)}</span><span class="p"><b>${noteWhen(n.updatedAt)}</b>${escapeHtml(notePreviewText(n).slice(0, 80)) || 'No additional text'}</span>${f ? `<span class="f" style="color:${f.color}">${escapeHtml(f.name)}</span>` : ''}</div>`;
+    }).join('') + '</div>').join('');
+  }
+  document.getElementById('pn-folders').addEventListener('click', ev => {
+    if (ev.target.closest('[data-pnf-add]')) { openFolderSheet(); return; }
+    const b = ev.target.closest('[data-pnf]'); if (!b) return;
+    pnFolder = b.dataset.pnf; renderNotesScreen();
+  });
+  document.getElementById('pn-list').addEventListener('click', ev => { const r = ev.target.closest('[data-pn]'); if (r) openNoteEditor(r.dataset.pn); });
+  document.getElementById('pn-search').addEventListener('input', ev => { pnQuery = ev.target.value.trim().toLowerCase(); renderNotesScreen(); });
+  function openFolderSheet() {
+    const colors = ['#3ddc97', '#7fb0e8', '#b39cf0', '#e8b25c', '#f07167', '#5fd3e0', '#f29bc8', '#a3d977'];
+    openSheet('Folders', `
+      ${notesStore.folders.map(f => `<div class="more-item"><span><i class="pn-dot" style="background:${f.color}"></i>${escapeHtml(f.name)}</span><button class="btn ghost small" style="width:auto" data-fdel="${f.id}">Delete</button></div>`).join('') || '<p class="subtitle">No folders yet.</p>'}
+      <label>New folder</label><input type="text" id="pn-newf" placeholder="e.g. Setups">
+      <button class="btn" type="button" id="pn-newf-save" style="margin-top:12px">Add folder</button>`);
+    document.getElementById('pn-newf-save').addEventListener('click', () => {
+      const name = document.getElementById('pn-newf').value.trim(); if (!name) return;
+      const f = { id: 'f_' + Date.now().toString(36), name, color: colors[notesStore.folders.length % colors.length], updatedAt: Date.now() };
+      notesStore.folders.push(f); saveNotes(); pnFolder = f.id; closeSheet(); renderNotesScreen();
+    });
+    document.querySelectorAll('[data-fdel]').forEach(b => b.addEventListener('click', () => {
+      const f = folderById(b.dataset.fdel); if (!f || !confirm(`Delete the folder "${f.name}"? Its notes stay in All.`)) return;
+      notesStore.notes.forEach(n => { if (n.folderId === f.id) { delete n.folderId; n.updatedAt = Date.now(); } });
+      notesStore.folders = notesStore.folders.filter(x => x.id !== f.id);
+      if (pnFolder === f.id) pnFolder = 'all';
+      saveNotes(); closeSheet(); renderNotesScreen();
+    }));
+  }
+
+  // -- note editor (full screen, like iPhone Notes) --
+  const pnEditorEl = document.getElementById('pn-editor');
+  function newNoteFromPhone() {
+    const note = createNote('', '');
+    if (pnFolder !== 'all' && pnFolder !== 'pinned' && folderById(pnFolder)) note.folderId = pnFolder;
+    saveNotes();
+    openNoteEditor(note.id, true);
+  }
+  function openNoteEditor(id, focusTitle) {
+    flushPhoneNote();
+    const note = getNote(id); if (!note) return;
+    pnOpenId = id;
+    const f = folderById(note.folderId);
+    document.getElementById('pn-date').innerHTML = new Date(note.updatedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) + ' at ' + new Date(note.updatedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + (f ? ` · <span style="color:${f.color}">${escapeHtml(f.name)}</span>` : '');
+    document.getElementById('pn-title').value = note.title;
+    document.getElementById('pn-body').innerHTML = mdToEditorHtml(note.body);
+    document.getElementById('pn-pin').classList.toggle('on', !!note.pinned);
+    const bl = backlinksFor(note);
+    document.getElementById('pn-links').innerHTML = `<h6>Linked from ${bl.length}</h6>` + (bl.length ? bl.map(b => `<button class="pn-bl" data-pnopen="${b.id}">${escapeHtml(b.title)}</button>`).join('') : '<span class="subtitle">No other notes link here yet.</span>');
+    pnEditorEl.hidden = false;
+    requestAnimationFrame(() => pnEditorEl.classList.add('open'));
+    document.getElementById('pn-scroll').scrollTop = 0;
+    if (focusTitle) { const t = document.getElementById('pn-title'); t.focus(); t.select(); }
+  }
+  function closeNoteEditor() {
+    flushPhoneNote();
+    const t = document.getElementById('pn-title'), note = getNote(pnOpenId);
+    if (note) renamePhoneNote(note, t.value);
+    pnEditorEl.classList.remove('open');
+    setTimeout(() => { pnEditorEl.hidden = true; }, 260);
+    pnOpenId = null;
+    renderNotesScreen();
+  }
+  function renamePhoneNote(note, value) {
+    const v = String(value).trim();
+    if (!v || v === note.title) return;
+    const clash = findNoteByTitle(v);
+    if (clash && clash.id !== note.id) { showToast('A note with that title already exists'); return; }
+    const re = new RegExp('\\[\\[\\s*' + note.title.replace(/[.*+?^${}()|[\]\\]/g, '\\  // ---------- Dashboard (Terminal layout) ----------') + '\\s*\\]\\]', 'gi');
+    notesStore.notes.forEach(n => { if (n.id !== note.id && re.test(n.body)) { re.lastIndex = 0; n.body = n.body.replace(re, '[[' + v + ']]'); n.updatedAt = Date.now(); } re.lastIndex = 0; });
+    note.title = v; note.updatedAt = Date.now();
+    saveNotes();
+  }
+  function commitPhoneNote() {
+    const note = getNote(pnOpenId); if (!note) return;
+    const body = editorToMd(document.getElementById('pn-body'));
+    if (body === note.body) return;
+    note.body = body; note.updatedAt = Date.now();
+    saveNotes();
+  }
+  function flushPhoneNote() { if (pnSaveTimer) { clearTimeout(pnSaveTimer); pnSaveTimer = null; commitPhoneNote(); } }
+  window.addEventListener('pagehide', flushPhoneNote);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) flushPhoneNote(); });
+  (function bindPhoneEditor() {
+    const body = document.getElementById('pn-body');
+    const schedule = () => { clearTimeout(pnSaveTimer); pnSaveTimer = setTimeout(() => { pnSaveTimer = null; commitPhoneNote(); }, 600); };
+    body.addEventListener('input', () => { convertTypedLinks(body); schedule(); });
+    body.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const li = selectionBlock(body, 'LI');
+        if (li && !li.textContent.trim()) { e.preventDefault(); document.execCommand(li.parentElement.tagName === 'OL' ? 'insertOrderedList' : 'insertUnorderedList'); schedule(); }
+        else if (li && li.parentElement.classList.contains('nt-chk')) setTimeout(() => { const n = selectionBlock(body, 'LI'); if (n && n !== li) n.dataset.done = '0'; }, 0);
+      }
+    });
+    body.addEventListener('click', e => {
+      const chip = e.target.closest('.nt-link');
+      if (chip) { const n = findNoteByTitle(chip.dataset.link) || (() => { const x = createNote(chip.dataset.link, ''); saveNotes(); return x; })(); openNoteEditor(n.id); return; }
+      const li = e.target.closest('ul.nt-chk > li');
+      if (li && e.clientX - li.getBoundingClientRect().left < 32) { li.dataset.done = li.dataset.done === '1' ? '0' : '1'; if (navigator.vibrate) { try { navigator.vibrate(8); } catch (err) {} } schedule(); }
+    });
+    body.addEventListener('paste', e => {
+      const items = [...((e.clipboardData || {}).items || [])], img = items.find(it => it.type.indexOf('image') === 0);
+      e.preventDefault();
+      if (img) { insertPhoneImage(img.getAsFile(), schedule); return; }
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain'); if (text) document.execCommand('insertText', false, text);
+    });
+    document.getElementById('pn-title').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); body.focus(); } });
+    document.getElementById('pn-title').addEventListener('blur', () => { const n = getNote(pnOpenId); if (n) renamePhoneNote(n, document.getElementById('pn-title').value); });
+    document.getElementById('pn-back').addEventListener('click', closeNoteEditor);
+    document.getElementById('pn-links').addEventListener('click', e => { const b = e.target.closest('[data-pnopen]'); if (b) openNoteEditor(b.dataset.pnopen); });
+    document.getElementById('pn-pin').addEventListener('click', () => { const n = getNote(pnOpenId); if (!n) return; n.pinned = !n.pinned; n.updatedAt = Date.now(); saveNotes(); document.getElementById('pn-pin').classList.toggle('on', n.pinned); });
+    document.getElementById('pn-more').addEventListener('click', () => {
+      const n = getNote(pnOpenId); if (!n) return;
+      flushPhoneNote();
+      openSheet('Note', `<label>Move to folder</label><div class="chip-row" id="pn-move">${notesStore.folders.map(f => `<button class="chip${n.folderId === f.id ? ' on' : ''}" data-mv="${f.id}"><i class="pn-dot" style="background:${f.color}"></i>${escapeHtml(f.name)}</button>`).join('')}<button class="chip${!n.folderId ? ' on' : ''}" data-mv="">No folder</button></div>
+        <button class="btn danger" type="button" id="pn-del" style="margin-top:20px">Delete note</button>`);
+      document.getElementById('pn-move').addEventListener('click', ev => { const b = ev.target.closest('[data-mv]'); if (!b) return; if (b.dataset.mv) n.folderId = b.dataset.mv; else delete n.folderId; n.updatedAt = Date.now(); saveNotes(); closeSheet(); openNoteEditor(n.id); });
+      document.getElementById('pn-del').addEventListener('click', () => { if (!confirm(`Delete "${n.title}"?`)) return; notesStore.notes = notesStore.notes.filter(x => x.id !== n.id); saveNotes(); closeSheet(); pnSaveTimer = null; pnEditorEl.classList.remove('open'); setTimeout(() => { pnEditorEl.hidden = true; }, 260); pnOpenId = null; renderNotesScreen(); showToast('Note deleted'); });
+    });
+    document.getElementById('pn-tools').addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+    document.getElementById('pn-tools').addEventListener('click', e => {
+      const b = e.target.closest('[data-pcmd]'); if (!b) return;
+      const cmd = b.dataset.pcmd;
+      if (cmd === 'image') { document.getElementById('pn-image').click(); return; }
+      if (cmd === 'link') { openLinkPicker(); return; }
+      body.focus();
+      if (cmd === 'checklist') { toggleChecklist(body); caretToLineEnd(body); }
+      else if (cmd === 'ul') { document.execCommand('insertUnorderedList'); caretToLineEnd(body); }
+      else if (cmd === 'bold') document.execCommand('bold');
+      else if (cmd === 'h') document.execCommand('formatBlock', false, selectionBlock(body, 'H2') ? 'div' : 'h2');
+      schedule();
+    });
+    document.getElementById('pn-image').addEventListener('change', ev => { const f = ev.target.files && ev.target.files[0]; ev.target.value = ''; if (f) insertPhoneImage(f, schedule); });
+    let savedRange = null;
+    function openLinkPicker() {
+      const s = window.getSelection(); savedRange = s.rangeCount && body.contains(s.anchorNode) ? s.getRangeAt(0).cloneRange() : null;
+      const others = notesStore.notes.filter(n => n.id !== pnOpenId).sort((a, b) => b.updatedAt - a.updatedAt);
+      openSheet('Link a note', `<input type="text" id="pn-linkq" placeholder="Search or type a new title"><div id="pn-linklist" style="margin-top:10px"></div>`);
+      const q = document.getElementById('pn-linkq'), list = document.getElementById('pn-linklist');
+      const paint = () => { const v = q.value.trim().toLowerCase(); const m = others.filter(n => !v || n.title.toLowerCase().includes(v)).slice(0, 12); list.innerHTML = m.map(n => `<div class="more-item" data-lk="${escAttr(n.title)}"><span>${escapeHtml(n.title)}</span><span class="chev">›</span></div>`).join('') + (v && !findNoteByTitle(v) ? `<div class="more-item" data-lk="${escAttr(q.value.trim())}"><span style="color:var(--accent)">+ Create “${escapeHtml(q.value.trim())}”</span></div>` : ''); };
+      q.addEventListener('input', paint); paint();
+      list.addEventListener('click', ev => {
+        const it = ev.target.closest('[data-lk]'); if (!it) return;
+        const d = document.createElement('div'); d.innerHTML = it.dataset.lk; const title = d.textContent;
+        closeSheet(); body.focus();
+        const sel = window.getSelection();
+        if (savedRange) { sel.removeAllRanges(); sel.addRange(savedRange); } else { const r = document.createRange(); r.selectNodeContents(body); r.collapse(false); sel.removeAllRanges(); sel.addRange(r); }
+        const r = sel.getRangeAt(0), chip = linkChip(title), sp = document.createTextNode(' ');
+        r.insertNode(sp); r.insertNode(chip);
+        const c = document.createRange(); c.setStartAfter(sp); c.collapse(true); sel.removeAllRanges(); sel.addRange(c);
+        schedule();
+      });
+    }
+  })();
+  function insertPhoneImage(file, after) {
+    const reader = new FileReader();
+    reader.onload = () => { const img = new Image(); img.onload = () => { const src = compressImage(img, 1200); document.getElementById('pn-body').focus(); document.execCommand('insertHTML', false, `<div class="nt-img" contenteditable="false"><img src="${src}" alt=""></div><div><br></div>`); after(); }; img.src = reader.result; };
+    reader.readAsDataURL(file);
+  }
+  function rerenderNotesAfterSync() {
+    if (pnOpenId) {
+      const n = getNote(pnOpenId), body = document.getElementById('pn-body');
+      if (!n) { pnEditorEl.classList.remove('open'); pnEditorEl.hidden = true; pnOpenId = null; }
+      else if (document.activeElement !== body && document.activeElement !== document.getElementById('pn-title') && !pnSaveTimer) openNoteEditor(n.id);
+    }
+    if (document.getElementById('screen-notes').classList.contains('active')) renderNotesScreen();
+  }
 
   // ---------- Dashboard (Terminal layout) ----------
   function drawEquitySpark(canvas, list) {
@@ -1343,6 +1717,8 @@
     syncRegistered = true;
     let entriesRerenderTimer = null;
     LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; persistEntries(); }, () => { clearTimeout(entriesRerenderTimer); entriesRerenderTimer = setTimeout(() => { renderDashboard(); renderEntriesList(); renderCalendar(); }, 150); });
+    LvdSync.registerCollection('notes', () => notesStore.notes.filter(n => JSON.stringify(n).length < 900000), (arr) => { const localOnly = notesStore.notes.filter(n => JSON.stringify(n).length >= 900000 && !arr.some(a => a.id === n.id)); notesStore.notes = arr.concat(localOnly); persistNotes(); }, rerenderNotesAfterSync);
+    LvdSync.registerCollection('noteFolders', () => notesStore.folders, (arr) => { notesStore.folders = arr; persistNotes(); }, rerenderNotesAfterSync);
     LvdSync.registerCollection('premarketEntries', () => premarketEntries, (arr) => { premarketEntries = arr; persistPremarket(); }, renderPremarketScreen);
     LvdSync.registerCollection('achievements', () => achievements, (arr) => { achievements = arr; persistAchievements(); }, renderAchievements);
     // background-photo pools (one small doc per photo, keyed on a hash of the data URL)
