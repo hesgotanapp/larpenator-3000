@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Larpenator Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0d0e;
+    --panel: #121315;
+    --panel-2: #17181b;
+    --line: rgba(255, 255, 255, 0.07);
+    --line-2: rgba(255, 255, 255, 0.12);
+    --ink: #ece7dc;
+    --ink-dim: #a9a397;
+    --ink-faint: #6d685f;
+    --brass: #c9a35b;
+    --brass-hi: #e6c27a;
+    --brass-lo: rgba(201, 163, 91, 0.16);
+    --led: #5be39a;
+    --led-glow: rgba(91, 227, 154, 0.55);
+    --red: #e7776a;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --sans: 'Geist', 'Segoe UI', system-ui, sans-serif;
+    --display: 'Bricolage Grotesque', 'Geist', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 13px/1.45 var(--sans);
+    overflow: hidden;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* the shell: brushed graphite, a brass hairline frame and fine grain */
+  .shell {
+    position: relative; height: 100vh; display: flex; flex-direction: column;
+    background:
+      radial-gradient(120% 60% at 100% 0%, rgba(201, 163, 91, 0.07), transparent 60%),
+      linear-gradient(180deg, #141518 0%, #0d0e10 55%, #0b0c0d 100%);
+  }
+  .shell::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 5;
+    border: 1px solid rgba(201, 163, 91, 0.28); border-radius: 2px;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+  .shell::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 4; opacity: 0.35; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- header (drag handle) ---------- */
+  .head {
+    -webkit-app-region: drag; flex-shrink: 0; position: relative;
+    display: flex; align-items: center; gap: 9px; padding: 9px 9px 9px 12px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent);
+  }
+  .screw { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #8a7a5a, #2c271e 70%); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5); }
+  .screw::after { content: ''; position: absolute; left: 1px; right: 1px; top: 2px; height: 1px; background: rgba(0, 0, 0, 0.55); transform: rotate(35deg); }
+  .screw.tl { left: 4px; top: 4px; } .screw.tr { right: 4px; top: 4px; }
+  .stamp { width: 26px; height: 26px; flex-shrink: 0; color: var(--brass); }
+  .stamp svg { width: 100%; height: 100%; display: block; }
+  .brand { min-width: 0; line-height: 1.05; }
+  .brand b { display: block; font: 800 15px var(--display); letter-spacing: 1.6px; font-stretch: 85%; color: var(--ink); }
+  .brand small { display: flex; gap: 6px; align-items: center; font: 500 9.5px var(--mono); letter-spacing: 1.1px; color: var(--ink-faint); text-transform: uppercase; white-space: nowrap; }
+  .sess { display: inline-flex; gap: 3px; }
+  .sess i { font-style: normal; padding: 0 3px; border-radius: 3px; color: var(--ink-faint); border: 1px solid transparent; }
+  .sess i.on { color: var(--led); border-color: rgba(91, 227, 154, 0.35); text-shadow: 0 0 6px var(--led-glow); }
+  .head-btns { margin-left: auto; display: flex; gap: 2px; -webkit-app-region: no-drag; }
+  .hb {
+    width: 26px; height: 26px; border-radius: 6px; border: 0; background: transparent; color: var(--ink-faint);
+    display: grid; place-items: center; cursor: pointer; transition: color .15s, background .15s;
+  }
+  .hb:hover { color: var(--ink); background: rgba(255, 255, 255, 0.06); }
+  .hb.on { color: var(--brass); }
+  .hb.x:hover { color: #fff; background: rgba(231, 119, 106, 0.8); }
+  .hb svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .hb .op { font: 600 9px var(--mono); letter-spacing: .2px; }
+
+  /* ---------- tabs ---------- */
+  .tabs { position: relative; display: grid; grid-template-columns: 1fr 1fr; margin: 10px 12px 0; padding: 3px; border-radius: 9px; background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line); flex-shrink: 0; }
+  .tab { position: relative; z-index: 1; border: 0; background: none; color: var(--ink-faint); font: 600 10.5px var(--mono); letter-spacing: 1.6px; text-transform: uppercase; padding: 6px 0; cursor: pointer; transition: color .2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .tab em { font-style: normal; font-weight: 500; color: var(--ink-faint); opacity: .8; }
+  .tab.on { color: #17130b; }
+  .tab.on em { color: #3a2f1a; }
+  .tab-ind { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 7px; background: linear-gradient(180deg, var(--brass-hi), var(--brass)); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35) inset, 0 4px 14px rgba(201, 163, 91, 0.25); transition: transform .32s cubic-bezier(.3, .9, .3, 1.15); }
+  .tabs[data-on="notes"] .tab-ind { transform: translateX(100%); }
+
+  .view { flex: 1; min-height: 0; display: none; flex-direction: column; }
+  .view.on { display: flex; }
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+  .scroll::-webkit-scrollbar { width: 8px; }
+  .scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+  .scroll::-webkit-scrollbar-thumb:hover { background-color: rgba(201, 163, 91, 0.35); }
+
+  /* ---------- checklist ---------- */
+  .setups { display: flex; gap: 5px; padding: 10px 12px 0; flex-wrap: wrap; flex-shrink: 0; }
+  .chip { border: 1px solid var(--line-2); background: transparent; color: var(--ink-dim); font: 500 11px var(--sans); padding: 4px 10px; border-radius: 999px; cursor: pointer; transition: all .15s; }
+  .chip:hover { border-color: rgba(201, 163, 91, 0.5); color: var(--ink); }
+  .chip.on { border-color: var(--brass); color: var(--brass-hi); background: var(--brass-lo); }
+  .chip i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+
+  .gauge { margin: 12px 12px 4px; padding: 10px 11px 9px; border-radius: 10px; background: rgba(0, 0, 0, 0.32); border: 1px solid var(--line); flex-shrink: 0; }
+  .gauge-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
+  .gauge-lbl { font: 600 10px var(--mono); letter-spacing: 1.8px; text-transform: uppercase; color: var(--ink-faint); transition: color .3s; }
+  .gauge-num { font: 700 12px var(--mono); color: var(--ink-dim); letter-spacing: .5px; }
+  .meter { display: flex; gap: 3px; height: 9px; }
+  .meter span { flex: 1; border-radius: 2px; background: rgba(255, 255, 255, 0.06); box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.4); transition: background .25s, box-shadow .25s; }
+  .meter span.lit { background: var(--brass); box-shadow: 0 0 8px rgba(201, 163, 91, 0.45); }
+  .gauge.ready { border-color: rgba(91, 227, 154, 0.45); box-shadow: 0 0 0 1px rgba(91, 227, 154, 0.12), 0 0 22px rgba(91, 227, 154, 0.12); }
+  .gauge.ready .gauge-lbl { color: var(--led); text-shadow: 0 0 8px var(--led-glow); }
+  .gauge.ready .meter span.lit { background: var(--led); box-shadow: 0 0 8px var(--led-glow); }
+  .gauge.flash { animation: readyFlash .9s ease-out; }
+  @keyframes readyFlash { 0% { box-shadow: 0 0 0 0 rgba(91, 227, 154, 0.6); } 100% { box-shadow: 0 0 0 14px rgba(91, 227, 154, 0); } }
+
+  .checks { padding: 4px 8px 8px; }
+  .chk { display: flex; align-items: flex-start; gap: 10px; padding: 8px 6px; border-radius: 8px; cursor: pointer; transition: background .15s; }
+  .chk:hover { background: rgba(255, 255, 255, 0.035); }
+  .led { position: relative; flex-shrink: 0; width: 15px; height: 15px; margin-top: 1px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #2b2d31, #121315 70%); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08); transition: all .2s; }
+  .chk.on .led { background: radial-gradient(circle at 35% 30%, #c8ffe0, var(--led) 45%, #1d8a52 100%); box-shadow: 0 0 10px var(--led-glow), 0 0 0 1px rgba(91, 227, 154, 0.5); }
+  .chk.on .led::after { content: ''; position: absolute; left: 4px; top: 3px; width: 4px; height: 3px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); filter: blur(.4px); }
+  .chk .t { flex: 1; color: var(--ink-dim); font-size: 13px; transition: color .2s; }
+  .chk.on .t { color: var(--ink); }
+  .chk.pop .led { animation: ledPop .3s ease-out; }
+  @keyframes ledPop { 50% { transform: scale(1.25); } }
+  .empty { padding: 26px 18px; text-align: center; color: var(--ink-faint); font-size: 12.5px; }
+  .foot { display: flex; gap: 6px; align-items: center; padding: 8px 10px 10px; border-top: 1px solid var(--line); flex-shrink: 0; }
+  .inp {
+    flex: 1; min-width: 0; background: rgba(0, 0, 0, 0.3); border: 1px solid var(--line-2); color: var(--ink);
+    border-radius: 7px; padding: 6px 9px; font: 12.5px var(--sans); outline: none; transition: border-color .15s; user-select: text;
+  }
+  .inp:focus { border-color: rgba(201, 163, 91, 0.6); }
+  .inp::placeholder { color: var(--ink-faint); }
+  .btn { border: 1px solid var(--line-2); background: rgba(255, 255, 255, 0.03); color: var(--ink-dim); border-radius: 7px; padding: 6px 10px; font: 600 10px var(--mono); letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; white-space: nowrap; transition: all .15s; }
+  .btn:hover { color: var(--ink); border-color: rgba(201, 163, 91, 0.55); }
+  .btn.brass { color: #17130b; background: linear-gradient(180deg, var(--brass-hi), var(--brass)); border-color: transparent; }
+  .btn.brass:hover { filter: brightness(1.08); }
+
+  /* ---------- notes list ---------- */
+  .nbar { display: flex; gap: 6px; padding: 10px 12px 0; flex-shrink: 0; }
+  .folders { display: flex; gap: 5px; padding: 8px 12px 6px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none; }
+  .folders::-webkit-scrollbar { display: none; }
+  .folders .chip { flex-shrink: 0; }
+  .nlist { padding: 2px 8px 10px; }
+  .ngrp { font: 600 9.5px var(--mono); letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-faint); padding: 10px 6px 4px; }
+  .nrow { position: relative; padding: 7px 8px 7px 12px; border-radius: 8px; cursor: pointer; transition: background .15s; }
+  .nrow:hover { background: rgba(255, 255, 255, 0.04); }
+  .nrow::before { content: ''; position: absolute; left: 3px; top: 9px; bottom: 9px; width: 2px; border-radius: 2px; background: var(--c, transparent); }
+  .nrow .tt { font-weight: 600; font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nrow .pv { font-size: 11.5px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nrow .pv b { font: 500 10px var(--mono); color: var(--ink-dim); margin-right: 6px; }
+
+  /* ---------- note view / edit ---------- */
+  .nhead { display: flex; align-items: center; gap: 4px; padding: 9px 8px 6px 6px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .ntitle { flex: 1; min-width: 0; background: transparent; border: 1px solid transparent; color: var(--ink); font: 700 15px var(--display); font-stretch: 92%; padding: 3px 6px; border-radius: 6px; outline: none; user-select: text; }
+  .ntitle:hover { border-color: var(--line); }
+  .ntitle:focus { border-color: rgba(201, 163, 91, 0.55); background: rgba(0, 0, 0, 0.25); }
+  .saved { display: inline-flex; align-items: center; gap: 5px; font: 600 9px var(--mono); letter-spacing: 1.3px; text-transform: uppercase; color: var(--ink-faint); padding: 0 4px; white-space: nowrap; }
+  .saved i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-faint); transition: all .25s; }
+  .saved.ok i { background: var(--led); box-shadow: 0 0 6px var(--led-glow); }
+  .saved.busy i { background: var(--brass); box-shadow: 0 0 6px rgba(201, 163, 91, 0.6); }
+  .saved.err { color: var(--red); } .saved.err i { background: var(--red); }
+  .md { padding: 12px 16px 26px; font-size: 13.2px; line-height: 1.6; color: #d9d3c6; user-select: text; }
+  .md h1, .md h2, .md h3 { font-family: var(--display); color: var(--ink); line-height: 1.25; margin: 14px 0 6px; font-stretch: 92%; }
+  .md h1 { font-size: 18px; } .md h2 { font-size: 15.5px; } .md h3 { font-size: 14px; }
+  .md > :first-child { margin-top: 0; }
+  .md p, .md .ln { margin: 0 0 6px; }
+  .md ul, .md ol { margin: 0 0 8px 18px; }
+  .md li { margin: 2px 0; }
+  .md ul.task { list-style: none; margin-left: 0; }
+  .md ul.task li { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; border-radius: 6px; padding: 2px 4px; margin-left: -4px; }
+  .md ul.task li:hover { background: rgba(255, 255, 255, 0.04); }
+  .md ul.task li .led { width: 13px; height: 13px; margin-top: 4px; }
+  .md ul.task li.on { color: var(--ink-faint); }
+  .md ul.task li.on .led { background: radial-gradient(circle at 35% 30%, #c8ffe0, var(--led) 45%, #1d8a52 100%); box-shadow: 0 0 8px var(--led-glow); }
+  .md blockquote { border-left: 2px solid var(--brass); background: rgba(201, 163, 91, 0.06); padding: 6px 10px; margin: 6px 0 10px; border-radius: 0 6px 6px 0; color: var(--ink); }
+  .md hr { border: 0; border-top: 1px dashed var(--line-2); margin: 12px 0; }
+  .md code { font: 12px var(--mono); background: rgba(255, 255, 255, 0.06); padding: 1px 5px; border-radius: 4px; }
+  .md strong { color: var(--ink); }
+  .md .wl { color: var(--brass-hi); background: var(--brass-lo); padding: 0 4px; border-radius: 4px; cursor: pointer; }
+  .md .wl:hover { text-decoration: underline; }
+  .md .wl.missing { color: var(--ink-faint); background: rgba(255, 255, 255, 0.05); cursor: default; text-decoration: none; }
+  .md img { max-width: 100%; border-radius: 6px; margin: 4px 0; display: block; }
+  .md .gap { height: 6px; }
+  .md .gap + .gap { display: none; }
+  .md .blank { color: var(--ink-faint); font-style: italic; }
+  .editor { flex: 1; min-height: 0; width: 100%; resize: none; border: 0; outline: none; background: rgba(0, 0, 0, 0.22); color: var(--ink); font: 12.5px/1.65 var(--mono); padding: 12px 14px; user-select: text; }
+  .editor::selection, .inp::selection, .ntitle::selection, .md ::selection { background: rgba(201, 163, 91, 0.35); }
+  .hint { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font: 500 9.5px var(--mono); letter-spacing: .6px; color: var(--ink-faint); padding: 5px 12px 8px; border-top: 1px solid var(--line); flex-shrink: 0; }
+
+  /* ---------- collapsed pill ---------- */
+  .pill { display: none; height: 100vh; align-items: center; gap: 8px; padding: 0 6px 0 9px; -webkit-app-region: drag; }
+  body.collapsed .shell > :not(.pill) { display: none !important; }
+  body.collapsed .pill { display: flex; }
+  .pill .stamp { width: 24px; height: 24px; }
+  .pill b { font: 800 13px var(--display); letter-spacing: 1.6px; font-stretch: 85%; }
+  .pill .mini { display: flex; gap: 2px; height: 7px; width: 54px; }
+  .pill .mini span { flex: 1; border-radius: 1px; background: rgba(255, 255, 255, 0.08); }
+  .pill .mini span.lit { background: var(--brass); }
+  .pill.ready .mini span.lit { background: var(--led); box-shadow: 0 0 6px var(--led-glow); }
+  .pill .cnt { font: 600 10px var(--mono); color: var(--ink-dim); }
+  .pill.ready .cnt { color: var(--led); }
+  .pill .head-btns { margin-left: auto; }
+
+  .toast { position: absolute; left: 50%; bottom: 14px; transform: translate(-50%, 10px); opacity: 0; transition: all .25s; z-index: 9; background: #1d1e21; border: 1px solid var(--line-2); color: var(--ink); font-size: 12px; padding: 6px 12px; border-radius: 8px; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .offline { padding: 30px 20px; text-align: center; color: var(--ink-dim); font-size: 12.5px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="head">
+    <span class="screw tl"></span><span class="screw tr"></span>
+    <span class="stamp" id="stamp"></span>
+    <div class="brand"><b>DESK</b><small><span id="clock">--:--</span><span class="sess" id="sess"></span></small></div>
+    <div class="head-btns">
+      <button class="hb on" id="pin" title="Stay on top of other windows"><svg viewBox="0 0 16 16"><path d="M9.5 2.5l4 4-2.2.9-2.6 2.6.3 2.6-1 1-2.5-2.5L3 13.6M5 8.6l2.5 2.5M5.2 7.6l1-1 2.6.3 2.6-2.6.9-2.2"/></svg></button>
+      <button class="hb" id="fade" title="See-through (click to cycle)"><span class="op" id="fade-v">100</span></button>
+      <button class="hb" id="collapse" title="Shrink to a small bar"><svg viewBox="0 0 16 16"><path d="M3.5 8h9"/></svg></button>
+      <button class="hb x" id="close" title="Close (Ctrl+Alt+L to bring it back)"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    </div>
+  </header>
+
+  <div class="tabs" id="tabs" data-on="check">
+    <span class="tab-ind"></span>
+    <button class="tab on" data-tab="check">Checklist <em id="tab-check-n"></em></button>
+    <button class="tab" data-tab="notes">Notes <em id="tab-notes-n"></em></button>
+  </div>
+
+  <!-- checklist -->
+  <section class="view on" id="v-check">
+    <div class="setups" id="setups"></div>
+    <div class="gauge" id="gauge">
+      <div class="gauge-top"><span class="gauge-lbl" id="gauge-lbl">Arming</span><span class="gauge-num" id="gauge-num">0/0</span></div>
+      <div class="meter" id="meter"></div>
+    </div>
+    <div class="scroll"><div class="checks" id="checks"></div></div>
+    <div class="foot">
+      <input class="inp" id="chk-add" placeholder="Add a check to this setup…" maxlength="160">
+      <button class="btn" id="chk-reset" title="Untick everything for this setup">Reset</button>
+    </div>
+  </section>
+
+  <!-- notes list -->
+  <section class="view" id="v-notes">
+    <div class="nbar"><input class="inp" id="n-search" placeholder="Search notes…"><button class="btn brass" id="n-new" title="New note">+ Note</button></div>
+    <div class="folders" id="folders"></div>
+    <div class="scroll"><div class="nlist" id="nlist"></div></div>
+  </section>
+
+  <!-- one note -->
+  <section class="view" id="v-note">
+    <div class="nhead">
+      <button class="hb" id="n-back" title="Back to notes (Esc)"><svg viewBox="0 0 16 16"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg></button>
+      <input class="ntitle" id="n-title" spellcheck="false">
+      <span class="saved ok" id="n-saved"><i></i><span>Saved</span></span>
+      <button class="hb" id="n-mode" title="Edit"><svg viewBox="0 0 16 16"><path d="M10.5 2.8l2.7 2.7L6 12.7l-3.3.6.6-3.3z"/></svg></button>
+      <button class="hb" id="n-app" title="Open in Larpenator"><svg viewBox="0 0 16 16"><path d="M9 3h4v4M13 3L7.5 8.5M11.5 9.5V13H3V4.5h3.5"/></svg></button>
+    </div>
+    <div class="scroll" id="n-viewwrap"><div class="md" id="n-md"></div></div>
+    <textarea class="editor" id="n-editor" hidden spellcheck="true"></textarea>
+    <div class="hint" id="n-hint" hidden># title · - list · - [ ] check · [[link]]</div>
+  </section>
+
+  <div class="pill" id="pill">
+    <span class="stamp" id="pill-stamp"></span>
+    <b>DESK</b>
+    <span class="mini" id="pill-mini"></span>
+    <span class="cnt" id="pill-cnt"></span>
+    <div class="head-btns">
+      <button class="hb" id="expand" title="Open the panel"><svg viewBox="0 0 16 16"><path d="M4 10l4-4 4 4"/></svg></button>
+      <button class="hb x" id="close2" title="Close"><svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function () {
+  const dw = window.larpenatorDesktop && window.larpenatorDesktop.widget;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  let toastT = null;
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1800); }
+
+  // the Larpenator stamp, drawn small
+  const STAMP = `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="32" r="20" fill="none" stroke="currentColor" stroke-width="1.2" opacity=".7"/><text x="32" y="37.5" text-anchor="middle" font-family="Bricolage Grotesque, Geist, sans-serif" font-weight="800" font-size="15" fill="currentColor">3K</text></svg>`;
+  $('stamp').innerHTML = STAMP; $('pill-stamp').innerHTML = STAMP;
+
+  if (!dw) { document.querySelector('.shell').innerHTML = '<div class="offline">Open this from the Larpenator desktop app.</div>'; return; }
+
+  let data = { notes: [], folders: [], checklist: [] };
+  const store = {
+    get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  const ui = store.get('lvd_widget_ui', { tab: 'check', setup: null, folder: 'all' });
+  const saveUi = () => store.set('lvd_widget_ui', ui);
+
+  // ---------- clock + market sessions ----------
+  function tick() {
+    const now = new Date();
+    $('clock').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const h = now.getUTCHours() + now.getUTCMinutes() / 60, day = now.getUTCDay();
+    const weekday = !(day === 6 || (day === 0 && h < 22) || (day === 5 && h >= 21));
+    const sess = [['ASIA', h >= 23 || h < 8], ['LDN', h >= 7 && h < 16], ['NY', h >= 13.5 && h < 20]];
+    $('sess').innerHTML = sess.map(([n, on]) => `<i class="${weekday && on ? 'on' : ''}">${n}</i>`).join('');
+  }
+  tick(); setInterval(tick, 15000);
+
+  // ---------- header buttons ----------
+  const FADES = [1, 0.85, 0.7, 0.55];
+  dw.prefs().then(p => {
+    $('pin').classList.toggle('on', !!p.pinned);
+    $('fade-v').textContent = Math.round((p.opacity || 1) * 100);
+    setCollapsed(!!p.collapsed);
+  });
+  $('pin').onclick = () => { const on = !$('pin').classList.contains('on'); $('pin').classList.toggle('on', on); dw.pin(on); toast(on ? 'Staying on top' : 'No longer on top'); };
+  $('fade').onclick = () => { const cur = +$('fade-v').textContent / 100; const i = FADES.findIndex(f => Math.abs(f - cur) < 0.01); const next = FADES[(i + 1) % FADES.length]; $('fade-v').textContent = Math.round(next * 100); dw.opacity(next); };
+  $('collapse').onclick = () => { saveNoteNow(); dw.collapse(true); };
+  $('expand').onclick = () => dw.collapse(false);
+  $('pill').addEventListener('dblclick', e => { if (!e.target.closest('button')) dw.collapse(false); });
+  $('close').onclick = $('close2').onclick = () => { saveNoteNow(); dw.close(); };
+  function setCollapsed(on) { document.body.classList.toggle('collapsed', on); }
+  dw.onCollapsed(setCollapsed);
+
+  // ---------- tabs ----------
+  function showTab(t) {
+    ui.tab = t; saveUi();
+    $('tabs').dataset.on = t;
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+    $('v-check').classList.toggle('on', t === 'check');
+    $('v-notes').classList.toggle('on', t === 'notes' && !openId);
+    $('v-note').classList.toggle('on', t === 'notes' && !!openId);
+  }
+  document.querySelectorAll('.tab').forEach(b => b.onclick = () => { if (b.dataset.tab === 'notes' && ui.tab === 'notes' && openId) closeNote(); showTab(b.dataset.tab); });
+
+  // ---------- checklist ----------
+  // ticks are per setup and reset each day, like a pre-flight check
+  const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+  function getTicks() { const t = store.get('lvd_widget_ticks', {}); return t.day === today() ? t : { day: today(), sets: {} }; }
+  function setTicks(t) { store.set('lvd_widget_ticks', t); }
+  let lastReady = false, justTicked = null;
+  function renderChecklist() {
+    const cats = data.checklist || [];
+    if (!cats.length) { $('checks').innerHTML = '<div class="empty">No checklist yet — add one in Larpenator → Playbook → Checklist.</div>'; return; }
+    if (!cats.some(c => c.id === ui.setup)) ui.setup = (cats.find(c => c.items.length) || cats[0]).id;
+    const cat = cats.find(c => c.id === ui.setup);
+    $('setups').innerHTML = cats.map(c => `<button class="chip${c.id === ui.setup ? ' on' : ''}" data-setup="${esc(c.id)}">${esc(c.label)}</button>`).join('');
+    const ticks = getTicks(), on = new Set((ticks.sets[cat.id] || []).filter(x => cat.items.includes(x)));
+    $('checks').innerHTML = cat.items.length
+      ? cat.items.map(it => `<div class="chk${on.has(it) ? ' on' : ''}${it === justTicked ? ' pop' : ''}" data-item="${esc(it)}"><span class="led"></span><span class="t">${esc(it)}</span></div>`).join('')
+      : '<div class="empty">No checks for this setup yet. Add one below.</div>';
+    justTicked = null;
+    const n = on.size, total = cat.items.length, ready = total > 0 && n === total;
+    $('gauge-num').textContent = `${n}/${total}`;
+    $('gauge-lbl').textContent = ready ? 'Clear to trade' : n ? 'Arming' : 'Standby';
+    $('gauge').classList.toggle('ready', ready);
+    if (ready && !lastReady) { $('gauge').classList.remove('flash'); void $('gauge').offsetWidth; $('gauge').classList.add('flash'); }
+    lastReady = ready;
+    const segs = Math.max(total, 1);
+    $('meter').innerHTML = Array.from({ length: segs }, (_, i) => `<span class="${i < n ? 'lit' : ''}"></span>`).join('');
+    $('pill-mini').innerHTML = Array.from({ length: Math.min(segs, 12) }, (_, i) => `<span class="${i < Math.round(n / segs * Math.min(segs, 12)) ? 'lit' : ''}"></span>`).join('');
+    $('pill-cnt').textContent = `${n}/${total}`;
+    $('pill').classList.toggle('ready', ready);
+    $('tab-check-n').textContent = total ? `${n}/${total}` : '';
+  }
+  $('setups').addEventListener('click', e => { const b = e.target.closest('[data-setup]'); if (!b) return; ui.setup = b.dataset.setup; saveUi(); lastReady = true; renderChecklist(); lastReady = $('gauge').classList.contains('ready'); });
+  $('checks').addEventListener('click', e => {
+    const row = e.target.closest('.chk'); if (!row) return;
+    const item = row.dataset.item, t = getTicks(), list = new Set(t.sets[ui.setup] || []);
+    if (list.has(item)) list.delete(item); else { list.add(item); justTicked = item; }
+    t.sets[ui.setup] = [...list]; setTicks(t); renderChecklist();
+  });
+  $('chk-reset').onclick = () => { const t = getTicks(); t.sets[ui.setup] = []; setTicks(t); renderChecklist(); };
+  $('chk-add').addEventListener('keydown', async e => {
+    if (e.key !== 'Enter') return;
+    const v = e.target.value.trim(); if (!v) return;
+    const ok = await dw.call('addChecklistItem', [ui.setup, v]);
+    if (ok) { e.target.value = ''; toast('Check added'); await refresh(); } else toast('Could not add that check');
+  });
+
+  // ---------- notes list ----------
+  let openId = null;
+  const folderById = id => (data.folders || []).find(f => f.id === id);
+  const preview = b => (b || '').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[\[([^\[\]\n]+)\]\]/g, '$1').replace(/^\s*[-*]\s+\[[ xX]\]\s*/gm, '').replace(/^[#>\s*-]+/gm, '').replace(/[*_`]/g, '').replace(/\s+/g, ' ').trim();
+  function when(t) {
+    const d = new Date(t), today0 = new Date(); today0.setHours(0, 0, 0, 0);
+    const days = Math.floor((today0 - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+    if (days <= 0) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return d.toLocaleDateString([], { weekday: 'short' });
+    return d.toLocaleDateString([], { day: 'numeric', month: 'short' });
+  }
+  function renderFolders() {
+    const fs = data.folders || [];
+    if (ui.folder !== 'all' && ui.folder !== 'pinned' && !folderById(ui.folder)) ui.folder = 'all';
+    const chips = [['all', 'All', null], ['pinned', 'Pinned', null]].concat(fs.map(f => [f.id, f.name, f.color]));
+    $('folders').innerHTML = chips.map(([id, name, c]) => `<button class="chip${ui.folder === id ? ' on' : ''}" data-folder="${esc(id)}">${c ? `<i style="background:${esc(c)}"></i>` : ''}${esc(name)}</button>`).join('');
+  }
+  function renderNotesList() {
+    renderFolders();
+    const q = $('n-search').value.trim().toLowerCase();
+    let list = (data.notes || []).filter(n => ui.folder === 'all' ? true : ui.folder === 'pinned' ? n.pinned : n.folderId === ui.folder);
+    if (q) list = list.filter(n => (n.title + '\n' + n.body).toLowerCase().includes(q));
+    list.sort((a, b) => (b.pinned - a.pinned) || (b.updatedAt - a.updatedAt));
+    $('tab-notes-n').textContent = (data.notes || []).length || '';
+    if (!list.length) { $('nlist').innerHTML = `<div class="empty">${q ? 'Nothing matches that search.' : 'No notes here yet.'}</div>`; return; }
+    const pinned = list.filter(n => n.pinned && ui.folder !== 'pinned' && !q), rest = list.filter(n => !pinned.includes(n));
+    const row = n => { const f = folderById(n.folderId); return `<div class="nrow" data-id="${esc(n.id)}" style="--c:${f ? esc(f.color) : 'transparent'}"><div class="tt">${esc(n.title || 'Untitled')}</div><div class="pv"><b>${esc(when(n.updatedAt))}</b>${esc(preview(n.body).slice(0, 90)) || 'No additional text'}</div></div>`; };
+    $('nlist').innerHTML = (pinned.length ? '<div class="ngrp">Pinned</div>' + pinned.map(row).join('') : '') + (rest.length ? (pinned.length ? '<div class="ngrp">Notes</div>' : '') + rest.map(row).join('') : '');
+  }
+  $('folders').addEventListener('click', e => { const b = e.target.closest('[data-folder]'); if (!b) return; ui.folder = b.dataset.folder; saveUi(); renderNotesList(); });
+  $('n-search').addEventListener('input', renderNotesList);
+  $('nlist').addEventListener('click', e => { const r = e.target.closest('.nrow'); if (r) openNote(r.dataset.id); });
+  $('n-new').onclick = async () => {
+    const n = await dw.call('newNote', [ui.folder !== 'all' && ui.folder !== 'pinned' ? ui.folder : null]);
+    if (!n) return toast('Could not create a note');
+    await refresh(); openNote(n.id, true);
+    $('n-title').focus(); $('n-title').select();
+  };
+
+  // ---------- one note ----------
+  // pasted pictures are kept out of the text box as ⟦image N⟧ markers and put back on save
+  let imgs = [], editing = false, dirty = false, saveT = null, titleDirty = false;
+  const IMG_RE = /!\[[^\]]*\]\((data:image\/[^)\s]+)\)/g;
+  const toEditable = body => { imgs = []; return (body || '').replace(IMG_RE, m => { imgs.push(m); return `⟦image ${imgs.length}⟧`; }); };
+  const fromEditable = text => text.replace(/⟦image (\d+)⟧/g, (m, i) => imgs[+i - 1] || '');
+  const current = () => (data.notes || []).find(n => n.id === openId);
+
+  function inline(s) {
+    let h = esc(s);
+    h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+    h = h.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    h = h.replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>');
+    h = h.replace(/\[\[([^\[\]\n]+)\]\]/g, (m, t) => { const exists = (data.notes || []).some(n => n.title.trim().toLowerCase() === t.trim().toLowerCase()); return `<span class="wl${exists ? '' : ' missing'}" data-link="${esc(t)}">${t}</span>`; });
+    return h;
+  }
+  function renderMd(body) {
+    const lines = (body || '').split('\n'); let html = '', list = null;
+    const close = () => { if (list) { html += `</${list}>`; list = null; } };
+    lines.forEach((raw, i) => {
+      let m;
+      if ((m = raw.match(/^\s*[-*]\s+\[( |x|X)\]\s?(.*)$/))) { if (list !== 'ul class="task"') { close(); html += '<ul class="task">'; list = 'ul class="task"'; } html += `<li class="${m[1] === ' ' ? '' : 'on'}" data-line="${i}"><span class="led"></span><span>${inline(m[2]) || '&nbsp;'}</span></li>`; return; }
+      if ((m = raw.match(/^\s*[-*]\s+(.*)$/))) { if (list !== 'ul') { close(); html += '<ul>'; list = 'ul'; } html += `<li>${inline(m[1])}</li>`; return; }
+      if ((m = raw.match(/^\s*\d+[.)]\s+(.*)$/))) { if (list !== 'ol') { close(); html += '<ol>'; list = 'ol'; } html += `<li>${inline(m[1])}</li>`; return; }
+      close();
+      if ((m = raw.match(/^(#{1,3})\s+(.*)$/))) { html += `<h${m[1].length}>${inline(m[2])}</h${m[1].length}>`; return; }
+      if ((m = raw.match(/^>\s?(.*)$/))) { html += `<blockquote>${inline(m[1])}</blockquote>`; return; }
+      if (/^\s*(---|\*\*\*)\s*$/.test(raw)) { html += '<hr>'; return; }
+      if ((m = raw.match(/^!\[[^\]]*\]\((data:image\/[^)\s]+)\)\s*$/))) { html += `<img src="${m[1]}" alt="">`; return; }
+      if (!raw.trim()) { html += '<div class="gap"></div>'; return; }
+      html += `<div class="ln">${inline(raw)}</div>`;
+    });
+    close();
+    return html.replace(/(<div class="gap"><\/div>)+$/, '') || '<div class="blank">Empty note — press the pencil to write.</div>';
+  }
+  function renderNote() {
+    const n = current(); if (!n) { closeNote(); return; }
+    if (document.activeElement !== $('n-title') && !titleDirty) $('n-title').value = n.title;
+    if (!editing) $('n-md').innerHTML = renderMd(n.body);
+  }
+  function setMode(edit) {
+    editing = edit;
+    const n = current();
+    $('n-editor').hidden = !edit; $('n-hint').hidden = !edit; $('n-viewwrap').hidden = edit;
+    $('n-mode').classList.toggle('on', edit);
+    $('n-mode').title = edit ? 'Done editing' : 'Edit';
+    $('n-mode').innerHTML = edit ? '<svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg>' : '<svg viewBox="0 0 16 16"><path d="M10.5 2.8l2.7 2.7L6 12.7l-3.3.6.6-3.3z"/></svg>';
+    if (edit && n) { $('n-editor').value = toEditable(n.body); $('n-editor').focus(); }
+    if (!edit) { saveNoteNow(); renderNote(); }
+  }
+  function openNote(id, edit) {
+    saveNoteNow();
+    openId = id; dirty = false; titleDirty = false;
+    showTab('notes');
+    $('n-viewwrap').scrollTop = 0;
+    setSaved('ok');
+    renderNote();
+    setMode(!!edit || !(current() && current().body.trim()));
+  }
+  function closeNote() { saveNoteNow(); openId = null; editing = false; showTab('notes'); renderNotesList(); }
+  function setSaved(s, msg) { const el = $('n-saved'); el.className = 'saved ' + s; el.querySelector('span').textContent = msg || (s === 'ok' ? 'Saved' : s === 'busy' ? 'Saving' : 'Not saved'); }
+
+  let saveChain = Promise.resolve();
+  function pushNote(patch) {
+    const n = current(); if (!n) return saveChain;
+    const id = n.id;
+    setSaved('busy');
+    saveChain = saveChain.then(async () => {
+      const r = await dw.call('saveNote', [id, patch.title != null ? patch.title : null, patch.body != null ? patch.body : null]);
+      const live = (data.notes || []).find(x => x.id === id);
+      if (r && r.ok) { if (live) Object.assign(live, r.note); if (openId === id) setSaved('ok'); }
+      else { if (openId === id) setSaved('err', 'Not saved'); toast((r && r.error) || 'Could not save — is Larpenator still open?'); if (patch.title != null && live && openId === id) $('n-title').value = live.title; }
+    }).catch(() => {});
+    return saveChain;
+  }
+  function scheduleSave() { dirty = true; setSaved('busy'); clearTimeout(saveT); saveT = setTimeout(saveNoteNow, 650); }
+  function saveNoteNow() {
+    clearTimeout(saveT); saveT = null;
+    if (dirty && openId && editing) { dirty = false; pushNote({ body: fromEditable($('n-editor').value) }); }
+    else dirty = false;
+  }
+  $('n-editor').addEventListener('input', scheduleSave);
+  $('n-editor').addEventListener('blur', saveNoteNow);
+  $('n-editor').addEventListener('keydown', e => {
+    // Enter continues a list or checklist line, like the main notes editor
+    if (e.key !== 'Enter' || e.shiftKey) return;
+    const ta = e.target, pos = ta.selectionStart, before = ta.value.slice(0, pos), lineStart = before.lastIndexOf('\n') + 1, line = before.slice(lineStart);
+    const m = line.match(/^(\s*)([-*] \[[ xX]\] |[-*] |(\d+)[.)] )/);
+    if (!m) return;
+    e.preventDefault();
+    if (line.trim() === m[2].trim()) { ta.setRangeText('', lineStart, pos, 'end'); scheduleSave(); return; }
+    const next = m[3] ? `${+m[3] + 1}. ` : m[2].replace(/\[[xX]\]/, '[ ]');
+    ta.setRangeText('\n' + m[1] + next, pos, ta.selectionEnd, 'end'); scheduleSave();
+  });
+  $('n-title').addEventListener('input', () => { titleDirty = true; });
+  const commitTitle = () => { if (!titleDirty) return; titleDirty = false; const v = $('n-title').value.trim(); const n = current(); if (!n) return; if (!v) { $('n-title').value = n.title; return; } if (v !== n.title) pushNote({ title: v }); };
+  $('n-title').addEventListener('blur', commitTitle);
+  $('n-title').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commitTitle(); (editing ? $('n-editor') : $('n-title')).focus(); } });
+  $('n-mode').onclick = () => setMode(!editing);
+  $('n-back').onclick = closeNote;
+  $('n-app').onclick = () => { saveNoteNow(); dw.openInApp(openId); };
+  $('n-md').addEventListener('click', e => {
+    const link = e.target.closest('.wl:not(.missing)');
+    if (link) { const t = link.dataset.link.trim().toLowerCase(); const n = (data.notes || []).find(x => x.title.trim().toLowerCase() === t); if (n) openNote(n.id); return; }
+    const li = e.target.closest('ul.task li'); if (!li) return;
+    const n = current(); if (!n) return;
+    const lines = n.body.split('\n'), i = +li.dataset.line;
+    lines[i] = lines[i].replace(/\[( |x|X)\]/, (m, c) => c === ' ' ? '[x]' : '[ ]');
+    n.body = lines.join('\n'); renderNote(); pushNote({ body: n.body });
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && openId) { if (editing) setMode(false); else closeNote(); }
+  });
+
+  // ---------- data ----------
+  async function refresh() {
+    const s = await dw.call('state', []);
+    if (!s) { $('nlist').innerHTML = '<div class="empty">Larpenator is starting…</div>'; return false; }
+    data = s;
+    renderChecklist();
+    renderNotesList();
+    if (openId) {
+      const n = current();
+      if (!n) { toast('That note was deleted'); closeNote(); }
+      else if (!(editing && (dirty || document.activeElement === $('n-editor')))) {
+        if (editing) $('n-editor').value = toEditable(n.body);
+        renderNote();
+      }
+    }
+    return true;
+  }
+  let refreshT = null;
+  dw.onRefresh(() => { clearTimeout(refreshT); refreshT = setTimeout(refresh, 120); });
+  // keep trying until the main window is ready (e.g. right after launch)
+  (async function boot() { for (let i = 0; i < 40; i++) { if (await refresh()) break; await new Promise(r => setTimeout(r, 500)); } })();
+  window.addEventListener('focus', () => { if (!dirty) refresh(); });
+  showTab(ui.tab === 'notes' ? 'notes' : 'check');
+})();
+</script>
+</body>
+</html>

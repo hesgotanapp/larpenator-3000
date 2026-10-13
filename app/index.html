@@ -1060,6 +1060,11 @@
   .sidebar .nav-item { display: block; padding: 5px 14px; margin: 0; border-radius: 0; border-left: none; font-size: 12.5px; font-weight: 500; color: var(--ink-dim); background: none; }
   .sidebar .nav-item:hover { color: var(--ink); background: none; }
   .sidebar .nav-item.active { color: var(--ink); background: none; font-weight: 500; box-shadow: inset 2px 0 0 var(--accent); }
+  .side-widget-btn { margin-top: auto; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: 1px dashed var(--border-strong); border-radius: var(--radius-sm); background: transparent; color: var(--ink-dim); font: 500 12.5px var(--font-body); cursor: pointer; transition: all var(--transition); }
+  .side-widget-btn:hover { border-style: solid; border-color: var(--accent); color: var(--ink); }
+  .side-widget-btn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; flex-shrink: 0; }
+  .side-widget-btn kbd { margin-left: auto; font: 500 9px var(--font-mono); letter-spacing: .4px; color: var(--ink-faint); border: 1px solid var(--border); border-radius: 4px; padding: 1px 4px; }
+  .side-widget-btn:not([hidden]) + .side-foot { margin-top: 0; }
   .side-foot { margin-top: auto; display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--ink-faint); padding: 0 8px; }
   .side-sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); flex: 0 0 auto; }
   .side-sync-dot.on { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 18%, transparent); }
@@ -1843,7 +1848,10 @@
     let t = null;
     const schedule = () => { clearTimeout(t); t = setTimeout(() => { try { api.flushStorage(); } catch (e) {} }, 400); };
     const set = Storage.prototype.setItem, remove = Storage.prototype.removeItem;
-    Storage.prototype.setItem = function (k, v) { const r = set.call(this, k, v); if (this === window.localStorage) schedule(); return r; };
+    let wt = null;
+    const widgetKeys = /^lvd_(notes|checklist_categories|palette|theme_mode|theme_accent)$/;
+    const pingWidget = k => { if (!api.widget || !widgetKeys.test(k)) return; clearTimeout(wt); wt = setTimeout(() => { try { api.widget.ping(); } catch (e) {} }, 250); };
+    Storage.prototype.setItem = function (k, v) { const r = set.call(this, k, v); if (this === window.localStorage) { schedule(); pingWidget(k); } return r; };
     Storage.prototype.removeItem = function (k) { const r = remove.call(this, k); if (this === window.localStorage) schedule(); return r; };
   })();
 </script>
@@ -1943,6 +1951,7 @@
         </div>
       </div>
     </div>
+    <button type="button" class="side-widget-btn" id="side-widget-btn" hidden title="Open the desk widget — a small panel that stays on top of your charts (Ctrl+Alt+L)"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="2.2"/><path d="M2 5.8h12M5 9h4M5 11h6"/></svg><span>Desk widget</span><kbd>Ctrl Alt L</kbd></button>
     <div class="side-foot"><span class="side-sync-dot" id="side-sync-dot"></span><span id="side-sync-label">Cloud sync off</span></div>
   </nav>
 
@@ -8730,7 +8739,7 @@
       { label: 'Log a premarket note', right: 'Today', run: () => { switchTab('premarket'); resetPmForm(); document.getElementById('pm-date').value = todayStr; } },
       { label: 'Print this month’s report', right: 'Review', run: () => { switchTab('monthly-report'); setTimeout(() => window.print(), 150); } },
       { label: 'Export everything (JSON backup)', right: 'Settings', run: () => document.getElementById('export-btn').click() }
-    ];
+    ].concat(window.larpenatorDesktop && window.larpenatorDesktop.widget ? [{ label: 'Open or close the desk widget', right: 'Ctrl Alt L', run: () => window.larpenatorDesktop.widget.toggle() }] : []);
   }
   function cmdkPages() {
     const out = [];
@@ -9205,6 +9214,64 @@
   document.getElementById('brand-stamp').innerHTML = stampSVG(false);
   const welcomeBrand = document.querySelector('.welcome-brand');
   if (welcomeBrand) welcomeBrand.insertAdjacentHTML('afterbegin', `<span class="welcome-stamp">${stampSVG(false)}</span>`);
+
+  // ---------- desk widget bridge ----------
+  // The always-on-top panel reads and writes through these, so it shares this page's
+  // notes (and their cloud sync) instead of keeping a second copy.
+  (function deskWidgetBridge() {
+    const dw = window.larpenatorDesktop && window.larpenatorDesktop.widget;
+    if (!dw) return;
+    const btn = document.getElementById('side-widget-btn');
+    if (btn) { btn.hidden = false; btn.addEventListener('click', () => dw.toggle()); }
+    const pick = n => ({ id: n.id, title: n.title, body: n.body || '', folderId: n.folderId || null, pinned: !!n.pinned, updatedAt: n.updatedAt || 0 });
+    const notesOpen = () => document.getElementById('section-notes').classList.contains('active');
+    const refreshNotesPage = () => { if (notesOpen()) rerenderNotesAfterSync(); };
+    window.__lvdWidgetApi = {
+      state() {
+        return {
+          notes: notesStore.notes.map(pick),
+          folders: (notesStore.folders || []).map(f => ({ id: f.id, name: f.name, color: f.color })),
+          checklist: Object.keys(checklistCategories).sort((a, b) => { const o = ['continuation', 'reversal', 'judas']; return (o.indexOf(a) + 1 || 99) - (o.indexOf(b) + 1 || 99); }).map(id => ({ id, label: SETUP_TYPE_LABELS[id] || id, items: (checklistCategories[id] || []).slice() })),
+          palette: document.documentElement.getAttribute('data-palette') || 'original'
+        };
+      },
+      saveNote(id, title, body) {
+        // title / body are null when the widget isn't changing them
+        const note = getNote(id);
+        if (!note) return { ok: false, error: 'That note no longer exists' };
+        if (notesStore.lastOpenedId === id) flushNoteSave();
+        title = title == null ? '' : String(title).trim();
+        if (title && title !== note.title) {
+          const clash = findNoteByTitle(title);
+          if (clash && clash.id !== id) return { ok: false, error: 'A note with that title already exists' };
+          const re = new RegExp('\\[\\[\\s*' + escapeRegExp(note.title) + '\\s*\\]\\]', 'gi');
+          notesStore.notes.forEach(n => { if (n.id !== id && re.test(n.body)) { re.lastIndex = 0; n.body = n.body.replace(re, '[[' + title + ']]'); n.updatedAt = Date.now(); } re.lastIndex = 0; });
+          note.title = title;
+        }
+        if (typeof body === 'string') note.body = body;
+        note.updatedAt = Date.now();
+        saveNotes();
+        refreshNotesPage();
+        return { ok: true, note: pick(note) };
+      },
+      newNote(folderId) {
+        const note = createNote('', '');
+        if (folderId && folderById(folderId)) note.folderId = folderId;
+        saveNotes();
+        refreshNotesPage();
+        return pick(note);
+      },
+      addChecklistItem(cat, text) {
+        text = String(text || '').trim();
+        if (!text || !checklistCategories[cat]) return false;
+        if (!checklistCategories[cat].includes(text)) checklistCategories[cat].push(text);
+        saveChecklistCategories();
+        if (document.getElementById('section-checklist').classList.contains('active')) renderChecklistManage();
+        return true;
+      },
+      openNote(id) { switchTab('notes'); openNoteById(id); return true; }
+    };
+  })();
 
   // ---------- init ----------
   migrateLegacyBgPhotosOnce();

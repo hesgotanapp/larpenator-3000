@@ -2,6 +2,7 @@ const { app, BrowserWindow, Menu, dialog, protocol, net, ipcMain, session } = re
 const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
+const { initWidget, restoreWidget, closeWidget } = require('./widget-main');
 
 // file:// pages get an opaque origin in modern Chromium, so their localStorage
 // is wiped between launches. Serving the app over a privileged custom scheme
@@ -81,7 +82,7 @@ function createWindow() {
     const pending = win.webContents.executeJavaScript('window.__lvdBeforeClose ? window.__lvdBeforeClose() : 0').catch(() => {});
     Promise.race([pending.then(() => writeAutoBackup(true)), new Promise(r => setTimeout(r, 1500))]).then(done, done);
   });
-  win.on('closed', () => { win = null; });
+  win.on('closed', () => { win = null; closeWidget(false); });
 }
 
 // Belt-and-braces: periodically snapshot all lvd_ localStorage keys to a JSON
@@ -300,6 +301,8 @@ function runPersistTest() {
 app.whenReady().then(() => {
   registerAppProtocol();
   createWindow();
+  initWidget(() => win);
+  if (win) win.webContents.once('did-finish-load', restoreWidget);
   runPersistTest();
   wireUpdater();
   wireAutoBackup();
