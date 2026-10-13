@@ -5,3 +5,5 @@ build/app.ico
 build/app.icns
 build/app.png
 build/tmp-*.png
+
+.claude-flow/
