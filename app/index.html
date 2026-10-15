@@ -1830,6 +1830,57 @@
   .graph-legend { position: absolute; left: 14px; bottom: 34px; display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: #8b94a3; z-index: 2; pointer-events: none; }
   .graph-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
   .graph-hint { color: #5d6674; }
+
+  /* ================= brain map (after Kaine's Brain app — bento tiles, graphite, hairlines) ================= */
+  .notes-graph-wrap.is-brain { background: #141414; }
+  .brain-layout { position: absolute; inset: 0; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; padding: 12px; }
+  .brain-tile { position: relative; min-width: 0; border-radius: 18px; background: radial-gradient(120% 90% at 50% 40%, #222 0%, #1d1d1d 55%, #191919 100%); overflow: hidden; }
+  .brain-tile canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+  .brain-tile canvas[hidden] { display: none; }
+  .brain-tile canvas.pointing { cursor: pointer; }
+  .brain-tile canvas.dragging { cursor: grabbing; }
+  .brain-tile .graph-back { top: 14px; left: 14px; background: rgba(33,33,33,.92); border-color: #2e2e2e; color: #f0f0ee; }
+  .brain-tile .graph-mode-toggle { top: 14px; right: 14px; background: rgba(33,33,33,.92); border-color: #2e2e2e; }
+  .brain-tile .graph-mode-toggle button { color: #acacaa; }
+  .brain-tile .graph-mode-toggle button.active { background: var(--brain-accent, #7ee2a8); color: #0b1a11; }
+  .brain-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .brain-labels span { position: absolute; transform: translateX(-50%); font: 500 11.5px 'Geist', 'Segoe UI', sans-serif; white-space: nowrap; color: #b4b4b1; text-shadow: 0 0 3px #1d1d1d, 0 0 6px #1d1d1d, 0 1px 2px #000; transition: opacity .18s; }
+  .brain-labels span.f { font-weight: 650; font-size: 13px; color: #dcdcd8; }
+  .brain-labels span.g { color: #8e8e8b; }
+  .brain-labels span.h { color: #fff; font-weight: 650; }
+  .brain-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); font: 12px var(--font-body); color: #8e8e8b; background: rgba(23,23,23,.85); padding: 6px 12px; border-radius: 99px; pointer-events: none; white-space: nowrap; }
+  .brain-side { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #333 transparent; }
+  .brain-side::-webkit-scrollbar { width: 6px; }
+  .brain-side::-webkit-scrollbar-thumb { background: #333; border-radius: 6px; }
+  .brain-card { background: #212121; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; color: #f0f0ee; flex-shrink: 0; }
+  .brain-eb { display: flex; align-items: center; gap: 8px; font: 500 11px var(--font-mono); letter-spacing: .9px; text-transform: uppercase; color: #8e8e8b; }
+  .brain-eb i { width: 7px; height: 7px; border-radius: 50%; background: #8e8e8b; }
+  .brain-eb i.g { background: var(--brain-accent, #7ee2a8); }
+  .brain-search { display: flex; align-items: center; gap: 10px; background: #212121; border-radius: 14px; padding: 0 14px; min-height: 46px; color: #8e8e8b; flex-shrink: 0; }
+  .brain-search input { flex: 1; min-width: 0; border: 0; background: transparent; color: #f0f0ee; font: 14px var(--font-body); outline: none; }
+  .brain-search input::placeholder { color: #8e8e8b; }
+  .brain-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .brain-chips button { border: 0; border-radius: 99px; background: #2a2a2a; color: #cfcfcc; font: 500 12.5px var(--font-body); padding: 7px 13px; cursor: pointer; transition: background .15s; }
+  .brain-chips button:hover { background: #333; }
+  .brain-chips button[aria-pressed="true"] { background: var(--brain-accent, #7ee2a8); color: #0b1a11; font-weight: 600; }
+  .brain-detail h2 { font: 700 19px/1.2 var(--font-body); margin: 0; color: #f0f0ee; letter-spacing: -.2px; word-break: break-word; }
+  .brain-detail p { margin: 0; font-size: 13px; color: #acacaa; line-height: 1.45; word-break: break-word; }
+  .bd-items { display: flex; flex-direction: column; gap: 6px; }
+  .bd-row { display: flex; flex-direction: column; gap: 2px; font-size: 13px; padding: 9px 12px; border-radius: 12px; background: #2a2a2a; color: #f0f0ee; text-align: left; border: 0; cursor: pointer; font-family: var(--font-body); transition: background .15s; }
+  .bd-row:hover { background: #333; }
+  .bd-row small { font: 11px var(--font-mono); color: #8e8e8b; letter-spacing: .3px; }
+  .bd-reading { white-space: pre-wrap; font-size: 12.5px; line-height: 1.55; color: #cfcfcc; background: #2a2a2a; border-radius: 12px; padding: 10px 12px; max-height: 210px; overflow-y: auto; }
+  .bd-reading::-webkit-scrollbar { width: 6px; } .bd-reading::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 6px; }
+  .brain-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .brain-btns:empty { display: none; }
+  .brain-btns button { border: 0; border-radius: 12px; min-height: 36px; padding: 0 14px; background: #2a2a2a; color: #f0f0ee; font: 500 13px var(--font-body); cursor: pointer; }
+  .brain-btns button:hover { background: #333; }
+  .brain-btns button.pri { background: var(--brain-accent, #7ee2a8); color: #0b1a11; font-weight: 600; }
+  .brain-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; color: #acacaa; }
+  .brain-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .brain-legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .brain-legend i.ring { background: transparent; border: 1.5px dashed #8f8f8d; width: 8px; height: 8px; }
+  @media (max-width: 1100px) { .brain-layout { grid-template-columns: minmax(0, 1fr) 250px; } }
 </style>
 </head>
 <body>
@@ -2771,17 +2822,40 @@
 
       <div class="notes-graph-view" id="notes-view-graph" hidden>
         <div class="card notes-graph-card">
-          <div class="notes-graph-wrap" id="notes-graph-wrap">
-            <canvas id="notes-graph-canvas" style="display:none;"></canvas>
-            <canvas id="notes-graph-canvas3d"></canvas>
-            <div class="graph-labels" id="graph-labels"></div>
-            <button class="graph-back" id="graph-back" type="button">← Notes</button>
-            <div class="graph-mode-toggle" id="graph-mode-toggle">
-              <button data-gmode="2d" type="button">2D</button>
-              <button data-gmode="3d" type="button" class="active">3D</button>
+          <div class="notes-graph-wrap is-brain" id="notes-graph-wrap">
+            <div class="brain-layout" id="brain-layout">
+              <div class="brain-tile" id="brain-tile">
+                <canvas id="brain-canvas"></canvas>
+                <canvas id="notes-graph-canvas3d" hidden></canvas>
+                <div class="brain-labels" id="brain-labels"></div>
+                <button class="graph-back" id="graph-back" type="button">← Notes</button>
+                <div class="graph-mode-toggle" id="graph-mode-toggle">
+                  <button data-gmode="2d" type="button">2D</button>
+                  <button data-gmode="3d" type="button">3D</button>
+                </div>
+                <div class="brain-hint" id="brain-hint"></div>
+              </div>
+              <aside class="brain-side">
+                <label class="brain-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="brain-search" placeholder="Search notes" aria-label="Search notes"></label>
+                <section class="brain-card">
+                  <div class="brain-eb"><i></i>Show</div>
+                  <div class="brain-chips" id="brain-chips">
+                    <button type="button" data-bf="all" aria-pressed="true">All</button>
+                    <button type="button" data-bf="week" aria-pressed="false">This week</button>
+                    <button type="button" data-bf="pinned" aria-pressed="false">Pinned</button>
+                    <button type="button" data-bf="loose" aria-pressed="false">Not linked</button>
+                  </div>
+                </section>
+                <section class="brain-card brain-detail" aria-live="polite">
+                  <div class="brain-eb"><i class="g"></i><span id="bd-kind"></span></div>
+                  <h2 id="bd-title"></h2>
+                  <p id="bd-sum"></p>
+                  <div class="bd-items" id="bd-items"></div>
+                  <div class="brain-btns" id="bd-btns"></div>
+                </section>
+                <section class="brain-card"><div class="brain-legend" id="brain-legend"></div></section>
+              </aside>
             </div>
-            <div class="graph-legend" id="graph-legend"></div>
-            <div class="graph-hint" id="graph-hint">drag to spin · scroll to zoom · click a star to open it</div>
           </div>
         </div>
       </div>
@@ -3029,6 +3103,10 @@
 <script src="vendor/firebase/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="sync.js"></script>
+<script src="vendor/d3/d3-dispatch.min.js"></script>
+<script src="vendor/d3/d3-quadtree.min.js"></script>
+<script src="vendor/d3/d3-timer.min.js"></script>
+<script src="vendor/d3/d3-force.min.js"></script>
 
 <script>
 (function () {
@@ -7158,16 +7236,6 @@
     }
     openNoteById(note.id);
   }
-  function openGraphNode(nd) {
-    if (nd.ghost) {
-      const note = createNote(nd.title, '');
-      showToast('Note created: ' + note.title);
-      notesStore.lastOpenedId = note.id;
-      saveNotes();
-      switchNotesView('list');
-    } else openNoteById(nd.id);
-  }
-
   // -- markdown <-> editor --
   function edInline(raw) {
     const fmt = s => escapeHtml(s)
@@ -7587,12 +7655,17 @@
     if (notesCurrentView !== 'list') switchNotesView('list');
   }
 
-  // ---------- brain map: shared ----------
-  let notesGraphMode = '3d';
+  // ---------- brain map ----------
+  // One picture of your notes, styled after the graph in Kaine's Brain app: folders are the big
+  // hubs, notes sit around them, [[links]] tie notes together, and links to notes you haven't
+  // written yet show as hollow dots. Notes only — nothing from the journal. 2D and 3D show the
+  // same thing and share the panel on the right (search, filters, what you clicked).
+  const GRAPH_MODE_KEY = 'lvd_graph_mode';
+  let notesGraphMode = localStorage.getItem(GRAPH_MODE_KEY) === '2d' ? '2d' : '3d';
   document.querySelectorAll('#graph-mode-toggle button').forEach(b => b.addEventListener('click', () => {
     if (notesGraphMode === b.dataset.gmode) return;
     notesGraphMode = b.dataset.gmode;
-    document.querySelectorAll('#graph-mode-toggle button').forEach(x => x.classList.toggle('active', x === b));
+    try { localStorage.setItem(GRAPH_MODE_KEY, notesGraphMode); } catch (e) {}
     initGraphView();
   }));
   // re-measure whenever the map's frame changes size (window resize, maximise, display scale)
@@ -7601,285 +7674,385 @@
     if (!notesGraphVisible()) return;
     clearTimeout(graphResizeTimer);
     graphResizeTimer = setTimeout(() => { if (notesGraphVisible()) initGraphView(); }, 120);
-  }).observe(document.getElementById('notes-graph-wrap'));
+  }).observe(document.getElementById('brain-tile'));
+
+  const WEEK = 7 * 86400000;
+  const BM = { key: '', nodes: [], links: [], byId: new Map(), nbrs: new Map() };
+  const brainUI = { hovered: null, selected: null, filter: 'all', query: '', bound: false, shown: undefined };
+  const pos2 = {}, pos3 = {};
+
   function initGraphView() {
-    document.getElementById('notes-graph-canvas').style.display = notesGraphMode === '2d' ? 'block' : 'none';
-    document.getElementById('notes-graph-canvas3d').style.display = notesGraphMode === '3d' ? 'block' : 'none';
-    document.getElementById('graph-labels').innerHTML = '';
-    document.getElementById('graph-hint').textContent = notesGraphMode === '3d'
-      ? 'drag to spin · scroll to zoom · click a star to open it'
-      : 'drag stars · drag the background to pan · scroll to zoom · click to open';
-    const used = notesStore.folders.filter(f => notesStore.notes.some(n => n.folderId === f.id));
-    document.getElementById('graph-legend').innerHTML = used.map(f => `<span><i style="background:${f.color}"></i>${escapeHtml(f.name)}</span>`).join('') + (used.length && notesStore.notes.some(n => !n.folderId) ? '<span><i style="background:#c9d2e0"></i>No folder</span>' : '');
-    if (notesGraphMode === '3d') { stopNotesGraph(); init3DGraph(); }
-    else { stop3DGraph(); initNotesGraph(); }
+    const is2d = notesGraphMode === '2d';
+    document.querySelectorAll('#graph-mode-toggle button').forEach(x => x.classList.toggle('active', x.dataset.gmode === notesGraphMode));
+    document.getElementById('brain-canvas').hidden = !is2d;
+    document.getElementById('notes-graph-canvas3d').hidden = is2d;
+    if (is2d) document.getElementById('brain-labels').innerHTML = '';
+    document.getElementById('brain-hint').textContent = is2d
+      ? 'Scroll to zoom · drag to move · click a dot · double-click to open'
+      : 'Drag to spin · scroll to zoom · click a dot · double-click to open';
+    bindBrainSide();
+    renderBrainLegend();
+    const changed = buildBrainModel();
+    if (brainUI.selected && !BM.byId.has(brainUI.selected)) brainUI.selected = null;
+    if (is2d) { stop3DGraph(); init2D(changed); }
+    else { init3DGraph(changed); }
+    renderBrainDetail(true);
   }
-  const graphPosCache = {};
-  let graph = null;
-  function buildGraphData() {
-    // notes without a folder are silver-white, so they never look like a folder colour
-    const nodes = notesStore.notes.map(n => ({ id: n.id, title: n.title, pinned: !!n.pinned, ghost: false, color: noteColor(n) || '#c9d2e0' }));
+  function stopNotesGraph() { /* the 2D map only draws when something changes, so there's nothing to stop */ }
+
+  // ---------- shared: the notes model ----------
+  function brainAccent() { return document.documentElement.dataset.palette === 'paper' ? '#c9a35b' : (getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#7ee2a8'); }
+  function buildBrainModel() {
+    const now = Date.now(), nodes = [], links = [], seen = new Set();
+    const link = (a, b, kind) => { const k = a < b ? a + '|' + b : b + '|' + a; if (a === b || seen.has(k)) return; seen.add(k); links.push({ s: a, t: b, kind }); };
+    const used = new Set(notesStore.notes.map(n => n.folderId).filter(Boolean));
+    notesStore.folders.filter(f => used.has(f.id)).forEach(f => nodes.push({ id: 'f:' + f.id, type: 'folder', label: f.name, color: f.color || '#e4e4e2', folderId: f.id }));
     const byTitle = {};
-    nodes.forEach(nd => { byTitle[nd.title.trim().toLowerCase()] = nd; });
-    const ghosts = {}, linkSet = new Set(), links = [];
+    notesStore.notes.forEach(n => { byTitle[(n.title || '').trim().toLowerCase()] = n; });
     notesStore.notes.forEach(n => {
-      extractLinks(n.body).forEach(t => {
-        const key = t.toLowerCase();
-        let target = byTitle[key] || ghosts[key];
-        if (!target) target = ghosts[key] = { id: 'ghost:' + key, title: t, pinned: false, ghost: true, color: '#8b94a3' };
-        const lk = [n.id, target.id].sort().join('|');
-        if (n.id === target.id || linkSet.has(lk)) return;
-        linkSet.add(lk);
-        links.push({ a: n.id, b: target.id });
-      });
+      nodes.push({ id: n.id, type: 'note', label: n.title || 'Untitled', noteId: n.id, fresh: now - (n.updatedAt || 0) < WEEK, pinned: !!n.pinned, folderId: n.folderId && used.has(n.folderId) ? n.folderId : null, at: n.updatedAt || 0 });
+      if (n.folderId && used.has(n.folderId)) link('f:' + n.folderId, n.id, 'fn');
     });
-    const all = nodes.concat(Object.values(ghosts));
-    const deg = {};
-    links.forEach(l => { deg[l.a] = (deg[l.a] || 0) + 1; deg[l.b] = (deg[l.b] || 0) + 1; });
-    all.forEach((nd, i) => {
-      const cached = graphPosCache[nd.id];
-      const r = 40 + 26 * Math.sqrt(i), th = i * 2.39996;
-      nd.x = cached ? cached.x : Math.cos(th) * r;
-      nd.y = cached ? cached.y : Math.sin(th) * r;
-      nd.vx = 0; nd.vy = 0;
-      nd.deg = deg[nd.id] || 0;
-      nd.r = nd.ghost ? 3.5 : 4.5 + Math.min(8, Math.sqrt(nd.deg) * 2.6);
-      nd.phase = i * 1.7;
-    });
-    const byId = {};
-    all.forEach(nd => { byId[nd.id] = nd; });
-    const adj = {};
-    links.forEach(l => { (adj[l.a] = adj[l.a] || new Set()).add(l.b); (adj[l.b] = adj[l.b] || new Set()).add(l.a); });
-    return { nodes: all, links, byId, adj };
+    const ghosts = {};
+    notesStore.notes.forEach(n => extractLinks(n.body).forEach(t => {
+      const key = t.trim().toLowerCase(), target = byTitle[key];
+      if (target) { link(n.id, target.id, 'nn'); return; }
+      if (!ghosts[key]) { ghosts[key] = { id: 'g:' + key, type: 'ghost', label: t.trim() }; nodes.push(ghosts[key]); }
+      link(n.id, ghosts[key].id, 'ng');
+    }));
+    const key = nodes.map(n => n.id + '~' + n.label + '~' + (n.folderId || '') + (n.fresh ? 'f' : '') + (n.pinned ? 'p' : '') + (n.color || '')).join(',') + '/' + links.map(l => l.s + l.t).join(',');
+    if (key === BM.key) return false; // nothing changed: keep the dots (and their positions) as they are
+    const byId = new Map(nodes.map(n => [n.id, n]));
+    const nbrs = new Map(nodes.map(n => [n.id, new Set()]));
+    links.forEach(l => { nbrs.get(l.s).add(l.t); nbrs.get(l.t).add(l.s); });
+    nodes.forEach(n => { n.deg = nbrs.get(n.id).size; });
+    nodes.forEach(n => { if (n.type === 'note') n.loose = ![...nbrs.get(n.id)].some(id => byId.get(id).type !== 'folder'); });
+    Object.assign(BM, { key, nodes, links, byId, nbrs });
+    return true;
   }
-  function graphColors() {
-    const cs = getComputedStyle(document.documentElement);
-    const v = name => cs.getPropertyValue(name).trim();
-    const accent = document.documentElement.dataset.palette === 'paper' ? '#c9a35b' : v('--accent');
-    return { green: accent, cyan: accent, ink: '#e8ecf1', inkDim: '#8b94a3', inkFaint: '#5d6674', surface: '#0b0e14' };
+  function brainOwner(n) { return n.type === 'note' ? n : null; }
+  function brainMatches(n) {
+    const f = brainUI.filter, o = brainOwner(n);
+    if (n.type !== 'folder') {
+      if (f === 'week' && !(o && o.fresh)) return false;
+      if (f === 'pinned' && !(o && o.pinned)) return false;
+      if (f === 'loose' && !(o && o.loose)) return false;
+    }
+    if (brainUI.query && !n.label.toLowerCase().includes(brainUI.query)) return false;
+    return true;
   }
-  function hexToRgba(hex, a) {
-    let h = String(hex || '').trim();
-    if (h.startsWith('rgb')) return h.replace(/rgba?\(([^)]+)\)/, (m, p) => `rgba(${p.split(',').slice(0, 3).join(',')},${a})`);
-    h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join('');
-    const n = parseInt(h, 16) || 0;
-    return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
+  // what's lit right now: the dot you're pointing at (or clicked) and its neighbours, or the filter
+  function brainLit() {
+    const focus = brainUI.hovered || brainUI.selected;
+    const near = focus ? BM.nbrs.get(focus) : null;
+    const filtering = brainUI.filter !== 'all' || !!brainUI.query;
+    return { focus, near, filtering, on: n => focus ? (n.id === focus || (near && near.has(n.id))) : (!filtering || brainMatches(n)) };
+  }
+  function brainDotColor(n, accent, focus) {
+    if (n.id === focus) return accent;
+    if (n.type === 'folder') return '#e4e4e2';
+    if (n.type === 'ghost') return '#8f8f8d';
+    if (n.fresh) return accent;
+    if (n.pinned) return '#dcdcd8';
+    if (n.loose) return '#c9d98a';
+    return '#9d9d9a';
+  }
+  function brainRadius(n) {
+    if (n.type === 'folder') return Math.min(16, 7.5 + Math.sqrt(n.deg) * 1.1);
+    if (n.type === 'ghost') return 3.2;
+    return Math.min(7.5, 3.6 + Math.sqrt(n.deg) * 0.75);
+  }
+  function brainShort(s, max) { return s.length > max ? s.slice(0, max - 1) + '…' : s; }
+  function brainSelect(id) { brainUI.selected = id; renderBrainDetail(); redrawGraph(); }
+  function redrawGraph() { if (notesGraphMode === '2d') request2D(); }
+  function brainOpen(n) {
+    if (!n) return;
+    if (n.type === 'note') { brainUI.hovered = null; openNoteById(n.noteId); return; }
+    if (n.type === 'folder') { notesFolder = n.folderId; switchNotesView('list'); return; }
+    if (n.type === 'ghost') { const note = findNoteByTitle(n.label) || createNote(n.label, ''); showToast('Note created: ' + note.title); openNoteById(note.id); }
   }
 
-  // ---------- 2D: Constellation ----------
-  function initNotesGraph() {
-    stopNotesGraph();
-    const canvas = document.getElementById('notes-graph-canvas');
-    const wrap = document.getElementById('notes-graph-wrap');
-    const rect = wrap.getBoundingClientRect();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.max(1, Math.round(rect.width * dpr));
-    canvas.height = Math.max(1, Math.round(rect.height * dpr));
-    const data = buildGraphData();
-    graph = {
-      canvas, ctx: canvas.getContext('2d'), dpr, w: rect.width, h: rect.height,
-      nodes: data.nodes, links: data.links, byId: data.byId, adj: data.adj,
-      zoom: 1, panX: 0, panY: 0, alpha: 1, hover: null, dragNode: null, panning: false,
-      downX: 0, downY: 0, moved: false, raf: 0, colors: graphColors(), fade: {}, t0: performance.now()
-    };
-    if (!canvas._graphBound) { bindGraphEvents(canvas); canvas._graphBound = true; }
-    for (let i = 0; i < 120 && graph.alpha > 0.02; i++) graphTick();
-    // fit the whole map in the frame
-    if (graph.nodes.length) {
-      const xs = graph.nodes.map(n => n.x), ys = graph.nodes.map(n => n.y);
-      const bw = Math.max(...xs) - Math.min(...xs) || 1, bh = Math.max(...ys) - Math.min(...ys) || 1;
-      graph.zoom = Math.max(0.4, Math.min(2.4, Math.min((graph.w - 180) / bw, (graph.h - 160) / bh)));
-      graph.panX = -((Math.max(...xs) + Math.min(...xs)) / 2) * graph.zoom;
-      graph.panY = -((Math.max(...ys) + Math.min(...ys)) / 2) * graph.zoom - 10;
+  // ---------- shared: the panel on the right ----------
+  function renderBrainLegend() {
+    document.documentElement.style.setProperty('--brain-accent', brainAccent());
+    document.getElementById('brain-legend').innerHTML = '<span><i style="background:#e4e4e2;box-shadow:0 0 0 2px #212121,0 0 0 3.5px #8f8f8d"></i>Folders</span><span><i style="background:#9d9d9a"></i>Notes</span><span><i style="background:var(--brain-accent)"></i>Edited this week</span><span><i style="background:#c9d98a"></i>Not linked yet</span><span><i class="ring"></i>Not written yet</span>';
+  }
+  function brainAgo(t) {
+    if (!t) return '';
+    const m = Math.round((Date.now() - t) / 60000);
+    if (m < 2) return 'just now';
+    if (m < 60) return m + ' min ago';
+    const h = Math.round(m / 60); if (h < 24) return h + ' hour' + (h === 1 ? '' : 's') + ' ago';
+    const d = Math.round(h / 24); if (d < 30) return d + ' day' + (d === 1 ? '' : 's') + ' ago';
+    return new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+  }
+  function brainText(body) {
+    return (body || '').replace(/!\[[^\]]*\]\([^)]*\)/g, '[picture]').replace(/^\s*[-*]\s+\[( |x|X)\]\s?/gm, (m, c) => c === ' ' ? '☐ ' : '☑ ').replace(/^#{1,3}\s+/gm, '').replace(/^>\s?/gm, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\[\[([^\[\]\n]+)\]\]/g, '$1').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  function renderBrainDetail(force) {
+    if (!force && brainUI.shown === brainUI.selected) return;
+    brainUI.shown = brainUI.selected;
+    const kind = document.getElementById('bd-kind'), title = document.getElementById('bd-title'), sum = document.getElementById('bd-sum'), items = document.getElementById('bd-items'), btns = document.getElementById('bd-btns');
+    const n = BM.byId.get(brainUI.selected);
+    const row = x => `<button type="button" class="bd-row" data-bsel="${escAttr(x.id)}">${escapeHtml(x.label)}<small>${x.type === 'folder' ? 'FOLDER' : x.type === 'ghost' ? 'NOT WRITTEN YET' : 'NOTE · ' + escapeHtml(brainAgo(x.at).toUpperCase())}</small></button>`;
+    if (!n) {
+      const count = t => BM.nodes.filter(x => x.type === t).length;
+      const nn = BM.links.filter(l => l.kind !== 'fn').length;
+      kind.textContent = 'All notes';
+      title.textContent = 'Your brain';
+      sum.textContent = `${count('note')} notes in ${count('folder')} folder${count('folder') === 1 ? '' : 's'}, with ${nn} link${nn === 1 ? '' : 's'} between them. Click a dot to see what it is.`;
+      const recent = BM.nodes.filter(x => x.type === 'note').sort((a, b) => b.at - a.at).slice(0, 3);
+      items.innerHTML = recent.length ? '<div class="brain-eb" style="margin-top:4px">Lately</div>' + recent.map(row).join('') : '';
+      btns.innerHTML = '';
+      return;
     }
-    graphLoop();
-  }
-  function stopNotesGraph() {
-    if (graph && graph.raf) cancelAnimationFrame(graph.raf);
-    if (graph) graph.raf = 0;
-  }
-  function graphToWorld(px, py) {
-    return { x: (px - graph.w / 2 - graph.panX) / graph.zoom, y: (py - graph.h / 2 - graph.panY) / graph.zoom };
-  }
-  function graphNodeAt(px, py) {
-    const p = graphToWorld(px, py);
-    for (let i = graph.nodes.length - 1; i >= 0; i--) {
-      const n = graph.nodes[i], dx = p.x - n.x, dy = p.y - n.y, hitR = n.r + 7 / graph.zoom;
-      if (dx * dx + dy * dy <= hitR * hitR) return n;
+    const nbr = [...BM.nbrs.get(n.id)].map(id => BM.byId.get(id)).filter(Boolean);
+    if (n.type === 'folder') {
+      const notes = nbr.filter(x => x.type === 'note').sort((a, b) => b.at - a.at);
+      kind.textContent = 'Folder';
+      title.textContent = n.label;
+      sum.textContent = `${notes.length} note${notes.length === 1 ? '' : 's'}${notes.length ? ' · last edited ' + brainAgo(notes[0].at) : ''}`;
+      items.innerHTML = notes.slice(0, 6).map(row).join('');
+      btns.innerHTML = `<button type="button" class="pri" data-bopen="${escAttr(n.id)}">Open folder</button>`;
+    } else if (n.type === 'note') {
+      const note = getNote(n.noteId); if (!note) return;
+      const f = note.folderId ? folderById(note.folderId) : null;
+      const linked = nbr.filter(x => x.type !== 'folder');
+      kind.textContent = 'Note' + (f ? ' · ' + f.name : '');
+      title.textContent = n.label;
+      sum.textContent = `Edited ${brainAgo(note.updatedAt)} · ${linked.length} link${linked.length === 1 ? '' : 's'}${note.pinned ? ' · pinned' : ''}`;
+      const text = brainText(note.body);
+      items.innerHTML = (text ? `<div class="bd-reading">${escapeHtml(text.slice(0, 1400))}${text.length > 1400 ? '…' : ''}</div>` : '<div class="bd-reading" style="color:#8e8e8b">Empty note.</div>') + linked.slice(0, 5).map(row).join('');
+      btns.innerHTML = `<button type="button" class="pri" data-bopen="${escAttr(n.id)}">Open note</button>` + (f ? `<button type="button" data-bsel="${escAttr('f:' + f.id)}">${escapeHtml(f.name)}</button>` : '');
+    } else {
+      const from = nbr.filter(x => x.type === 'note');
+      kind.textContent = 'Not written yet';
+      title.textContent = n.label;
+      sum.textContent = `${from.length} note${from.length === 1 ? ' links' : 's link'} to [[${n.label}]], but there's no note with that name yet.`;
+      items.innerHTML = from.slice(0, 5).map(row).join('');
+      btns.innerHTML = `<button type="button" class="pri" data-bopen="${escAttr(n.id)}">Write this note</button>`;
     }
-    return null;
   }
-  function bindGraphEvents(canvas) {
-    canvas.addEventListener('pointerdown', (e) => {
-      if (!graph) return;
-      const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
-      graph.downX = px; graph.downY = py; graph.moved = false;
-      const n = graphNodeAt(px, py);
-      if (n) { graph.dragNode = n; graph.alpha = Math.max(graph.alpha, 0.35); }
-      else { graph.panning = true; canvas.classList.add('dragging'); }
-      canvas.setPointerCapture(e.pointerId);
+  function bindBrainSide() {
+    if (brainUI.bound) return;
+    brainUI.bound = true;
+    document.getElementById('brain-search').addEventListener('input', e => { brainUI.query = e.target.value.trim().toLowerCase(); redrawGraph(); });
+    document.getElementById('brain-chips').addEventListener('click', e => {
+      const b = e.target.closest('[data-bf]'); if (!b) return;
+      brainUI.filter = b.dataset.bf;
+      document.querySelectorAll('#brain-chips button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      redrawGraph();
     });
-    canvas.addEventListener('pointermove', (e) => {
-      if (!graph) return;
-      const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
-      if (Math.abs(px - graph.downX) + Math.abs(py - graph.downY) > 4) graph.moved = true;
-      if (graph.dragNode) { const p = graphToWorld(px, py); graph.dragNode.x = p.x; graph.dragNode.y = p.y; graph.dragNode.vx = 0; graph.dragNode.vy = 0; graph.alpha = Math.max(graph.alpha, 0.3); }
-      else if (graph.panning) { if (graph._lastPX !== undefined) { graph.panX += px - graph._lastPX; graph.panY += py - graph._lastPY; } graph._lastPX = px; graph._lastPY = py; }
-      graph.hover = (!graph.dragNode && !graph.panning) ? graphNodeAt(px, py) : graph.dragNode;
-      canvas.classList.toggle('pointing', !!graph.hover && !graph.panning);
+    document.querySelector('.brain-detail').addEventListener('click', e => {
+      const sel = e.target.closest('[data-bsel]');
+      if (sel) { brainSelect(sel.dataset.bsel); if (notesGraphMode === '3d') focus3D(sel.dataset.bsel); return; }
+      const open = e.target.closest('[data-bopen]');
+      if (open) brainOpen(BM.byId.get(open.dataset.bopen));
     });
-    canvas.addEventListener('pointerleave', () => { if (graph && !graph.dragNode) graph.hover = null; });
-    const endPointer = () => {
-      if (!graph) return;
-      const wasNode = graph.dragNode, moved = graph.moved;
-      graph.dragNode = null; graph.panning = false; graph._lastPX = undefined; graph._lastPY = undefined;
-      canvas.classList.remove('dragging');
-      if (wasNode && !moved) openGraphNode(wasNode);
-    };
-    canvas.addEventListener('pointerup', endPointer);
-    canvas.addEventListener('pointercancel', endPointer);
-    canvas.addEventListener('wheel', (e) => {
-      if (!graph) return;
-      e.preventDefault();
-      const r = canvas.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
-      const before = graphToWorld(px, py);
-      graph.zoom = Math.max(0.25, Math.min(3.5, graph.zoom * (e.deltaY < 0 ? 1.12 : 0.89)));
-      const after = graphToWorld(px, py);
-      graph.panX += (after.x - before.x) * graph.zoom; graph.panY += (after.y - before.y) * graph.zoom;
-    }, { passive: false });
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape' || !notesGraphVisible() || !brainUI.selected) return;
+      if (e.target && e.target.matches && e.target.matches('input, textarea, [contenteditable]')) return;
+      brainSelect(null);
+    });
   }
-  function graphTick() {
-    const nodes = graph.nodes, links = graph.links;
-    const repulsion = 1600, spring = 0.045, rest = 95, gravity = 0.012, damping = 0.82;
-    for (let i = 0; i < nodes.length; i++) {
-      const a = nodes[i];
-      for (let j = i + 1; j < nodes.length; j++) {
-        const b = nodes[j];
-        let dx = a.x - b.x, dy = a.y - b.y, d2 = dx * dx + dy * dy;
-        if (d2 < 1) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = 1; }
-        if (d2 > 160000) continue;
-        const f = repulsion / d2, d = Math.sqrt(d2), fx = (dx / d) * f, fy = (dy / d) * f;
-        a.vx += fx; a.vy += fy; b.vx -= fx; b.vy -= fy;
-      }
-    }
-    links.forEach(l => {
-      const a = graph.byId[l.a], b = graph.byId[l.b], dx = b.x - a.x, dy = b.y - a.y, d = Math.max(1, Math.sqrt(dx * dx + dy * dy));
-      const f = (d - rest) * spring, fx = (dx / d) * f, fy = (dy / d) * f;
-      a.vx += fx; a.vy += fy; b.vx -= fx; b.vy -= fy;
-    });
+
+  // ---------- 2D ----------
+  // Each folder gets its own patch of the map, so its notes gather around it in a tidy cluster;
+  // dots can't overlap, names only appear where they have room, and dots are always drawn on top.
+  const cam2 = { k: 1, x: 0, y: 0, userMoved: false };
+  let raf2 = 0, drag2 = null, bound2 = false;
+  function layout2D() {
+    const nodes = BM.nodes, folders = nodes.filter(n => n.type === 'folder'), F = folders.length;
+    const R = F <= 1 ? 0 : 110 + 48 * F;
+    folders.forEach((f, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / F; f.ax = Math.cos(a) * R * 1.3; f.ay = Math.sin(a) * R; });
     nodes.forEach(n => {
-      if (n === graph.dragNode) return;
-      n.vx -= n.x * gravity; n.vy -= n.y * gravity; n.vx *= damping; n.vy *= damping;
-      n.x += n.vx * graph.alpha; n.y += n.vy * graph.alpha;
-      graphPosCache[n.id] = { x: n.x, y: n.y };
+      if (n.type === 'note') { const f = n.folderId && BM.byId.get('f:' + n.folderId); n.ax = f ? f.ax : 0; n.ay = f ? f.ay : 0; }
+      if (n.type === 'ghost') { const ls = [...BM.nbrs.get(n.id)].map(id => BM.byId.get(id)); n.ax = ls.reduce((s, x) => s + (x.ax || 0), 0) / ls.length; n.ay = ls.reduce((s, x) => s + (x.ay || 0), 0) / ls.length; }
     });
-    graph.alpha = Math.max(0, graph.alpha - 0.004);
-  }
-  function graphDraw() {
-    const { ctx, dpr, w, h } = graph;
-    const t = (performance.now() - graph.t0) / 1000, still = reducedMotion();
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-    ctx.translate(w / 2 + graph.panX, h / 2 + graph.panY);
-    ctx.scale(graph.zoom, graph.zoom);
-    const hover = graph.hover, neighbors = hover ? (graph.adj[hover.id] || new Set()) : null;
-    // smooth fade in/out of the hover highlight
-    graph.nodes.forEach(n => { const target = !hover ? 1 : (n === hover || neighbors.has(n.id)) ? 1 : 0.14; const cur = graph.fade[n.id] ?? 1; graph.fade[n.id] = cur + (target - cur) * 0.18; });
-    ctx.lineCap = 'round';
-    graph.links.forEach(l => {
-      const a = graph.byId[l.a], b = graph.byId[l.b], touched = hover && (l.a === hover.id || l.b === hover.id);
-      const dim = Math.min(graph.fade[a.id], graph.fade[b.id]);
-      const g = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-      g.addColorStop(0, hexToRgba(a.color, touched ? 0.9 : 0.3 * dim)); g.addColorStop(1, hexToRgba(b.color, touched ? 0.9 : 0.3 * dim));
-      ctx.strokeStyle = g; ctx.lineWidth = (touched ? 1.7 : 1) / graph.zoom;
-      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    nodes.forEach(n => {
+      const p = pos2[n.id];
+      if (p) { n.x = p.x; n.y = p.y; }
+      else if (n.type === 'folder') { n.x = n.ax; n.y = n.ay; }
+      else { n.x = (n.ax || 0) + (rnd() - 0.5) * 80; n.y = (n.ay || 0) + (rnd() - 0.5) * 80; }
+      n.vx = 0; n.vy = 0;
     });
-    graph.nodes.forEach(n => {
-      const isHover = hover === n, a = Math.max(graph.fade[n.id], 0.14);
-      ctx.globalAlpha = a;
-      if (n.ghost) {
-        ctx.strokeStyle = hexToRgba(n.color, 0.6); ctx.lineWidth = 1 / graph.zoom; ctx.setLineDash([2 / graph.zoom, 3 / graph.zoom]);
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.r * 1.4, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
-      } else {
-        const tw = still ? 1 : 0.85 + 0.15 * Math.sin(t * 1.6 + n.phase);
-        const haloR = n.r * 5 * tw * (isHover ? 1.3 : 1);
-        const halo = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, haloR);
-        halo.addColorStop(0, hexToRgba(n.color, 0.42)); halo.addColorStop(1, hexToRgba(n.color, 0));
-        ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(n.x, n.y, haloR, 0, Math.PI * 2); ctx.fill();
-        const cr = n.r * (isHover ? 1.3 : 1);
-        const core = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, cr);
-        core.addColorStop(0, '#ffffff'); core.addColorStop(0.45, n.color); core.addColorStop(1, hexToRgba(n.color, 0.25));
-        ctx.fillStyle = core; ctx.beginPath(); ctx.arc(n.x, n.y, cr, 0, Math.PI * 2); ctx.fill();
-        if (n.pinned) { ctx.strokeStyle = hexToRgba('#e8b25c', 0.8); ctx.lineWidth = 1.2 / graph.zoom; ctx.beginPath(); ctx.arc(n.x, n.y, cr + 4 / graph.zoom, 0, Math.PI * 2); ctx.stroke(); }
-      }
-      const showLabel = isHover || (neighbors && neighbors.has(n.id)) || (!hover && (n.deg >= 3 || graph.zoom >= 1.25 || graph.nodes.length <= 12));
-      if (showLabel) {
-        ctx.globalAlpha = isHover ? 1 : Math.max(0.2, a) * 0.92;
-        ctx.font = `${isHover ? 600 : 500} ${12 / graph.zoom}px Geist, 'Plus Jakarta Sans', sans-serif`;
-        ctx.textAlign = 'center'; ctx.fillStyle = n.ghost ? '#8b94a3' : '#e8ecf1';
-        ctx.shadowColor = 'rgba(0,0,0,.95)'; ctx.shadowBlur = 6;
-        ctx.fillText(n.title.length > 30 ? n.title.slice(0, 29) + '…' : n.title, n.x, n.y + n.r + 15 / graph.zoom);
-        ctx.shadowBlur = 0;
-      }
-    });
-    ctx.globalAlpha = 1;
-    if (!graph.nodes.length) {
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.fillStyle = '#8b94a3'; ctx.font = "13px Geist, 'Plus Jakarta Sans', sans-serif"; ctx.textAlign = 'center';
-      ctx.fillText('No notes yet — write some and link them with [[wiki links]] to grow the map.', w / 2, h / 2);
+    if (typeof d3 === 'undefined' || !d3.forceSimulation) { nodes.forEach((n, i) => { if (!pos2[n.id] && n.type !== 'folder') { const r = 40 + 18 * Math.sqrt(i), th = i * 2.39996; n.x = n.ax + Math.cos(th) * r * 0.4; n.y = n.ay + Math.sin(th) * r * 0.4; } }); }
+    else {
+      const links = BM.links.map(l => ({ source: l.s, target: l.t, kind: l.kind }));
+      const sim = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(d => d.id).distance(l => l.kind === 'fn' ? 95 : l.kind === 'ng' ? 60 : 120).strength(l => l.kind === 'fn' ? 0.3 : l.kind === 'ng' ? 0.25 : 0.03))
+        .force('charge', d3.forceManyBody().strength(d => d.type === 'folder' ? -520 : d.type === 'ghost' ? -60 : -160).distanceMax(420))
+        .force('collide', d3.forceCollide(d => brainRadius(d) + (d.type === 'folder' ? 34 : 24)).strength(0.95).iterations(2))
+        .force('x', d3.forceX(d => d.ax || 0).strength(d => d.type === 'folder' ? 0.8 : 0.16))
+        .force('y', d3.forceY(d => d.ay || 0).strength(d => d.type === 'folder' ? 0.8 : 0.16))
+        .alpha(Object.keys(pos2).length ? 0.5 : 1).stop();
+      for (let i = 0; i < 320; i++) sim.tick();
     }
+    nodes.forEach(n => { pos2[n.id] = { x: n.x, y: n.y }; });
   }
-  function graphLoop() {
-    if (!graph || graph.raf) return;
-    const step = () => {
-      graph.raf = 0;
-      if (!notesGraphVisible() || notesGraphMode !== '2d') return;
-      if (graph.alpha > 0.02) graphTick();
-      graphDraw();
-      graph.raf = requestAnimationFrame(step);
+  function fit2D() {
+    const r = document.getElementById('brain-canvas').getBoundingClientRect();
+    if (!r.width || !r.height || !BM.nodes.length) return;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    BM.nodes.forEach(n => { x0 = Math.min(x0, n.x); y0 = Math.min(y0, n.y); x1 = Math.max(x1, n.x); y1 = Math.max(y1, n.y); });
+    // leave room for the folder names under each cluster and the hint along the bottom
+    cam2.k = Math.max(0.25, Math.min(2.2, Math.min((r.width - 140) / (x1 - x0 || 1), (r.height - 210) / (y1 - y0 || 1))));
+    cam2.x = r.width / 2 - ((x0 + x1) / 2) * cam2.k;
+    cam2.y = r.height / 2 - ((y0 + y1) / 2) * cam2.k - 22;
+  }
+  function init2D(changed) {
+    bind2D();
+    if (changed || BM.nodes.some(n => n.x == null)) layout2D();
+    if (!cam2.userMoved) fit2D();
+    request2D();
+  }
+  function request2D() {
+    if (raf2) return;
+    raf2 = requestAnimationFrame(() => { raf2 = 0; draw2D(); });
+  }
+  function draw2D() {
+    const c = document.getElementById('brain-canvas');
+    const rect = c.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    if (c.width !== Math.round(rect.width * dpr) || c.height !== Math.round(rect.height * dpr)) { c.width = Math.round(rect.width * dpr); c.height = Math.round(rect.height * dpr); }
+    const g = c.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, rect.width, rect.height);
+    if (!BM.nodes.length) {
+      g.fillStyle = '#8e8e8b'; g.font = "14px 'Geist', sans-serif"; g.textAlign = 'center';
+      g.fillText('No notes yet — write one and it will show up here.', rect.width / 2, rect.height / 2);
+      return;
+    }
+    const accent = brainAccent(), L = brainLit(), k = cam2.k;
+    const sp = n => ({ x: n.x * k + cam2.x, y: n.y * k + cam2.y });
+    // everything below is drawn in screen space so lines, dots and text stay crisp at any zoom
+    const P = new Map(BM.nodes.map(n => [n.id, sp(n)]));
+    const R = n => Math.max(1.8, brainRadius(n) * Math.min(1.25, Math.max(0.6, Math.sqrt(k))));
+
+    // links
+    g.lineWidth = 1;
+    g.strokeStyle = L.focus || L.filtering ? 'rgba(170,170,170,0.06)' : 'rgba(170,170,170,0.2)';
+    g.beginPath();
+    BM.links.forEach(l => { if (L.focus && (l.s === L.focus || l.t === L.focus)) return; const a = P.get(l.s), b = P.get(l.t); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); });
+    g.stroke();
+    if (L.focus) {
+      g.strokeStyle = hexToRgba(accent, 0.7); g.lineWidth = 1.4;
+      g.beginPath();
+      BM.links.forEach(l => { if (l.s !== L.focus && l.t !== L.focus) return; const a = P.get(l.s), b = P.get(l.t); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); });
+      g.stroke();
+    }
+
+    // names: work out which fit first (most important first), never on top of a dot or another name
+    const boxes = [];
+    const dotBoxes = BM.nodes.map(n => { const p = P.get(n.id), r = R(n) + 2; return { id: n.id, x0: p.x - r, y0: p.y - r, x1: p.x + r, y1: p.y + r }; });
+    const hit = (b, list, skip) => list.some(o => o.id !== skip && b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0);
+    const prio = n => n.id === L.focus ? 1e6 : n.type === 'folder' ? 1e5 : (L.near && L.near.has(n.id)) ? 1e4 : (n.pinned ? 300 : 0) + (n.fresh ? 200 : 0) + n.deg * 10;
+    const wants = n => {
+      if (n.id === L.focus || n.type === 'folder') return true;
+      if (L.focus) return L.near.has(n.id);
+      if (L.filtering) return brainMatches(n) && k > 0.55;
+      if (n.type === 'ghost') return k > 1.5;
+      return k > 0.7;
     };
-    graphDraw();
-    graph.raf = requestAnimationFrame(step);
+    const labels = [];
+    const clusterEdge = f => { let far = 0; const fp = P.get(f.id); BM.nbrs.get(f.id).forEach(id => { const o = BM.byId.get(id); if (o.type !== 'note' || o.folderId !== f.folderId) return; const q = P.get(id); far = Math.max(far, q.y - fp.y + R(o)); }); return far; };
+    BM.nodes.filter(wants).sort((a, b) => prio(b) - prio(a)).forEach(n => {
+      const p = P.get(n.id), big = n.type === 'folder' || n.id === L.focus;
+      g.font = `${big ? 650 : 500} ${big ? 13 : 11.5}px 'Geist', 'Segoe UI', sans-serif`;
+      const text = brainShort(n.label, big ? 34 : 26), w = g.measureText(text).width, h = big ? 15 : 13, r = R(n);
+      // a folder's name goes under its whole cluster, so it never sits on its own notes
+      const spots = n.type === 'folder' && n.id !== L.focus
+        ? [[p.x, p.y + Math.max(r + 8, clusterEdge(n) + 14)]]
+        : [[p.x, p.y + r + 6], [p.x, p.y - r - 6 - h], [p.x + r + 6 + w / 2, p.y - h / 2], [p.x - r - 6 - w / 2, p.y - h / 2]];
+      for (const [x, y] of spots) {
+        const box = { id: n.id, x0: x - w / 2 - 3, y0: y - 1, x1: x + w / 2 + 3, y1: y + h };
+        if (n.id !== L.focus && n.type !== 'folder' && (hit(box, boxes) || hit(box, dotBoxes, n.id))) continue;
+        if (n.type === 'folder' && n.id !== L.focus && hit(box, boxes)) continue;
+        boxes.push(box);
+        labels.push({ n, text, x, y, big });
+        break;
+      }
+    });
+    g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
+    labels.forEach(({ n, text, x, y, big }) => {
+      g.font = `${big ? 650 : 500} ${big ? 13 : 11.5}px 'Geist', 'Segoe UI', sans-serif`;
+      g.globalAlpha = L.on(n) || n.id === L.focus ? 1 : 0.25;
+      g.strokeStyle = '#1d1d1d'; g.lineWidth = 4; g.strokeText(text, x, y);
+      g.fillStyle = n.id === L.focus ? '#f4f4f2' : n.type === 'folder' ? '#d6d6d3' : n.type === 'ghost' ? '#8e8e8b' : '#acaca9';
+      g.fillText(text, x, y);
+    });
+
+    // dots, always on top
+    BM.nodes.forEach(n => {
+      const p = P.get(n.id), r = R(n);
+      g.globalAlpha = L.on(n) ? 1 : 0.13;
+      if (n.id === brainUI.selected) { g.fillStyle = hexToRgba(accent, 0.18); g.beginPath(); g.arc(p.x, p.y, r + 7, 0, Math.PI * 2); g.fill(); }
+      if (n.type === 'ghost') {
+        g.strokeStyle = n.id === L.focus ? accent : '#8f8f8d'; g.lineWidth = 1.2; g.setLineDash([2.5, 2.5]);
+        g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+        return;
+      }
+      g.fillStyle = brainDotColor(n, accent, L.focus);
+      g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.fill();
+      if (n.type === 'folder') { g.strokeStyle = n.color; g.lineWidth = 2.4; g.beginPath(); g.arc(p.x, p.y, r + 3.5, 0, Math.PI * 2); g.stroke(); }
+    });
+    g.globalAlpha = 1;
+  }
+  function node2DAt(e) {
+    const c = document.getElementById('brain-canvas'), r = c.getBoundingClientRect();
+    const px = e.clientX - r.left, py = e.clientY - r.top;
+    let best = null;
+    BM.nodes.forEach(n => { const x = n.x * cam2.k + cam2.x, y = n.y * cam2.k + cam2.y, d = Math.hypot(x - px, y - py); if (d < Math.max(9, brainRadius(n) + 5) && (!best || d < best.d)) best = { n, d }; });
+    return best ? best.n : null;
+  }
+  function bind2D() {
+    if (bound2) return;
+    bound2 = true;
+    const c = document.getElementById('brain-canvas');
+    c.addEventListener('wheel', e => {
+      e.preventDefault();
+      const r = c.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+      const k = Math.min(6, Math.max(0.2, cam2.k * Math.exp(-e.deltaY * 0.0015)));
+      cam2.x = mx - ((mx - cam2.x) / cam2.k) * k; cam2.y = my - ((my - cam2.y) / cam2.k) * k; cam2.k = k;
+      cam2.userMoved = true; request2D();
+    }, { passive: false });
+    c.addEventListener('pointerdown', e => { drag2 = { x: e.clientX, y: e.clientY, cx: cam2.x, cy: cam2.y, moved: false }; c.setPointerCapture(e.pointerId); });
+    c.addEventListener('pointermove', e => {
+      if (drag2) {
+        const dx = e.clientX - drag2.x, dy = e.clientY - drag2.y;
+        if (Math.abs(dx) + Math.abs(dy) > 3) drag2.moved = true;
+        if (drag2.moved) { cam2.x = drag2.cx + dx; cam2.y = drag2.cy + dy; cam2.userMoved = true; c.classList.add('dragging'); request2D(); return; }
+      }
+      const n = node2DAt(e), id = n ? n.id : null;
+      c.classList.toggle('pointing', !!n);
+      if (id !== brainUI.hovered) { brainUI.hovered = id; request2D(); }
+    });
+    c.addEventListener('pointerup', e => {
+      const moved = drag2 && drag2.moved; drag2 = null; c.classList.remove('dragging');
+      if (moved) return;
+      const n = node2DAt(e);
+      brainSelect(n ? (n.id === brainUI.selected ? null : n.id) : null);
+    });
+    c.addEventListener('pointerleave', () => { if (brainUI.hovered) { brainUI.hovered = null; request2D(); } });
+    c.addEventListener('dblclick', e => { const n = node2DAt(e); if (n) brainOpen(n); else { cam2.userMoved = false; fit2D(); request2D(); } });
   }
 
-  // ---------- 3D: Nebula ----------
-  const graphPosCache3D = {};
+  // ---------- 3D ----------
+  // The same map in space: lit spheres, folder rings that always face you, depth fog so nearer notes
+  // read first, slow drift, and clicking a dot glides the view round to it.
   let g3 = null;
-  let nebulaGlowTex = null;
-  function nebulaGlow() {
-    if (nebulaGlowTex) return nebulaGlowTex;
-    const c = document.createElement('canvas'); c.width = c.height = 128;
-    const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
-    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.18, 'rgba(255,255,255,.55)'); g.addColorStop(0.45, 'rgba(255,255,255,.12)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
-    nebulaGlowTex = new THREE.CanvasTexture(c);
-    return nebulaGlowTex;
-  }
-  function init3DGraph() {
-    if (typeof THREE === 'undefined') { showToast('3D engine failed to load — using 2D'); notesGraphMode = '2d'; initNotesGraph(); return; }
-    stop3DGraph();
+  function init3DGraph(changed) {
+    if (typeof THREE === 'undefined') { brain3DUnavailable('3D engine failed to load — showing the 2D map'); return; }
     const canvas = document.getElementById('notes-graph-canvas3d');
-    const wrap = document.getElementById('notes-graph-wrap');
-    const rect = wrap.getBoundingClientRect();
+    const rect = document.getElementById('brain-tile').getBoundingClientRect();
     if (!g3) {
       // some machines can't start WebGL (graphics driver or GPU blocked) — show the 2D map instead of breaking
       let renderer = null;
       try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { renderer = null; }
-      if (!renderer) {
-        showToast("3D isn't available on this computer right now — showing the 2D map");
-        notesGraphMode = '2d';
-        document.querySelectorAll('#graph-mode-toggle button').forEach(x => x.classList.toggle('active', x.dataset.gmode === '2d'));
-        document.getElementById('notes-graph-canvas').style.display = 'block';
-        canvas.style.display = 'none';
-        initNotesGraph();
-        return;
-      }
-      g3 = {
-        renderer,
-        camera: new THREE.PerspectiveCamera(50, 1, 1, 8000),
-        raycaster: new THREE.Raycaster(), pointer: new THREE.Vector2(),
-        theta: 0.6, phi: 1.2, dist: 0, raf: 0, hover: null, rotating: false, moved: false
-      };
+      if (!renderer) { brain3DUnavailable("3D isn't available on this computer right now — showing the 2D map"); return; }
+      g3 = { renderer, camera: new THREE.PerspectiveCamera(48, 1, 1, 9000), raycaster: new THREE.Raycaster(), pointer: new THREE.Vector2(), theta: 0.7, phi: 1.15, dist: 0, raf: 0, rotating: false, moved: false, target: new THREE.Vector3(), goal: new THREE.Vector3(), userZoomed: false, lastClick: 0 };
       bind3DEvents(canvas);
     }
     g3.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -7887,157 +8060,223 @@
     g3.w = rect.width; g3.h = rect.height;
     g3.camera.aspect = rect.width / Math.max(1, rect.height);
     g3.camera.updateProjectionMatrix();
-    if (g3.scene) dispose3DScene();
-    g3.scene = new THREE.Scene();
-
-    const data = buildGraphData();
-    g3.nodes = data.nodes; g3.links = data.links; g3.byId = data.byId; g3.adj = data.adj;
-    const N = Math.max(1, g3.nodes.length);
-    g3.nodes.forEach((n, i) => {
-      const cached = graphPosCache3D[n.id];
-      if (cached) { n.x = cached.x; n.y = cached.y; n.z = cached.z; }
-      else {
-        const ph = Math.acos(1 - 2 * (i + 0.5) / N), th = Math.PI * (1 + Math.sqrt(5)) * i, R = 130 + 22 * Math.sqrt(N);
-        n.x = R * Math.sin(ph) * Math.cos(th); n.y = R * Math.cos(ph); n.z = R * Math.sin(ph) * Math.sin(th);
-      }
-      n.vx = 0; n.vy = 0; n.vz = 0;
+    if (changed || !g3.scene) build3DScene();
+    if (!g3.userZoomed) frame3D();
+    loop3D();
+  }
+  function brain3DUnavailable(msg) {
+    showToast(msg);
+    notesGraphMode = '2d';
+    initGraphView();
+  }
+  function layout3D() {
+    const nodes = BM.nodes, folders = nodes.filter(n => n.type === 'folder'), F = folders.length;
+    const R = F <= 1 ? 0 : 150 + 55 * F;
+    folders.forEach((f, i) => {
+      const ph = Math.acos(1 - 2 * (i + 0.5) / F), th = Math.PI * (1 + Math.sqrt(5)) * i;
+      f.ax = R * Math.sin(ph) * Math.cos(th); f.ay = R * Math.cos(ph) * 0.75; f.az = R * Math.sin(ph) * Math.sin(th);
     });
-    if (!g3.dist) g3.dist = Math.max(380, 62 * Math.sqrt(N) + 240);
+    nodes.forEach(n => {
+      if (n.type === 'note') { const f = n.folderId && BM.byId.get('f:' + n.folderId); n.ax = f ? f.ax : 0; n.ay = f ? f.ay : 0; n.az = f ? f.az : 0; }
+    });
+    nodes.forEach(n => { if (n.type === 'ghost') { const ls = [...BM.nbrs.get(n.id)].map(id => BM.byId.get(id)); ['ax', 'ay', 'az'].forEach(k => { n[k] = ls.reduce((s, x) => s + (x[k] || 0), 0) / ls.length; }); } });
+    let seed = 5; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    nodes.forEach(n => {
+      const p = pos3[n.id];
+      if (p) { n.x3 = p.x; n.y3 = p.y; n.z3 = p.z; }
+      else { n.x3 = (n.ax || 0) + (rnd() - 0.5) * 90; n.y3 = (n.ay || 0) + (rnd() - 0.5) * 90; n.z3 = (n.az || 0) + (rnd() - 0.5) * 90; }
+      n.v = [0, 0, 0];
+    });
+    const byId = BM.byId;
+    for (let it = 0; it < 260; it++) {
+      const a = 1 - it / 260;
+      for (let i = 0; i < nodes.length; i++) {
+        const p = nodes[i];
+        for (let j = i + 1; j < nodes.length; j++) {
+          const q = nodes[j];
+          let dx = p.x3 - q.x3, dy = p.y3 - q.y3, dz = p.z3 - q.z3, d2 = dx * dx + dy * dy + dz * dz;
+          if (d2 < 1) { dx = rnd() - 0.5; dy = rnd() - 0.5; dz = rnd() - 0.5; d2 = 1; }
+          if (d2 > 160000) continue;
+          const want = (p.type === 'folder' || q.type === 'folder') ? 5200 : 1500;
+          const d = Math.sqrt(d2), f = want / d2;
+          p.v[0] += dx / d * f; p.v[1] += dy / d * f; p.v[2] += dz / d * f;
+          q.v[0] -= dx / d * f; q.v[1] -= dy / d * f; q.v[2] -= dz / d * f;
+        }
+      }
+      BM.links.forEach(l => {
+        const p = byId.get(l.s), q = byId.get(l.t), rest = l.kind === 'fn' ? 70 : l.kind === 'ng' ? 50 : 110, k = l.kind === 'nn' ? 0.008 : 0.05;
+        const dx = q.x3 - p.x3, dy = q.y3 - p.y3, dz = q.z3 - p.z3, d = Math.max(1, Math.hypot(dx, dy, dz)), f = (d - rest) * k;
+        p.v[0] += dx / d * f; p.v[1] += dy / d * f; p.v[2] += dz / d * f;
+        q.v[0] -= dx / d * f; q.v[1] -= dy / d * f; q.v[2] -= dz / d * f;
+      });
+      nodes.forEach(n => {
+        const pull = n.type === 'folder' ? 0.25 : 0.03;
+        n.v[0] += ((n.ax || 0) - n.x3) * pull; n.v[1] += ((n.ay || 0) - n.y3) * pull; n.v[2] += ((n.az || 0) - n.z3) * pull;
+        n.v = n.v.map(v => v * 0.6);
+        n.x3 += n.v[0] * a; n.y3 += n.v[1] * a; n.z3 += n.v[2] * a;
+      });
+    }
+    nodes.forEach(n => { pos3[n.id] = { x: n.x3, y: n.y3, z: n.z3 }; });
+  }
+  let ringTex = null;
+  function folderRingTexture() {
+    if (ringTex) return ringTex;
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d');
+    x.strokeStyle = '#ffffff'; x.lineWidth = 7; x.beginPath(); x.arc(64, 64, 52, 0, Math.PI * 2); x.stroke();
+    ringTex = new THREE.CanvasTexture(c);
+    return ringTex;
+  }
+  function build3DScene() {
+    if (g3.scene) dispose3DScene();
+    layout3D();
+    const scene = new THREE.Scene();
+    g3.scene = scene;
+    scene.fog = new THREE.Fog(0x1d1d1d, 400, 2600);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const key = new THREE.DirectionalLight(0xffffff, 0.95); key.position.set(1, 1.4, 1.2); scene.add(key);
+    const rim = new THREE.DirectionalLight(0xbfd8ff, 0.35); rim.position.set(-1.2, -0.4, -1); scene.add(rim);
+    // faint dust far out, so turning the map gives a sense of depth
+    let seed = 9; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const dust = [];
+    for (let i = 0; i < 700; i++) { const r = 700 + rnd() * 1400, th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1); dust.push(r * Math.sin(ph) * Math.cos(th), r * Math.sin(ph) * Math.sin(th), r * Math.cos(ph)); }
+    const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.Float32BufferAttribute(dust, 3));
+    scene.add(new THREE.Points(dg, new THREE.PointsMaterial({ color: 0x8a8a88, size: 2, sizeAttenuation: true, transparent: true, opacity: 0.35, depthWrite: false })));
 
-    // star field
-    let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    const starPos = [];
-    for (let i = 0; i < 1500; i++) { const r = 900 + rnd() * 1600, th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1); starPos.push(r * Math.sin(ph) * Math.cos(th), r * Math.sin(ph) * Math.sin(th), r * Math.cos(ph)); }
-    const starGeo = new THREE.BufferGeometry(); starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-    g3.scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xaab8ff, size: 2.2, sizeAttenuation: true, transparent: true, opacity: 0.7, depthWrite: false })));
-
-    const coreGeo = new THREE.SphereGeometry(1, 32, 24), glow = nebulaGlow();
-    const labels = document.getElementById('graph-labels');
+    const sphere = new THREE.SphereGeometry(1, 28, 20), ring = folderRingTexture();
+    const labels = document.getElementById('brain-labels');
     labels.innerHTML = '';
-    g3.nodes.forEach(n => {
-      const col = new THREE.Color(n.color);
-      const mesh = new THREE.Mesh(coreGeo, new THREE.MeshBasicMaterial({ color: col.clone().lerp(new THREE.Color('#ffffff'), n.ghost ? 0.2 : 0.55), transparent: true, opacity: n.ghost ? 0.5 : 1 }));
-      n.s3 = n.ghost ? 5 : 7 + Math.sqrt(n.deg) * 4.2;
-      mesh.scale.setScalar(n.s3 * 0.42);
+    BM.nodes.forEach(n => {
+      const r = brainRadius(n) * 1.25;
+      let mat;
+      if (n.type === 'ghost') mat = new THREE.MeshBasicMaterial({ color: 0x8f8f8d, wireframe: true, transparent: true, opacity: 0.7 });
+      else mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(brainDotColor(n, brainAccent(), null)), roughness: 0.42, metalness: 0.08, transparent: true, opacity: 1, emissive: new THREE.Color(n.fresh ? brainAccent() : '#000000'), emissiveIntensity: n.fresh ? 0.35 : 0 });
+      const mesh = new THREE.Mesh(sphere, mat);
+      mesh.scale.setScalar(r);
+      mesh.position.set(n.x3, n.y3, n.z3);
       mesh.userData.node = n;
-      g3.scene.add(mesh);
-      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: col, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: n.ghost ? 0.35 : 0.9 }));
-      g3.scene.add(sprite);
-      n._mesh = mesh; n._glow = sprite;
-      const lab = document.createElement('span'); lab.textContent = n.title.length > 30 ? n.title.slice(0, 29) + '…' : n.title; lab.style.opacity = 0; labels.appendChild(lab);
+      scene.add(mesh);
+      n._mesh = mesh; n._r3 = r;
+      if (n.type === 'folder') {
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: ring, color: new THREE.Color(n.color), transparent: true, depthWrite: false }));
+        sp.scale.setScalar(r * 3.1); sp.position.copy(mesh.position);
+        scene.add(sp); n._ring = sp;
+      }
+      const lab = document.createElement('span');
+      lab.textContent = brainShort(n.label, n.type === 'folder' ? 34 : 26);
+      lab.className = n.type === 'folder' ? 'f' : n.type === 'ghost' ? 'g' : '';
+      lab.style.opacity = 0;
+      labels.appendChild(lab);
       n._label = lab;
     });
-    g3.linkGeo = new THREE.BufferGeometry();
-    g3.linkGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(g3.links.length * 6), 3));
-    g3.lines = new THREE.LineSegments(g3.linkGeo, new THREE.LineBasicMaterial({ color: 0x8fa6ff, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }));
-    g3.scene.add(g3.lines);
-    g3.hlGeo = new THREE.BufferGeometry();
-    g3.hlGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(g3.links.length * 6), 3));
-    g3.hlLines = new THREE.LineSegments(g3.hlGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const pos = new Float32Array(BM.links.length * 6);
+    BM.links.forEach((l, i) => { const a = BM.byId.get(l.s), b = BM.byId.get(l.t); pos.set([a.x3, a.y3, a.z3, b.x3, b.y3, b.z3], i * 6); });
+    g3.linkGeo = new THREE.BufferGeometry(); g3.linkGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g3.lines = new THREE.LineSegments(g3.linkGeo, new THREE.LineBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.22, depthWrite: false }));
+    scene.add(g3.lines);
+    g3.hlGeo = new THREE.BufferGeometry(); g3.hlGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(BM.links.length * 6), 3));
+    g3.hlLines = new THREE.LineSegments(g3.hlGeo, new THREE.LineBasicMaterial({ color: new THREE.Color(brainAccent()), transparent: true, opacity: 0.85, depthWrite: false }));
     g3.hlLines.visible = false;
-    g3.scene.add(g3.hlLines);
-
-    g3.alpha = 1; g3.t0 = performance.now();
-    for (let i = 0; i < 120 && g3.alpha > 0.02; i++) tick3D();
-    // frame the whole map unless you have zoomed yourself
-    if (!g3.userZoomed) {
-      const radius = Math.max(60, ...g3.nodes.map(n => Math.hypot(n.x, n.y, n.z))) + 40;
-      g3.dist = radius / Math.tan(25 * Math.PI / 180) * 1.05;
-    }
-    draw3D();
-    loop3D();
+    scene.add(g3.hlLines);
+    g3.t0 = performance.now();
+  }
+  function brainCentre3D() {
+    // the middle of the map's outer edges, so big folders don't pull the view off-centre
+    if (!BM.nodes.length) return new THREE.Vector3();
+    const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+    BM.nodes.forEach(n => [n.x3, n.y3, n.z3].forEach((v, i) => { lo[i] = Math.min(lo[i], v); hi[i] = Math.max(hi[i], v); }));
+    return new THREE.Vector3((lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2);
+  }
+  function frame3D() {
+    const c = brainCentre3D();
+    const radius = Math.max(80, ...BM.nodes.map(n => Math.hypot(n.x3 - c.x, n.y3 - c.y, n.z3 - c.z))) + 50;
+    g3.dist = radius / Math.tan(24 * Math.PI / 180) * 0.92;
+    g3.goal.copy(c);
+    if (!g3.framed) { g3.target.copy(c); g3.framed = true; }
+  }
+  function focus3D(id) {
+    if (!g3) return;
+    const n = BM.byId.get(id);
+    if (n) g3.goal.set(n.x3, n.y3, n.z3); else g3.goal.copy(brainCentre3D());
   }
   function dispose3DScene() {
     g3.scene.traverse(o => {
       if (o.geometry) o.geometry.dispose();
-      if (o.material) { if (o.material.map && o.material.map !== nebulaGlowTex) o.material.map.dispose(); o.material.dispose(); }
+      if (o.material) { if (o.material.map && o.material.map !== ringTex) o.material.map.dispose(); o.material.dispose(); }
     });
     g3.scene = null;
   }
   function stop3DGraph() {
     if (g3 && g3.raf) { cancelAnimationFrame(g3.raf); g3.raf = 0; }
-  }
-  function tick3D() {
-    const nodes = g3.nodes, repulsion = 2600, spring = 0.04, rest = 110, gravity = 0.012, damping = 0.82;
-    for (let i = 0; i < nodes.length; i++) {
-      const a = nodes[i];
-      for (let j = i + 1; j < nodes.length; j++) {
-        const b = nodes[j];
-        let dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z, d2 = dx * dx + dy * dy + dz * dz;
-        if (d2 < 1) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; dz = Math.random() - 0.5; d2 = 1; }
-        if (d2 > 250000) continue;
-        const d = Math.sqrt(d2), f = repulsion / d2, fx = (dx / d) * f, fy = (dy / d) * f, fz = (dz / d) * f;
-        a.vx += fx; a.vy += fy; a.vz += fz; b.vx -= fx; b.vy -= fy; b.vz -= fz;
-      }
-    }
-    g3.links.forEach(l => {
-      const a = g3.byId[l.a], b = g3.byId[l.b], dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
-      const d = Math.max(1, Math.sqrt(dx * dx + dy * dy + dz * dz)), f = (d - rest) * spring;
-      const fx = (dx / d) * f, fy = (dy / d) * f, fz = (dz / d) * f;
-      a.vx += fx; a.vy += fy; a.vz += fz; b.vx -= fx; b.vy -= fy; b.vz -= fz;
-    });
-    nodes.forEach(n => {
-      n.vx -= n.x * gravity; n.vy -= n.y * gravity; n.vz -= n.z * gravity;
-      n.vx *= damping; n.vy *= damping; n.vz *= damping;
-      n.x += n.vx * g3.alpha; n.y += n.vy * g3.alpha; n.z += n.vz * g3.alpha;
-      graphPosCache3D[n.id] = { x: n.x, y: n.y, z: n.z };
-    });
-    g3.alpha = Math.max(0, g3.alpha - 0.004);
+    const l = document.getElementById('brain-labels'); if (l && notesGraphMode !== '3d') l.innerHTML = '';
   }
   function draw3D() {
     if (!g3 || !g3.scene) return;
-    const t = (performance.now() - (g3.t0 || 0)) / 1000, still = reducedMotion();
-    g3.phi = Math.max(0.08, Math.min(Math.PI - 0.08, g3.phi));
-    g3.camera.position.set(g3.dist * Math.sin(g3.phi) * Math.cos(g3.theta), g3.dist * Math.cos(g3.phi), g3.dist * Math.sin(g3.phi) * Math.sin(g3.theta));
-    g3.camera.lookAt(0, 0, 0);
+    g3.phi = Math.max(0.1, Math.min(Math.PI - 0.1, g3.phi));
+    g3.target.lerp(g3.goal, 0.08);
+    const cp = g3.camera.position;
+    cp.set(g3.target.x + g3.dist * Math.sin(g3.phi) * Math.cos(g3.theta), g3.target.y + g3.dist * Math.cos(g3.phi), g3.target.z + g3.dist * Math.sin(g3.phi) * Math.sin(g3.theta));
+    g3.camera.lookAt(g3.target);
     g3.camera.updateMatrixWorld();
-    const hover = g3.hover, neighbors = hover ? (g3.adj[hover.id] || new Set()) : null;
-    const v = new THREE.Vector3();
-    g3.nodes.forEach((n, i) => {
-      const isHover = hover === n, lit = !hover || isHover || neighbors.has(n.id);
-      n._mesh.position.set(n.x, n.y, n.z);
-      n._mesh.scale.setScalar(n.s3 * 0.42 * (isHover ? 1.35 : 1));
-      n._mesh.material.opacity = (n.ghost ? 0.5 : 1) * (lit ? 1 : 0.3);
-      const pulse = still ? 1 : 1 + 0.12 * Math.sin(t * 1.3 + i);
-      n._glow.position.set(n.x, n.y, n.z);
-      n._glow.scale.setScalar(n.s3 * 6.5 * pulse * (isHover ? 1.4 : 1));
-      n._glow.material.opacity = (n.ghost ? 0.35 : 0.9) * (lit ? 1 : 0.22);
-      v.set(n.x, n.y, n.z).project(g3.camera);
-      const camDist = g3.camera.position.distanceTo(n._mesh.position);
-      const near = Math.max(0, Math.min(1, (g3.dist * 1.35 - camDist) / (g3.dist * 0.5)));
-      const show = v.z < 1 && (isHover || (hover && neighbors.has(n.id)) || (!hover && (n.deg >= 3 || g3.nodes.length <= 12)));
-      n._label.style.left = ((v.x + 1) / 2 * g3.w) + 'px';
-      n._label.style.top = ((1 - v.y) / 2 * g3.h + n.s3 * 0.6) + 'px';
-      n._label.style.opacity = show ? (isHover ? 1 : 0.85 * Math.max(0.35, near)) : 0;
-      n._label.classList.toggle('h', isHover);
+    g3.scene.fog.near = g3.dist * 0.55; g3.scene.fog.far = g3.dist * 2.1;
+    const accent = brainAccent(), L = brainLit(), t = (performance.now() - g3.t0) / 1000, still = reducedMotion();
+    const v = new THREE.Vector3(), shown = [];
+    BM.nodes.forEach((n, i) => {
+      const lit = L.on(n), isFocus = n.id === L.focus;
+      const m = n._mesh;
+      const breathe = still || !n.fresh ? 1 : 1 + 0.07 * Math.sin(t * 1.6 + i);
+      m.scale.setScalar(n._r3 * (isFocus ? 1.45 : 1) * breathe);
+      m.material.opacity = lit ? (n.type === 'ghost' ? 0.7 : 1) : 0.12;
+      if (n.type !== 'ghost') m.material.color.set(brainDotColor(n, accent, L.focus));
+      if (n._ring) { n._ring.material.opacity = lit ? 0.95 : 0.12; n._ring.scale.setScalar(n._r3 * 3.1 * (isFocus ? 1.3 : 1)); }
+      v.set(n.x3, n.y3, n.z3).project(g3.camera);
+      const sx = (v.x + 1) / 2 * g3.w, sy = (1 - v.y) / 2 * g3.h, depth = cp.distanceTo(m.position);
+      const pxR = n._r3 / (depth * Math.tan(24 * Math.PI / 180)) * (g3.h / 2);
+      const want = v.z < 1 && (isFocus || n.type === 'folder' || (L.focus ? L.near.has(n.id) : (lit && depth < g3.dist * 0.62 && n.type !== 'ghost')));
+      n._sx = sx; n._sy = sy; n._pxR = pxR;
+      n._lx = sx; n._ly = sy + (n.type === 'folder' ? pxR * 1.6 : pxR) + 6; n._depth = depth;
+      if (want) shown.push(n); else n._label.style.opacity = 0;
     });
-    const pos = g3.linkGeo.attributes.position.array, hlPos = g3.hlGeo.attributes.position.array;
-    let hlCount = 0;
-    g3.links.forEach((l, i) => {
-      const a = g3.byId[l.a], b = g3.byId[l.b];
-      pos[i * 6] = a.x; pos[i * 6 + 1] = a.y; pos[i * 6 + 2] = a.z; pos[i * 6 + 3] = b.x; pos[i * 6 + 4] = b.y; pos[i * 6 + 5] = b.z;
-      if (hover && (l.a === hover.id || l.b === hover.id)) {
-        hlPos[hlCount * 6] = a.x; hlPos[hlCount * 6 + 1] = a.y; hlPos[hlCount * 6 + 2] = a.z; hlPos[hlCount * 6 + 3] = b.x; hlPos[hlCount * 6 + 4] = b.y; hlPos[hlCount * 6 + 5] = b.z;
-        hlCount++;
-      }
+    shown.forEach(f => {
+      if (f.type !== 'folder' || f.id === L.focus) return;
+      let far = f._pxR * 1.6;
+      BM.nbrs.get(f.id).forEach(id => { const o = BM.byId.get(id); if (o.type === 'note' && o.folderId === f.folderId && o._sy != null) far = Math.max(far, o._sy - f._sy + o._pxR); });
+      f._ly = f._sy + far + 10;
     });
-    g3.linkGeo.attributes.position.needsUpdate = true;
-    g3.linkGeo.computeBoundingSphere();
-    g3.lines.material.opacity = hover ? 0.08 : 0.22;
-    g3.hlLines.visible = hlCount > 0;
-    g3.hlGeo.setDrawRange(0, hlCount * 2);
+    // names: nearest and most important first, skipping any that would land on another name
+    const boxes = [];
+    shown.sort((a, b) => (b.id === L.focus) - (a.id === L.focus) || (b.type === 'folder') - (a.type === 'folder') || a._depth - b._depth).forEach(n => {
+      const w = n._label.textContent.length * (n.type === 'folder' ? 7.4 : 6.6) + 8, h = 16;
+      const box = { x0: n._lx - w / 2, y0: n._ly, x1: n._lx + w / 2, y1: n._ly + h };
+      const over = o => box.x0 < o.x1 && box.x1 > o.x0 && box.y0 < o.y1 && box.y1 > o.y0;
+      const onDot = n.type !== 'folder' && BM.nodes.some(o => o !== n && o._sx != null && over({ x0: o._sx - o._pxR, y0: o._sy - o._pxR, x1: o._sx + o._pxR, y1: o._sy + o._pxR }));
+      const clash = n.id !== L.focus && (boxes.some(over) || onDot);
+      if (clash) { n._label.style.opacity = 0; return; }
+      boxes.push(box);
+      n._label.style.left = n._lx + 'px'; n._label.style.top = n._ly + 'px';
+      const fade = Math.max(0.35, Math.min(1, (g3.dist * 1.6 - n._depth) / (g3.dist * 0.8)));
+      n._label.style.opacity = n.id === L.focus ? 1 : L.on(n) ? fade : 0.2;
+      n._label.classList.toggle('h', n.id === L.focus);
+    });
+    const hl = g3.hlGeo.attributes.position.array;
+    let c = 0;
+    if (L.focus) BM.links.forEach(l => { if (l.s !== L.focus && l.t !== L.focus) return; const a = BM.byId.get(l.s), b = BM.byId.get(l.t); hl.set([a.x3, a.y3, a.z3, b.x3, b.y3, b.z3], c * 6); c++; });
+    g3.hlLines.material.color.set(accent);
+    g3.hlLines.visible = c > 0;
+    g3.hlGeo.setDrawRange(0, c * 2);
     g3.hlGeo.attributes.position.needsUpdate = true;
+    g3.lines.material.opacity = L.focus || L.filtering ? 0.07 : 0.22;
     g3.renderer.render(g3.scene, g3.camera);
   }
   function pick3D() {
     g3.raycaster.setFromCamera(g3.pointer, g3.camera);
-    const hit = g3.raycaster.intersectObjects(g3.nodes.map(n => n._mesh), false)[0];
+    const hit = g3.raycaster.intersectObjects(BM.nodes.map(n => n._mesh).filter(Boolean), false)[0];
     if (hit) return hit.object.userData.node;
-    // nearest star within ~22px, so small ones stay easy to hit
+    // nearest dot within ~18px, so small ones stay easy to hit
     const v = new THREE.Vector3(), px = (g3.pointer.x + 1) / 2 * g3.w, py = (1 - g3.pointer.y) / 2 * g3.h;
-    let best = null, bestD = 22;
-    g3.nodes.forEach(n => {
-      v.set(n.x, n.y, n.z).project(g3.camera);
+    let best = null, bestD = 18;
+    BM.nodes.forEach(n => {
+      v.set(n.x3, n.y3, n.z3).project(g3.camera);
       if (v.z > 1) return;
       const d = Math.hypot((v.x + 1) / 2 * g3.w - px, (1 - v.y) / 2 * g3.h - py);
       if (d < bestD) { bestD = d; best = n; }
@@ -8063,20 +8302,28 @@
         lastX = e.clientX; lastY = e.clientY;
       } else {
         setPointer(e);
-        g3.hover = pick3D();
-        canvas.classList.toggle('pointing', !!g3.hover);
+        const n = pick3D();
+        brainUI.hovered = n ? n.id : null;
+        canvas.classList.toggle('pointing', !!n);
       }
     });
-    canvas.addEventListener('pointerleave', () => { if (!g3.rotating) g3.hover = null; });
+    canvas.addEventListener('pointerleave', () => { if (!g3.rotating) brainUI.hovered = null; });
     canvas.addEventListener('pointerup', (e) => {
       const moved = g3.moved;
       g3.rotating = false; canvas.classList.remove('dragging');
-      if (!moved) { setPointer(e); const n = pick3D(); if (n) openGraphNode(n); }
+      if (moved) return;
+      setPointer(e);
+      const n = pick3D();
+      const now = performance.now(), dbl = n && now - g3.lastClick < 380 && g3.lastId === n.id;
+      g3.lastClick = now; g3.lastId = n ? n.id : null;
+      if (dbl) { brainOpen(n); return; }
+      brainSelect(n ? (n.id === brainUI.selected ? null : n.id) : null);
+      focus3D(brainUI.selected);
     });
     canvas.addEventListener('pointercancel', () => { g3.rotating = false; canvas.classList.remove('dragging'); });
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
-      g3.dist = Math.max(120, Math.min(5000, g3.dist * (e.deltaY > 0 ? 1.1 : 0.9)));
+      g3.dist = Math.max(90, Math.min(5000, g3.dist * (e.deltaY > 0 ? 1.1 : 0.9)));
       g3.userZoomed = true;
     }, { passive: false });
   }
@@ -8085,9 +8332,8 @@
     const step = () => {
       g3.raf = 0;
       if (!g3.scene || !notesGraphVisible() || notesGraphMode !== '3d') return;
-      if (g3.alpha > 0.02) tick3D();
-      // drift slowly unless you're holding or pointing at it
-      if (!g3.rotating && !g3.hover && !reducedMotion()) g3.theta += 0.0012;
+      // drift slowly unless you're holding, pointing at or looking at something
+      if (!g3.rotating && !brainUI.hovered && !brainUI.selected && !reducedMotion()) g3.theta += 0.0011;
       draw3D();
       g3.raf = requestAnimationFrame(step);
     };
