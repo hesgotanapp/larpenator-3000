@@ -1845,10 +1845,12 @@
   .brain-tile .graph-mode-toggle button.active { background: var(--brain-accent, #7ee2a8); color: #0b1a11; }
   .brain-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
   .brain-labels span { position: absolute; transform: translateX(-50%); font: 500 11.5px 'Geist', 'Segoe UI', sans-serif; white-space: nowrap; color: #b4b4b1; text-shadow: 0 0 3px #1d1d1d, 0 0 6px #1d1d1d, 0 1px 2px #000; transition: opacity .18s; }
-  .brain-labels span.f { font-weight: 650; font-size: 13px; color: #dcdcd8; }
+  .brain-labels span.f { font-weight: 650; font-size: 12.5px; color: #e6e6e3; text-shadow: none; background: rgba(22,22,22,.88); border: 1px solid color-mix(in srgb, var(--fc, #8f8f8d) 45%, transparent); border-radius: 11px; padding: 3px 10px 3px 21px; }
+  .brain-labels span.f::before { content: ''; position: absolute; left: 9px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: var(--fc, #8f8f8d); box-shadow: 0 0 6px var(--fc, #8f8f8d); }
   .brain-labels span.g { color: #8e8e8b; }
   .brain-labels span.h { color: #fff; font-weight: 650; }
-  .brain-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); font: 12px var(--font-body); color: #8e8e8b; background: rgba(23,23,23,.85); padding: 6px 12px; border-radius: 99px; pointer-events: none; white-space: nowrap; }
+  .brain-hint.gone { opacity: 0; }
+  .brain-hint { transition: opacity .6s; position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); font: 12px var(--font-body); color: #8e8e8b; background: rgba(23,23,23,.85); padding: 6px 12px; border-radius: 99px; pointer-events: none; white-space: nowrap; }
   .brain-side { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #333 transparent; }
   .brain-side::-webkit-scrollbar { width: 6px; }
   .brain-side::-webkit-scrollbar-thumb { background: #333; border-radius: 6px; }
@@ -7690,6 +7692,10 @@
     document.getElementById('brain-hint').textContent = is2d
       ? 'Scroll to zoom · drag to move · click a dot · double-click to open'
       : 'Drag to spin · scroll to zoom · click a dot · double-click to open';
+    // the hint shows for a few seconds, then gets out of the way
+    const hint = document.getElementById('brain-hint');
+    hint.classList.remove('gone'); clearTimeout(initGraphView._hintT);
+    initGraphView._hintT = setTimeout(() => hint.classList.add('gone'), 6000);
     bindBrainSide();
     renderBrainLegend();
     const changed = buildBrainModel();
@@ -7748,14 +7754,20 @@
     const filtering = brainUI.filter !== 'all' || !!brainUI.query;
     return { focus, near, filtering, on: n => focus ? (n.id === focus || (near && near.has(n.id))) : (!filtering || brainMatches(n)) };
   }
+  function brainMix(a, b, t) {
+    const p = h => { h = String(h).replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); const n = parseInt(h, 16) || 0; return [n >> 16, (n >> 8) & 255, n & 255]; };
+    const x = p(a), y = p(b);
+    return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
+  }
   function brainDotColor(n, accent, focus) {
     if (n.id === focus) return accent;
-    if (n.type === 'folder') return '#e4e4e2';
+    if (n.type === 'folder') return '#ecece9';
     if (n.type === 'ghost') return '#8f8f8d';
     if (n.fresh) return accent;
-    if (n.pinned) return '#dcdcd8';
     if (n.loose) return '#c9d98a';
-    return '#9d9d9a';
+    const f = n.folderId && BM.byId.get('f:' + n.folderId);
+    const base = n.pinned ? '#dcdcd8' : '#a6a6a3';
+    return f ? brainMix(base, f.color, 0.38) : base;
   }
   function brainRadius(n) {
     if (n.type === 'folder') return Math.min(16, 7.5 + Math.sqrt(n.deg) * 1.1);
@@ -7901,9 +7913,12 @@
     cam2.x = r.width / 2 - ((x0 + x1) / 2) * cam2.k;
     cam2.y = r.height / 2 - ((y0 + y1) / 2) * cam2.k - 22;
   }
+  let intro2 = 0;
   function init2D(changed) {
     bind2D();
-    if (changed || BM.nodes.some(n => n.x == null)) layout2D();
+    const fresh = changed || BM.nodes.some(n => n.x == null);
+    if (fresh) layout2D();
+    if (fresh || !intro2) intro2 = performance.now(); // grow in when the map opens or the notes change
     if (!cam2.userMoved) fit2D();
     request2D();
   }
@@ -7911,6 +7926,14 @@
     if (raf2) return;
     raf2 = requestAnimationFrame(() => { raf2 = 0; draw2D(); });
   }
+  const ease = x => 1 - Math.pow(1 - Math.max(0, Math.min(1, x)), 3);
+  // a gentle bend for each link, always the same way for the same pair so the map doesn't wobble
+  function bend(a, b, s, t) {
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy) || 1;
+    const sign = ((s.charCodeAt(s.length - 1) + t.charCodeAt(t.length - 1)) % 2) ? 1 : -1;
+    return { x: mx - dy / len * len * 0.13 * sign, y: my + dx / len * len * 0.13 * sign };
+  }
+  function onCurve(a, c, b, u) { const v = 1 - u; return { x: v * v * a.x + 2 * v * u * c.x + u * u * b.x, y: v * v * a.y + 2 * v * u * c.y + u * u * b.y }; }
   function draw2D() {
     const c = document.getElementById('brain-canvas');
     const rect = c.getBoundingClientRect();
@@ -7925,23 +7948,62 @@
       g.fillText('No notes yet — write one and it will show up here.', rect.width / 2, rect.height / 2);
       return;
     }
+    const now = performance.now(), still = reducedMotion();
     const accent = brainAccent(), L = brainLit(), k = cam2.k;
-    const sp = n => ({ x: n.x * k + cam2.x, y: n.y * k + cam2.y });
+    const introT = still ? 1 : (now - intro2) / 900;
     // everything below is drawn in screen space so lines, dots and text stay crisp at any zoom
-    const P = new Map(BM.nodes.map(n => [n.id, sp(n)]));
-    const R = n => Math.max(1.8, brainRadius(n) * Math.min(1.25, Math.max(0.6, Math.sqrt(k))));
+    const P = new Map(BM.nodes.map(n => [n.id, { x: n.x * k + cam2.x, y: n.y * k + cam2.y }]));
+    const grow = new Map(BM.nodes.map(n => { const d = n.type === 'folder' ? 0 : Math.min(1, Math.hypot(n.x - (n.ax || 0), n.y - (n.ay || 0)) / 260); return [n.id, ease(introT * 1.4 - d * 0.5)]; }));
+    const R = n => Math.max(1.8, brainRadius(n) * Math.min(1.25, Math.max(0.6, Math.sqrt(k)))) * grow.get(n.id);
+    const linkIn = ease(introT * 1.2 - 0.35);
 
-    // links
-    g.lineWidth = 1;
-    g.strokeStyle = L.focus || L.filtering ? 'rgba(170,170,170,0.06)' : 'rgba(170,170,170,0.2)';
-    g.beginPath();
-    BM.links.forEach(l => { if (L.focus && (l.s === L.focus || l.t === L.focus)) return; const a = P.get(l.s), b = P.get(l.t); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); });
-    g.stroke();
+    // soft colour patches behind each folder's cluster
+    BM.nodes.forEach(f => {
+      if (f.type !== 'folder') return;
+      const p = P.get(f.id);
+      let far = 30 * k;
+      BM.nbrs.get(f.id).forEach(id => { const o = BM.byId.get(id); if (o.type === 'note' && o.folderId === f.folderId) { const q = P.get(id); far = Math.max(far, Math.hypot(q.x - p.x, q.y - p.y)); } });
+      const rad = (far + 46) * grow.get(f.id);
+      const lit = !L.focus || L.focus === f.id || (L.near && L.near.has(f.id)) || BM.byId.get(L.focus).folderId === f.folderId;
+      const gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad);
+      gr.addColorStop(0, hexToRgba(f.color, lit ? 0.13 : 0.04));
+      gr.addColorStop(0.65, hexToRgba(f.color, lit ? 0.05 : 0.015));
+      gr.addColorStop(1, hexToRgba(f.color, 0));
+      g.fillStyle = gr; g.beginPath(); g.arc(p.x, p.y, rad, 0, Math.PI * 2); g.fill();
+    });
+
+    // links: gentle curves, tinted inside a folder, grey between folders
+    const curves = BM.links.map(l => { const a = P.get(l.s), b = P.get(l.t); return { l, a, b, c: bend(a, b, l.s, l.t) }; });
+    g.lineCap = 'round';
+    curves.forEach(({ l, a, b, c: cp }) => {
+      const hot = L.focus && (l.s === L.focus || l.t === L.focus);
+      if (hot) return;
+      const f = l.kind === 'fn' ? BM.byId.get(l.s.startsWith('f:') ? l.s : l.t) : null;
+      const base = f ? hexToRgba(f.color, 0.3) : 'rgba(170,170,170,0.22)';
+      g.strokeStyle = L.focus || L.filtering ? 'rgba(170,170,170,0.05)' : base;
+      g.globalAlpha = linkIn;
+      g.lineWidth = f ? 1.1 : 0.9;
+      g.beginPath(); g.moveTo(a.x, a.y); g.quadraticCurveTo(cp.x, cp.y, b.x, b.y); g.stroke();
+    });
+    g.globalAlpha = 1;
     if (L.focus) {
-      g.strokeStyle = hexToRgba(accent, 0.7); g.lineWidth = 1.4;
-      g.beginPath();
-      BM.links.forEach(l => { if (l.s !== L.focus && l.t !== L.focus) return; const a = P.get(l.s), b = P.get(l.t); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); });
-      g.stroke();
+      g.strokeStyle = hexToRgba(accent, 0.75); g.lineWidth = 1.6;
+      g.shadowColor = hexToRgba(accent, 0.6); g.shadowBlur = 8;
+      curves.forEach(({ l, a, b, c: cp }) => { if (l.s !== L.focus && l.t !== L.focus) return; g.beginPath(); g.moveTo(a.x, a.y); g.quadraticCurveTo(cp.x, cp.y, b.x, b.y); g.stroke(); });
+      g.shadowBlur = 0;
+      // little signals running along the lit links
+      if (!still) curves.forEach(({ l, a, b, c: cp }, i) => {
+        if (l.s !== L.focus && l.t !== L.focus) return;
+        const out = l.s === L.focus;
+        for (let j = 0; j < 2; j++) {
+          let u = ((now / 1100) + i * 0.29 + j * 0.5) % 1; if (!out) u = 1 - u;
+          const q = onCurve(a, cp, b, u);
+          g.fillStyle = hexToRgba(accent, 0.95 * Math.sin(Math.PI * (out ? u : 1 - u)));
+          g.shadowColor = accent; g.shadowBlur = 10;
+          g.beginPath(); g.arc(q.x, q.y, 2.2, 0, Math.PI * 2); g.fill();
+        }
+      });
+      g.shadowBlur = 0;
     }
 
     // names: work out which fit first (most important first), never on top of a dot or another name
@@ -7959,46 +8021,77 @@
     const labels = [];
     const clusterEdge = f => { let far = 0; const fp = P.get(f.id); BM.nbrs.get(f.id).forEach(id => { const o = BM.byId.get(id); if (o.type !== 'note' || o.folderId !== f.folderId) return; const q = P.get(id); far = Math.max(far, q.y - fp.y + R(o)); }); return far; };
     BM.nodes.filter(wants).sort((a, b) => prio(b) - prio(a)).forEach(n => {
-      const p = P.get(n.id), big = n.type === 'folder' || n.id === L.focus;
-      g.font = `${big ? 650 : 500} ${big ? 13 : 11.5}px 'Geist', 'Segoe UI', sans-serif`;
-      const text = brainShort(n.label, big ? 34 : 26), w = g.measureText(text).width, h = big ? 15 : 13, r = R(n);
+      const p = P.get(n.id), chip = n.type === 'folder', big = chip || n.id === L.focus;
+      g.font = `${big ? 650 : 500} ${big ? 12.5 : 11.5}px 'Geist', 'Segoe UI', sans-serif`;
+      const text = brainShort(n.label, big ? 34 : 26), tw = g.measureText(text).width, w = chip ? tw + 26 : tw, h = chip ? 22 : 13, r = R(n);
       // a folder's name goes under its whole cluster, so it never sits on its own notes
-      const spots = n.type === 'folder' && n.id !== L.focus
-        ? [[p.x, p.y + Math.max(r + 8, clusterEdge(n) + 14)]]
+      const spots = chip
+        ? [[p.x, p.y + Math.max(r + 10, clusterEdge(n) + 14)]]
         : [[p.x, p.y + r + 6], [p.x, p.y - r - 6 - h], [p.x + r + 6 + w / 2, p.y - h / 2], [p.x - r - 6 - w / 2, p.y - h / 2]];
       for (const [x, y] of spots) {
         const box = { id: n.id, x0: x - w / 2 - 3, y0: y - 1, x1: x + w / 2 + 3, y1: y + h };
-        if (n.id !== L.focus && n.type !== 'folder' && (hit(box, boxes) || hit(box, dotBoxes, n.id))) continue;
-        if (n.type === 'folder' && n.id !== L.focus && hit(box, boxes)) continue;
+        if (n.id !== L.focus && !chip && (hit(box, boxes) || hit(box, dotBoxes, n.id))) continue;
+        if (chip && n.id !== L.focus && hit(box, boxes)) continue;
         boxes.push(box);
-        labels.push({ n, text, x, y, big });
+        labels.push({ n, text, x, y, w, h, chip, big });
         break;
       }
     });
-    g.textAlign = 'center'; g.textBaseline = 'top'; g.lineJoin = 'round';
-    labels.forEach(({ n, text, x, y, big }) => {
-      g.font = `${big ? 650 : 500} ${big ? 13 : 11.5}px 'Geist', 'Segoe UI', sans-serif`;
-      g.globalAlpha = L.on(n) || n.id === L.focus ? 1 : 0.25;
-      g.strokeStyle = '#1d1d1d'; g.lineWidth = 4; g.strokeText(text, x, y);
-      g.fillStyle = n.id === L.focus ? '#f4f4f2' : n.type === 'folder' ? '#d6d6d3' : n.type === 'ghost' ? '#8e8e8b' : '#acaca9';
-      g.fillText(text, x, y);
+    g.textBaseline = 'middle'; g.lineJoin = 'round';
+    labels.forEach(({ n, text, x, y, w, h, chip, big }) => {
+      g.globalAlpha = (L.on(n) || n.id === L.focus ? 1 : 0.25) * ease(introT * 1.3 - 0.45);
+      g.font = `${big ? 650 : 500} ${big ? 12.5 : 11.5}px 'Geist', 'Segoe UI', sans-serif`;
+      if (chip) {
+        // folder names sit in a small dark pill with the folder's colour
+        const x0 = x - w / 2;
+        g.fillStyle = 'rgba(22,22,22,0.88)'; g.strokeStyle = hexToRgba(n.color, 0.45); g.lineWidth = 1;
+        g.beginPath(); g.roundRect ? g.roundRect(x0, y, w, h, 11) : g.rect(x0, y, w, h); g.fill(); g.stroke();
+        g.fillStyle = n.color; g.beginPath(); g.arc(x0 + 11, y + h / 2, 3.5, 0, Math.PI * 2); g.fill();
+        g.textAlign = 'left'; g.fillStyle = n.id === L.focus ? '#ffffff' : '#e6e6e3';
+        g.fillText(text, x0 + 19, y + h / 2 + 0.5);
+        return;
+      }
+      g.textAlign = 'center';
+      g.strokeStyle = '#1d1d1d'; g.lineWidth = 4; g.strokeText(text, x, y + h / 2);
+      g.fillStyle = n.id === L.focus ? '#f4f4f2' : n.type === 'ghost' ? '#8e8e8b' : '#b4b4b1';
+      g.fillText(text, x, y + h / 2);
     });
+    g.globalAlpha = 1;
 
     // dots, always on top
     BM.nodes.forEach(n => {
       const p = P.get(n.id), r = R(n);
+      if (r <= 0.2) return;
       g.globalAlpha = L.on(n) ? 1 : 0.13;
-      if (n.id === brainUI.selected) { g.fillStyle = hexToRgba(accent, 0.18); g.beginPath(); g.arc(p.x, p.y, r + 7, 0, Math.PI * 2); g.fill(); }
+      const col = brainDotColor(n, accent, L.focus);
+      if (n.id === brainUI.selected) {
+        const pulse = still ? 1 : 1 + 0.12 * Math.sin(now / 320);
+        g.fillStyle = hexToRgba(accent, 0.16); g.beginPath(); g.arc(p.x, p.y, (r + 8) * pulse, 0, Math.PI * 2); g.fill();
+      }
       if (n.type === 'ghost') {
         g.strokeStyle = n.id === L.focus ? accent : '#8f8f8d'; g.lineWidth = 1.2; g.setLineDash([2.5, 2.5]);
         g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
         return;
       }
-      g.fillStyle = brainDotColor(n, accent, L.focus);
-      g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.fill();
-      if (n.type === 'folder') { g.strokeStyle = n.color; g.lineWidth = 2.4; g.beginPath(); g.arc(p.x, p.y, r + 3.5, 0, Math.PI * 2); g.stroke(); }
+      if (n.type === 'folder') {
+        // hub: glow, coloured ring, and a soft shaded core
+        g.shadowColor = hexToRgba(n.color, 0.7); g.shadowBlur = 18;
+        g.strokeStyle = n.color; g.lineWidth = 2.4; g.beginPath(); g.arc(p.x, p.y, r + 4, 0, Math.PI * 2); g.stroke();
+        g.shadowBlur = 0;
+        const gr = g.createRadialGradient(p.x - r * 0.35, p.y - r * 0.35, r * 0.1, p.x, p.y, r);
+        gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, n.id === L.focus ? accent : brainMix('#cfcfcc', n.color, 0.25));
+        g.fillStyle = gr; g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.fill();
+        return;
+      }
+      if (n.fresh || n.id === L.focus) { g.shadowColor = hexToRgba(n.id === L.focus ? accent : col, 0.8); g.shadowBlur = 10; }
+      const gr = g.createRadialGradient(p.x - r * 0.35, p.y - r * 0.35, r * 0.1, p.x, p.y, r);
+      gr.addColorStop(0, brainMix(col, '#ffffff', 0.45)); gr.addColorStop(1, col);
+      g.fillStyle = gr; g.beginPath(); g.arc(p.x, p.y, r, 0, Math.PI * 2); g.fill();
+      g.shadowBlur = 0;
     });
     g.globalAlpha = 1;
+    // keep animating while it grows in, or while signals are running
+    if (!still && (introT < 1.6 || L.focus || brainUI.selected)) request2D();
   }
   function node2DAt(e) {
     const c = document.getElementById('brain-canvas'), r = c.getBoundingClientRect();
@@ -8118,14 +8211,28 @@
     }
     nodes.forEach(n => { pos3[n.id] = { x: n.x3, y: n.y3, z: n.z3 }; });
   }
-  let ringTex = null;
-  function folderRingTexture() {
-    if (ringTex) return ringTex;
+  let glowTex = null;
+  function glowTexture() {
+    if (glowTex) return glowTex;
     const c = document.createElement('canvas'); c.width = c.height = 128;
-    const x = c.getContext('2d');
-    x.strokeStyle = '#ffffff'; x.lineWidth = 7; x.beginPath(); x.arc(64, 64, 52, 0, Math.PI * 2); x.stroke();
-    ringTex = new THREE.CanvasTexture(c);
-    return ringTex;
+    const x = c.getContext('2d'), gr = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+    gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.22, 'rgba(255,255,255,.5)'); gr.addColorStop(0.5, 'rgba(255,255,255,.12)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
+    glowTex = new THREE.CanvasTexture(c);
+    return glowTex;
+  }
+  const SEG3 = 18;
+  // a gentle arc between two dots (always the same bend for the same pair)
+  function arc3D(a, b, s, t) {
+    const A = new THREE.Vector3(a.x3, a.y3, a.z3), B = new THREE.Vector3(b.x3, b.y3, b.z3);
+    const d = B.clone().sub(A), len = d.length() || 1;
+    let side = new THREE.Vector3().crossVectors(d, new THREE.Vector3(0, 1, 0));
+    if (side.lengthSq() < 1e-6) side.set(1, 0, 0);
+    side.normalize().multiplyScalar(len * 0.16 * ((s.charCodeAt(s.length - 1) + t.charCodeAt(t.length - 1)) % 2 ? 1 : -1));
+    const C = A.clone().add(B).multiplyScalar(0.5).add(side).add(new THREE.Vector3(0, len * 0.06, 0));
+    const pts = [];
+    for (let i = 0; i <= SEG3; i++) { const u = i / SEG3, v = 1 - u; pts.push(new THREE.Vector3(v * v * A.x + 2 * v * u * C.x + u * u * B.x, v * v * A.y + 2 * v * u * C.y + u * u * B.y, v * v * A.z + 2 * v * u * C.z + u * u * B.z)); }
+    return pts;
   }
   function build3DScene() {
     if (g3.scene) dispose3DScene();
@@ -8133,52 +8240,101 @@
     const scene = new THREE.Scene();
     g3.scene = scene;
     scene.fog = new THREE.Fog(0x1d1d1d, 400, 2600);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-    const key = new THREE.DirectionalLight(0xffffff, 0.95); key.position.set(1, 1.4, 1.2); scene.add(key);
-    const rim = new THREE.DirectionalLight(0xbfd8ff, 0.35); rim.position.set(-1.2, -0.4, -1); scene.add(rim);
-    // faint dust far out, so turning the map gives a sense of depth
+    const accent = brainAccent(), glow = glowTexture();
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const key = new THREE.DirectionalLight(0xffffff, 1.0); key.position.set(1, 1.4, 1.2); scene.add(key);
+    const rim = new THREE.DirectionalLight(new THREE.Color(accent), 0.35); rim.position.set(-1.2, -0.4, -1); scene.add(rim);
+
+    // faint drifting dust far out, so turning the map gives a sense of depth
     let seed = 9; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     const dust = [];
-    for (let i = 0; i < 700; i++) { const r = 700 + rnd() * 1400, th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1); dust.push(r * Math.sin(ph) * Math.cos(th), r * Math.sin(ph) * Math.sin(th), r * Math.cos(ph)); }
+    for (let i = 0; i < 900; i++) { const r = 600 + rnd() * 1500, th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1); dust.push(r * Math.sin(ph) * Math.cos(th), r * Math.sin(ph) * Math.sin(th), r * Math.cos(ph)); }
     const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.Float32BufferAttribute(dust, 3));
-    scene.add(new THREE.Points(dg, new THREE.PointsMaterial({ color: 0x8a8a88, size: 2, sizeAttenuation: true, transparent: true, opacity: 0.35, depthWrite: false })));
+    g3.dust = new THREE.Points(dg, new THREE.PointsMaterial({ color: 0x9a9a98, map: glow, size: 7, sizeAttenuation: true, transparent: true, opacity: 0.32, depthWrite: false, blending: THREE.AdditiveBlending }));
+    scene.add(g3.dust);
 
-    const sphere = new THREE.SphereGeometry(1, 28, 20), ring = folderRingTexture();
+    // a soft colour cloud behind each folder's cluster
+    g3.clouds = [];
+    BM.nodes.forEach(f => {
+      if (f.type !== 'folder') return;
+      let far = 40;
+      BM.nbrs.get(f.id).forEach(id => { const o = BM.byId.get(id); if (o.type === 'note' && o.folderId === f.folderId) far = Math.max(far, Math.hypot(o.x3 - f.x3, o.y3 - f.y3, o.z3 - f.z3)); });
+      const cl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: new THREE.Color(f.color), transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending }));
+      cl.position.set(f.x3, f.y3, f.z3); cl.scale.setScalar((far + 60) * 2.6);
+      cl.userData.folder = f; cl.userData.size = (far + 60) * 2.6;
+      scene.add(cl); g3.clouds.push(cl);
+    });
+
+    const sphere = new THREE.SphereGeometry(1, 32, 24), ringGeo = new THREE.TorusGeometry(1, 0.028, 8, 96);
     const labels = document.getElementById('brain-labels');
     labels.innerHTML = '';
+    const centre = brainCentre3D();
+    const maxD = Math.max(1, ...BM.nodes.map(n => Math.hypot(n.x3 - centre.x, n.y3 - centre.y, n.z3 - centre.z)));
     BM.nodes.forEach(n => {
-      const r = brainRadius(n) * 1.25;
+      const r = brainRadius(n) * 1.3, tint = new THREE.Color(brainDotColor(n, accent, null));
       let mat;
-      if (n.type === 'ghost') mat = new THREE.MeshBasicMaterial({ color: 0x8f8f8d, wireframe: true, transparent: true, opacity: 0.7 });
-      else mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(brainDotColor(n, brainAccent(), null)), roughness: 0.42, metalness: 0.08, transparent: true, opacity: 1, emissive: new THREE.Color(n.fresh ? brainAccent() : '#000000'), emissiveIntensity: n.fresh ? 0.35 : 0 });
+      if (n.type === 'ghost') mat = new THREE.MeshBasicMaterial({ color: 0x9a9a98, wireframe: true, transparent: true, opacity: 0.7 });
+      else mat = new THREE.MeshStandardMaterial({ color: tint, roughness: 0.32, metalness: 0.18, transparent: true, opacity: 1, emissive: n.type === 'folder' ? new THREE.Color(n.color) : tint, emissiveIntensity: n.type === 'folder' ? 0.22 : n.fresh ? 0.5 : 0.14 });
       const mesh = new THREE.Mesh(sphere, mat);
       mesh.scale.setScalar(r);
       mesh.position.set(n.x3, n.y3, n.z3);
       mesh.userData.node = n;
       scene.add(mesh);
       n._mesh = mesh; n._r3 = r;
+      // a halo, coloured like the dot (the folder's colour for hubs)
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: n.type === 'folder' ? new THREE.Color(n.color) : tint, transparent: true, opacity: n.type === 'ghost' ? 0.15 : 0.5, depthWrite: false, blending: THREE.AdditiveBlending }));
+      halo.position.copy(mesh.position); halo.scale.setScalar(r * (n.type === 'folder' ? 7 : 4.2));
+      scene.add(halo); n._halo = halo;
+      // folders get two rings that slowly orbit the hub
+      n._rings = [];
       if (n.type === 'folder') {
-        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: ring, color: new THREE.Color(n.color), transparent: true, depthWrite: false }));
-        sp.scale.setScalar(r * 3.1); sp.position.copy(mesh.position);
-        scene.add(sp); n._ring = sp;
+        [[2.1, 0.5, 0.2], [2.7, -0.9, 1.1]].forEach(([s, rx, ry]) => {
+          const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: new THREE.Color(n.color), transparent: true, opacity: 0.85 }));
+          ring.scale.setScalar(r * s); ring.position.copy(mesh.position); ring.rotation.set(rx, ry, 0);
+          scene.add(ring); n._rings.push(ring);
+        });
       }
+      n._delay = Math.hypot(n.x3 - centre.x, n.y3 - centre.y, n.z3 - centre.z) / maxD;
       const lab = document.createElement('span');
       lab.textContent = brainShort(n.label, n.type === 'folder' ? 34 : 26);
       lab.className = n.type === 'folder' ? 'f' : n.type === 'ghost' ? 'g' : '';
+      if (n.type === 'folder') lab.style.setProperty('--fc', n.color);
       lab.style.opacity = 0;
       labels.appendChild(lab);
       n._label = lab;
     });
-    const pos = new Float32Array(BM.links.length * 6);
-    BM.links.forEach((l, i) => { const a = BM.byId.get(l.s), b = BM.byId.get(l.t); pos.set([a.x3, a.y3, a.z3, b.x3, b.y3, b.z3], i * 6); });
-    g3.linkGeo = new THREE.BufferGeometry(); g3.linkGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    g3.lines = new THREE.LineSegments(g3.linkGeo, new THREE.LineBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.22, depthWrite: false }));
+
+    // curved links, shading from one end's colour to the other's
+    const pos = [], col = [];
+    g3.arcs = BM.links.map(l => {
+      const a = BM.byId.get(l.s), b = BM.byId.get(l.t), pts = arc3D(a, b, l.s, l.t);
+      const ca = new THREE.Color(a.type === 'folder' ? a.color : brainDotColor(a, accent, null)), cb = new THREE.Color(b.type === 'folder' ? b.color : brainDotColor(b, accent, null));
+      for (let i = 0; i < SEG3; i++) {
+        const p = pts[i], q = pts[i + 1], u0 = i / SEG3, u1 = (i + 1) / SEG3;
+        pos.push(p.x, p.y, p.z, q.x, q.y, q.z);
+        const c0 = ca.clone().lerp(cb, u0), c1 = ca.clone().lerp(cb, u1);
+        col.push(c0.r, c0.g, c0.b, c1.r, c1.g, c1.b);
+      }
+      return { l, pts, ca, cb, phase: (a.x3 * 7.13 + b.z3 * 3.7) % 1, speed: 0.16 + ((a.y3 * 13.1) % 1 + 1) % 1 * 0.12 };
+    });
+    g3.linkGeo = new THREE.BufferGeometry();
+    g3.linkGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g3.linkGeo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    g3.lines = new THREE.LineSegments(g3.linkGeo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.38, depthWrite: false }));
     scene.add(g3.lines);
-    g3.hlGeo = new THREE.BufferGeometry(); g3.hlGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(BM.links.length * 6), 3));
-    g3.hlLines = new THREE.LineSegments(g3.hlGeo, new THREE.LineBasicMaterial({ color: new THREE.Color(brainAccent()), transparent: true, opacity: 0.85, depthWrite: false }));
+    // the lit links around whatever you're pointing at
+    g3.hlGeo = new THREE.BufferGeometry(); g3.hlGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(BM.links.length * SEG3 * 6), 3));
+    g3.hlLines = new THREE.LineSegments(g3.hlGeo, new THREE.LineBasicMaterial({ color: new THREE.Color(accent), transparent: true, opacity: 0.95, depthWrite: false }));
     g3.hlLines.visible = false;
     scene.add(g3.hlLines);
+    // signals: small sparks that travel along the links, like a brain firing
+    const sg = new THREE.BufferGeometry();
+    sg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(BM.links.length * 3), 3));
+    sg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(BM.links.length * 3), 3));
+    g3.sparks = new THREE.Points(sg, new THREE.PointsMaterial({ map: glow, size: 16, sizeAttenuation: true, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    scene.add(g3.sparks);
     g3.t0 = performance.now();
+    g3.intro = performance.now();
   }
   function brainCentre3D() {
     // the middle of the map's outer edges, so big folders don't pull the view off-centre
@@ -8190,7 +8346,7 @@
   function frame3D() {
     const c = brainCentre3D();
     const radius = Math.max(80, ...BM.nodes.map(n => Math.hypot(n.x3 - c.x, n.y3 - c.y, n.z3 - c.z))) + 50;
-    g3.dist = radius / Math.tan(24 * Math.PI / 180) * 0.92;
+    g3.dist = radius / Math.tan(24 * Math.PI / 180) * 0.88;
     g3.goal.copy(c);
     if (!g3.framed) { g3.target.copy(c); g3.framed = true; }
   }
@@ -8202,7 +8358,7 @@
   function dispose3DScene() {
     g3.scene.traverse(o => {
       if (o.geometry) o.geometry.dispose();
-      if (o.material) { if (o.material.map && o.material.map !== ringTex) o.material.map.dispose(); o.material.dispose(); }
+      if (o.material) { if (o.material.map && o.material.map !== glowTex) o.material.map.dispose(); o.material.dispose(); }
     });
     g3.scene = null;
   }
@@ -8218,35 +8374,51 @@
     cp.set(g3.target.x + g3.dist * Math.sin(g3.phi) * Math.cos(g3.theta), g3.target.y + g3.dist * Math.cos(g3.phi), g3.target.z + g3.dist * Math.sin(g3.phi) * Math.sin(g3.theta));
     g3.camera.lookAt(g3.target);
     g3.camera.updateMatrixWorld();
-    g3.scene.fog.near = g3.dist * 0.55; g3.scene.fog.far = g3.dist * 2.1;
-    const accent = brainAccent(), L = brainLit(), t = (performance.now() - g3.t0) / 1000, still = reducedMotion();
+    g3.scene.fog.near = g3.dist * 0.55; g3.scene.fog.far = g3.dist * 2.2;
+    const accent = brainAccent(), accentC = new THREE.Color(accent), L = brainLit(), now = performance.now(), t = (now - g3.t0) / 1000, still = reducedMotion();
+    const introT = still ? 2 : (now - g3.intro) / 1400;
+    if (!still) g3.dust.rotation.y = t * 0.012;
     const v = new THREE.Vector3(), shown = [];
     BM.nodes.forEach((n, i) => {
-      const lit = L.on(n), isFocus = n.id === L.focus;
-      const m = n._mesh;
+      const lit = L.on(n), isFocus = n.id === L.focus, sel = n.id === brainUI.selected;
+      const grow = ease(introT * 1.6 - n._delay * 0.6);
       const breathe = still || !n.fresh ? 1 : 1 + 0.07 * Math.sin(t * 1.6 + i);
-      m.scale.setScalar(n._r3 * (isFocus ? 1.45 : 1) * breathe);
-      m.material.opacity = lit ? (n.type === 'ghost' ? 0.7 : 1) : 0.12;
+      const m = n._mesh;
+      m.scale.setScalar(Math.max(0.001, n._r3 * (isFocus ? 1.4 : 1) * breathe * grow));
+      m.material.opacity = lit ? (n.type === 'ghost' ? 0.7 : 1) : 0.1;
       if (n.type !== 'ghost') m.material.color.set(brainDotColor(n, accent, L.focus));
-      if (n._ring) { n._ring.material.opacity = lit ? 0.95 : 0.12; n._ring.scale.setScalar(n._r3 * 3.1 * (isFocus ? 1.3 : 1)); }
+      const pulse = still ? 1 : 1 + 0.18 * Math.sin(t * 3.2);
+      n._halo.material.opacity = (lit ? (n.type === 'ghost' ? 0.15 : isFocus || sel ? 0.95 : n.fresh ? 0.7 : 0.45) : 0.04) * grow;
+      n._halo.scale.setScalar(n._r3 * (n.type === 'folder' ? 7 : 4.2) * (isFocus || sel ? 1.6 * pulse : 1) * grow);
+      if (isFocus || sel) n._halo.material.color.copy(accentC); else n._halo.material.color.set(n.type === 'folder' ? n.color : brainDotColor(n, accent, null));
+      n._rings.forEach((ring, j) => {
+        if (!still) { ring.rotation.x += j ? -0.0035 : 0.0045; ring.rotation.y += j ? 0.003 : 0.002; }
+        ring.material.opacity = (lit ? 0.85 : 0.08) * grow;
+        ring.scale.setScalar(n._r3 * (j ? 2.7 : 2.1) * (isFocus ? 1.15 : 1) * Math.max(0.001, grow));
+      });
       v.set(n.x3, n.y3, n.z3).project(g3.camera);
       const sx = (v.x + 1) / 2 * g3.w, sy = (1 - v.y) / 2 * g3.h, depth = cp.distanceTo(m.position);
       const pxR = n._r3 / (depth * Math.tan(24 * Math.PI / 180)) * (g3.h / 2);
-      const want = v.z < 1 && (isFocus || n.type === 'folder' || (L.focus ? L.near.has(n.id) : (lit && depth < g3.dist * 0.62 && n.type !== 'ghost')));
+      const want = grow > 0.8 && v.z < 1 && (isFocus || n.type === 'folder' || (L.focus ? L.near.has(n.id) : (lit && depth < g3.dist * 0.62 && n.type !== 'ghost')));
       n._sx = sx; n._sy = sy; n._pxR = pxR;
-      n._lx = sx; n._ly = sy + (n.type === 'folder' ? pxR * 1.6 : pxR) + 6; n._depth = depth;
+      n._lx = sx; n._ly = sy + (n.type === 'folder' ? pxR * 2.8 : pxR) + 6; n._depth = depth;
       if (want) shown.push(n); else n._label.style.opacity = 0;
+    });
+    (g3.clouds || []).forEach(cl => {
+      const f = cl.userData.folder, lit = !L.focus || L.focus === f.id || (BM.byId.get(L.focus) || {}).folderId === f.folderId;
+      cl.material.opacity = (lit ? 0.26 : 0.04) * ease(introT);
+      cl.scale.setScalar(cl.userData.size * (0.6 + 0.4 * ease(introT)));
     });
     shown.forEach(f => {
       if (f.type !== 'folder' || f.id === L.focus) return;
-      let far = f._pxR * 1.6;
+      let far = f._pxR * 2.8;
       BM.nbrs.get(f.id).forEach(id => { const o = BM.byId.get(id); if (o.type === 'note' && o.folderId === f.folderId && o._sy != null) far = Math.max(far, o._sy - f._sy + o._pxR); });
-      f._ly = f._sy + far + 10;
+      f._ly = f._sy + far + 12;
     });
-    // names: nearest and most important first, skipping any that would land on another name
+    // names: nearest and most important first, skipping any that would land on another name or a dot
     const boxes = [];
     shown.sort((a, b) => (b.id === L.focus) - (a.id === L.focus) || (b.type === 'folder') - (a.type === 'folder') || a._depth - b._depth).forEach(n => {
-      const w = n._label.textContent.length * (n.type === 'folder' ? 7.4 : 6.6) + 8, h = 16;
+      const w = n._label.textContent.length * (n.type === 'folder' ? 7.2 : 6.6) + (n.type === 'folder' ? 30 : 8), h = n.type === 'folder' ? 24 : 16;
       const box = { x0: n._lx - w / 2, y0: n._ly, x1: n._lx + w / 2, y1: n._ly + h };
       const over = o => box.x0 < o.x1 && box.x1 > o.x0 && box.y0 < o.y1 && box.y1 > o.y0;
       const onDot = n.type !== 'folder' && BM.nodes.some(o => o !== n && o._sx != null && over({ x0: o._sx - o._pxR, y0: o._sy - o._pxR, x1: o._sx + o._pxR, y1: o._sy + o._pxR }));
@@ -8258,14 +8430,34 @@
       n._label.style.opacity = n.id === L.focus ? 1 : L.on(n) ? fade : 0.2;
       n._label.classList.toggle('h', n.id === L.focus);
     });
+    // lit links around the focus
     const hl = g3.hlGeo.attributes.position.array;
     let c = 0;
-    if (L.focus) BM.links.forEach(l => { if (l.s !== L.focus && l.t !== L.focus) return; const a = BM.byId.get(l.s), b = BM.byId.get(l.t); hl.set([a.x3, a.y3, a.z3, b.x3, b.y3, b.z3], c * 6); c++; });
-    g3.hlLines.material.color.set(accent);
+    if (L.focus) g3.arcs.forEach(({ l, pts }) => {
+      if (l.s !== L.focus && l.t !== L.focus) return;
+      for (let i = 0; i < SEG3; i++) { const p = pts[i], q = pts[i + 1]; hl.set([p.x, p.y, p.z, q.x, q.y, q.z], c * 6); c++; }
+    });
+    g3.hlLines.material.color.copy(accentC);
     g3.hlLines.visible = c > 0;
     g3.hlGeo.setDrawRange(0, c * 2);
     g3.hlGeo.attributes.position.needsUpdate = true;
-    g3.lines.material.opacity = L.focus || L.filtering ? 0.07 : 0.22;
+    g3.lines.material.opacity = (L.focus || L.filtering ? 0.07 : 0.38) * ease(introT * 1.2 - 0.3);
+    // sparks: everywhere at rest, only along the lit links when you point at something
+    const sp = g3.sparks.geometry.attributes.position.array, sc = g3.sparks.geometry.attributes.color.array;
+    const linkIn = ease(introT * 1.2 - 0.5);
+    g3.arcs.forEach((a, i) => {
+      const hot = L.focus && (a.l.s === L.focus || a.l.t === L.focus);
+      const show = !still && (L.focus ? hot : !L.filtering);
+      let u = (((a.phase + t * a.speed * (hot ? 2.4 : 1)) % 1) + 1) % 1;
+      if (hot && a.l.t === L.focus) u = 1 - u;
+      const f = u * SEG3, i0 = Math.min(SEG3 - 1, Math.floor(f)), w = f - i0, p = a.pts[i0], q = a.pts[i0 + 1];
+      sp[i * 3] = p.x + (q.x - p.x) * w; sp[i * 3 + 1] = p.y + (q.y - p.y) * w; sp[i * 3 + 2] = p.z + (q.z - p.z) * w;
+      const fadeIn = Math.sin(Math.PI * u) * linkIn * (show ? (hot ? 1 : 0.55) : 0);
+      const col = hot ? accentC : a.ca.clone().lerp(a.cb, u);
+      sc[i * 3] = col.r * fadeIn; sc[i * 3 + 1] = col.g * fadeIn; sc[i * 3 + 2] = col.b * fadeIn;
+    });
+    g3.sparks.geometry.attributes.position.needsUpdate = true;
+    g3.sparks.geometry.attributes.color.needsUpdate = true;
     g3.renderer.render(g3.scene, g3.camera);
   }
   function pick3D() {
