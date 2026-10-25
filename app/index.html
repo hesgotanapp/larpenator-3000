@@ -1653,12 +1653,13 @@
     --wash-1: transparent; --wash-2: transparent; --wash-corner: transparent; --wash-corner-core: transparent;
     --lq-blur: 28px;
   }
-  :root[data-style="liquid"] body {
-    background-color: var(--bg);
+  :root[data-style="liquid"] body { background: var(--bg); }
+  :root[data-style="liquid"] body::before {
+    display: block; inset: 0; animation: none; z-index: -1;
     background-image: var(--lq-veil, linear-gradient(transparent, transparent)), var(--lq-wall, linear-gradient(transparent, transparent)), var(--lq-fallback, linear-gradient(transparent, transparent));
-    background-size: cover; background-position: center; background-attachment: fixed;
+    background-size: cover; background-position: center;
   }
-  :root[data-style="liquid"] body::before, :root[data-style="liquid"] body::after { display: none; }
+  :root[data-style="liquid"] body::after { display: none; }
   :root[data-style="liquid"] :is(.sidebar, .card, .stat-card, .entry-card, .equity-wrap, .stat-row, .data-card, .notes-app, #entry-form, .detail-blocks .entry-block, .day-popover, .welcome-card, .entries-split.detail-open #entries-list) {
     backdrop-filter: blur(var(--lq-blur)) saturate(140%); -webkit-backdrop-filter: blur(var(--lq-blur)) saturate(140%);
   }
@@ -1683,8 +1684,9 @@
     --lq-tile-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 6px 14px rgba(0,0,0,.5);
   }
   :root[data-palette="liq-peaks"] {
+    --lq-solid: #151515;
     --bg: #0b0b0b; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-peaks.jpg"); --lq-fallback: linear-gradient(#8a8a8a, #2b2b2b 60%, #0d0d0d); --lq-veil: linear-gradient(rgba(0,0,0,.3), rgba(0,0,0,.55));
-    --sidebar: rgba(14,14,14,.45); --surface: rgba(255,255,255,.07); --surface-2: rgba(255,255,255,.1); --surface-3: rgba(255,255,255,.16); --field-bg: rgba(0,0,0,.28);
+    --lq-gs: rgba(14,14,14,.45); --lq-g1: rgba(255,255,255,.07); --lq-g2: rgba(255,255,255,.1); --lq-g3: rgba(255,255,255,.16); --field-bg: rgba(0,0,0,.28);
     --border: rgba(255,255,255,0.1); --border-strong: rgba(255,255,255,0.2);
     --ink: #f6f6f4; --ink-dim: #bdbdb8; --ink-faint: #8a8a85;
     --green: #f4f4f1; --green-dim: rgba(255,255,255,.3); --red: #a7a7a2; --red-dim: rgba(255,255,255,.12); --amber: #d6d6d1; --amber-dim: rgba(255,255,255,.2);
@@ -1694,7 +1696,7 @@
     --lq-tile-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 8px 18px rgba(0,0,0,.35);
   }
   :root[data-palette="liq-platinum"], :root[data-palette="liq-porsche"] {
-    --sidebar: rgba(255,255,255,.5); --surface: rgba(255,255,255,.7); --surface-2: rgba(255,255,255,.55); --surface-3: rgba(0,0,0,.06); --field-bg: rgba(255,255,255,.82);
+    --lq-gs: rgba(255,255,255,.5); --lq-g1: rgba(255,255,255,.7); --lq-g2: rgba(255,255,255,.55); --lq-g3: rgba(0,0,0,.06); --field-bg: rgba(255,255,255,.82);
     --border: rgba(0,0,0,0.07); --border-strong: rgba(0,0,0,0.15);
     --ink: #0d0d0d; --ink-dim: #5a5a56; --ink-faint: #96968f;
     --green: #111; --green-dim: rgba(0,0,0,.25); --red: #8a8a85; --red-dim: rgba(0,0,0,.12); --amber: #6b6b66; --amber-dim: rgba(0,0,0,.15);
@@ -1703,10 +1705,10 @@
     --lq-tile-win: linear-gradient(#ffffff, #ececea); --lq-tile-win-line: #fff; --lq-tile-loss: linear-gradient(#d9d9d6, #cfcfcb); --lq-tile-loss-line: rgba(0,0,0,.05); --lq-tile-empty: rgba(0,0,0,.035);
     --lq-tile-shadow: 0 1px 0 #fff inset, 0 8px 18px rgba(0,0,0,.1);
   }
-  :root[data-palette="liq-platinum"] { --bg: #ececea; --lq-fallback: radial-gradient(60% 70% at 20% 10%, #fff 0%, transparent 60%), radial-gradient(50% 60% at 85% 90%, #d3d3cf 0%, transparent 70%), linear-gradient(135deg, #f4f4f2, #dededa); }
-  :root[data-palette="liq-porsche"] { --bg: #f2f2f2; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-porsche.jpg"); --lq-fallback: linear-gradient(#f6f6f6, #e3e3e3); --sidebar: rgba(250,250,250,.42); --surface: rgba(255,255,255,.58); --surface-2: rgba(255,255,255,.45); }
+  :root[data-palette="liq-platinum"] { --lq-solid: #f5f5f3; --bg: #ececea; --lq-fallback: radial-gradient(60% 70% at 20% 10%, #fff 0%, transparent 60%), radial-gradient(50% 60% at 85% 90%, #d3d3cf 0%, transparent 70%), linear-gradient(135deg, #f4f4f2, #dededa); }
+  :root[data-palette="liq-porsche"] { --lq-solid: #f5f5f3; --bg: #f2f2f2; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-porsche.jpg"); --lq-fallback: linear-gradient(#f6f6f6, #e3e3e3); --lq-gs: rgba(250,250,250,.42); --lq-g1: rgba(255,255,255,.58); --lq-g2: rgba(255,255,255,.45); }
   :root[data-palette="liq-blue"], :root[data-palette="liq-ridge"], :root[data-palette="liq-rose"] {
-    --surface: rgba(255,255,255,.1); --surface-2: rgba(255,255,255,.14); --surface-3: rgba(255,255,255,.2); --field-bg: rgba(0,0,0,.22);
+    --lq-g1: rgba(255,255,255,.1); --lq-g2: rgba(255,255,255,.14); --lq-g3: rgba(255,255,255,.2); --field-bg: rgba(0,0,0,.22);
     --border: rgba(255,255,255,0.13); --border-strong: rgba(255,255,255,0.24);
     --green: #ffffff; --green-dim: rgba(255,255,255,.35); --amber: #f3e2c2; --amber-dim: rgba(255,255,255,.2);
     --on-accent: #0b1b3a;
@@ -1715,28 +1717,41 @@
     --lq-tile-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 8px 18px rgba(0,10,40,.3);
   }
   :root[data-palette="liq-blue"] {
+    --lq-solid: #11295c;
     --bg: #0b2556; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-blue.jpg"); --lq-fallback: radial-gradient(60% 80% at 8% 15%, #dfe9f7 0%, #7d9ccf 25%, transparent 55%), linear-gradient(160deg, #16306a, #0b1f4d);
     --lq-veil: linear-gradient(90deg, rgba(8,28,80,.62), rgba(8,28,80,.3) 35%, rgba(8,28,80,.08) 65%);
-    --sidebar: rgba(14,40,96,.34); --ink: #f3f6fc; --ink-dim: #b8c6e0; --ink-faint: #8295bb; --red: #9fb2d6; --red-dim: rgba(160,180,220,.25);
+    --lq-gs: rgba(14,40,96,.34); --ink: #f3f6fc; --ink-dim: #b8c6e0; --ink-faint: #8295bb; --red: #9fb2d6; --red-dim: rgba(160,180,220,.25);
     --accent: #e9f0ff; --accent-dim: rgba(233,240,255,.3);
     --lq-glow: 0 0 40px rgba(170,200,255,.55); --lq-tile-loss: linear-gradient(rgba(10,20,45,.6), rgba(10,20,45,.45)); --lq-tile-loss-line: rgba(255,255,255,.08);
   }
   :root[data-palette="liq-ridge"] {
+    --lq-solid: #13283f;
     --bg: #0e2238; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-ridge.jpg"); --lq-fallback: linear-gradient(#aecbe6, #3d5a7a 55%, #0f2238); --lq-veil: linear-gradient(rgba(6,18,38,.2), rgba(6,18,38,.5));
-    --sidebar: rgba(16,36,62,.34); --ink: #f3f7fb; --ink-dim: #c2d0de; --ink-faint: #8ba0b6; --red: #a8b9cb; --red-dim: rgba(170,190,210,.25);
+    --lq-gs: rgba(16,36,62,.34); --ink: #f3f7fb; --ink-dim: #c2d0de; --ink-faint: #8ba0b6; --red: #a8b9cb; --red-dim: rgba(170,190,210,.25);
     --accent: #eaf3ff; --accent-dim: rgba(234,243,255,.3);
     --lq-glow: 0 0 40px rgba(200,225,255,.6); --lq-tile-loss: linear-gradient(rgba(5,15,30,.55), rgba(5,15,30,.4)); --lq-tile-loss-line: rgba(255,255,255,.08);
   }
   :root[data-palette="liq-rose"] {
+    --lq-solid: #3b1325;
     --bg: #3f0e22; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-rose.jpg"); --lq-fallback: radial-gradient(60% 80% at 8% 15%, #f6e1e8 0%, #c77f98 28%, transparent 58%), linear-gradient(160deg, #5e1a33, #3a0d1f);
     --lq-veil: linear-gradient(90deg, rgba(70,10,35,.6), rgba(70,10,35,.28) 35%, rgba(70,10,35,.06) 65%);
-    --sidebar: rgba(80,14,40,.34); --ink: #fdf3f6; --ink-dim: #e6c3cf; --ink-faint: #b98a9b; --red: #e0a8bb; --red-dim: rgba(224,168,187,.25);
+    --lq-gs: rgba(80,14,40,.34); --ink: #fdf3f6; --ink-dim: #e6c3cf; --ink-faint: #b98a9b; --red: #e0a8bb; --red-dim: rgba(224,168,187,.25);
     --accent: #fff0f4; --accent-dim: rgba(255,240,244,.3); --on-accent: #5a1530;
     --lq-glow: 0 0 40px rgba(255,190,210,.55); --lq-tile-loss: linear-gradient(rgba(40,5,18,.55), rgba(40,5,18,.4)); --lq-tile-loss-line: rgba(255,255,255,.08);
   }
   /* "Your photo": the colours are worked out from the picture and set inline by applyTheme */
-  :root[data-palette="liq-custom"] { --bg: #111; --sidebar: rgba(20,20,20,.38); --surface: rgba(255,255,255,.09); --surface-2: rgba(255,255,255,.12); --surface-3: rgba(255,255,255,.18); --field-bg: rgba(0,0,0,.25); --border: rgba(255,255,255,.12); --border-strong: rgba(255,255,255,.22); }
+  :root[data-palette="liq-custom"] { --lq-solid: #161616; --bg: #111; --lq-gs: rgba(20,20,20,.38); --lq-g1: rgba(255,255,255,.09); --lq-g2: rgba(255,255,255,.12); --lq-g3: rgba(255,255,255,.18); --field-bg: rgba(0,0,0,.25); --border: rgba(255,255,255,.12); --border-strong: rgba(255,255,255,.22); }
 
+  :root[data-style="liquid"]:not([data-palette="liq-black"]) {
+    --lq-mix: calc(var(--lq-frost, 45) * 1%);
+    --sidebar: color-mix(in srgb, var(--lq-solid) var(--lq-mix), var(--lq-gs));
+    --surface: color-mix(in srgb, var(--lq-solid) var(--lq-mix), var(--lq-g1));
+    --surface-2: color-mix(in srgb, var(--lq-solid) var(--lq-mix), var(--lq-g2));
+    --surface-3: color-mix(in srgb, var(--lq-solid) calc(var(--lq-frost, 45) * 0.6%), var(--lq-g3));
+    --lq-blur: calc(14px + var(--lq-frost, 45) * 0.3px);
+  }
+  .lq-frost-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--ink-dim); }
+  .lq-frost-row input { width: 100%; accent-color: var(--accent); }
   /* settings: Larpenator / Liquid switch and the Liquid look tiles */
   .style-switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); margin-top: 6px; }
   .style-switch button { border: 0; background: transparent; color: var(--ink-dim); font: 600 12.5px var(--font-body); padding: 6px 14px; border-radius: 8px; cursor: pointer; }
@@ -3256,7 +3271,16 @@
   const LIQUID_CUSTOM_KEY = 'lvd_liquid_custom';
   let liquidCustom = null;
   try { liquidCustom = JSON.parse(localStorage.getItem(LIQUID_CUSTOM_KEY) || 'null'); } catch (e) { liquidCustom = null; }
-  const LIQUID_TOKEN_NAMES = ['--bg', '--sidebar', '--surface', '--surface-2', '--surface-3', '--field-bg', '--border', '--border-strong', '--ink', '--ink-dim', '--ink-faint', '--green', '--green-dim', '--red', '--red-dim', '--amber', '--amber-dim', '--accent', '--accent-dim', '--on-accent', '--lq-veil', '--lq-glow', '--lq-card-line', '--lq-card-shadow', '--lq-tile-win', '--lq-tile-win-line', '--lq-tile-loss', '--lq-tile-loss-line', '--lq-tile-empty', '--lq-tile-shadow'];
+  if (liquidCustom && liquidCustom.tokens && liquidCustom.tokens['--surface']) {
+    const t = liquidCustom.tokens, ren = { '--sidebar': '--lq-gs', '--surface': '--lq-g1', '--surface-2': '--lq-g2', '--surface-3': '--lq-g3' };
+    Object.entries(ren).forEach(([o, n]) => { if (o in t) { t[n] = t[o]; delete t[o]; } });
+    if (!t['--lq-solid']) t['--lq-solid'] = liquidCustom.theme === 'light' ? '#f5f5f3' : '#161616';
+  }
+  // how see-through the glass is: 0 = clear, 100 = solid
+  const LIQUID_FROST_KEY = 'lvd_liquid_frost';
+  let liquidFrost = parseInt(localStorage.getItem(LIQUID_FROST_KEY), 10);
+  if (isNaN(liquidFrost) || liquidFrost < 0 || liquidFrost > 100) liquidFrost = 55;
+  const LIQUID_TOKEN_NAMES = ['--bg', '--lq-solid', '--lq-gs', '--lq-g1', '--lq-g2', '--lq-g3', '--field-bg', '--border', '--border-strong', '--ink', '--ink-dim', '--ink-faint', '--green', '--green-dim', '--red', '--red-dim', '--amber', '--amber-dim', '--accent', '--accent-dim', '--on-accent', '--lq-veil', '--lq-glow', '--lq-card-line', '--lq-card-shadow', '--lq-tile-win', '--lq-tile-win-line', '--lq-tile-loss', '--lq-tile-loss-line', '--lq-tile-empty', '--lq-tile-shadow'];
   let palette = localStorage.getItem(PALETTE_KEY) || 'original';
   if (!PALETTES.some(p => p.id === palette)) palette = 'original';
   let customAccent = localStorage.getItem(ACCENT_KEY) || null;
@@ -3303,6 +3327,7 @@
     else applyGlowIntensity();
     // Liquid: the wallpaper, and for "Your photo" the colours worked out from it
     LIQUID_TOKEN_NAMES.forEach(t => root.style.removeProperty(t));
+    root.style.setProperty('--lq-frost', String(liquidFrost));
     if (mine) { root.style.setProperty('--lq-wall', `url("${liquidCustom.img}")`); Object.entries(liquidCustom.tokens || {}).forEach(([k, v]) => root.style.setProperty(k, v)); }
     else root.style.removeProperty('--lq-wall');
   }
@@ -8746,9 +8771,16 @@
     row.innerHTML = groups.map(g => `<div class="lq-group">${g}</div><div class="lq-row">${looks.filter(p => p.group === g).map(tile).join('')}</div>`).join('') +
       `<div class="lq-group">Your photo</div><div class="lq-row">${mine}<button type="button" class="lq-opt add" id="lq-photo-btn">${mine ? 'Change photo' : '+ Add your own photo'}</button></div>
        <div class="lq-tools"><span class="lq-note">Add a photo and the journal picks its glass, text and accent colours from it.</span></div>
+       <div class="lq-group">Glass</div>
+       <div class="lq-frost-row"><span>See-through</span><input type="range" id="lq-frost" min="0" max="100" step="1" value="${liquidFrost}" aria-label="How solid the glass is"><span>Solid</span></div>
        <input type="file" id="lq-photo-input" accept="image/*" hidden>`;
     row.querySelectorAll('[data-lq]').forEach(b => b.addEventListener('click', () => pickPalette(b.dataset.lq)));
     document.getElementById('lq-photo-btn').addEventListener('click', () => document.getElementById('lq-photo-input').click());
+    document.getElementById('lq-frost').addEventListener('input', ev => {
+      liquidFrost = parseInt(ev.target.value, 10);
+      document.documentElement.style.setProperty('--lq-frost', String(liquidFrost));
+      try { localStorage.setItem(LIQUID_FROST_KEY, String(liquidFrost)); } catch (e) {}
+    });
     document.getElementById('lq-photo-input').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) useLiquidPhoto(f); });
   }
 
@@ -8784,7 +8816,7 @@
     const [ah, as] = lqRgbToHsl(R, G, B);
     const tint = (a) => `hsla(${Math.round(ah)}, ${Math.round(Math.min(as, 0.5) * 100)}%, ${light ? 96 : 12}%, ${a})`;
     const tokens = light ? {
-      '--bg': lqHex(R, G, B), '--sidebar': 'rgba(255,255,255,.5)', '--surface': 'rgba(255,255,255,.66)', '--surface-2': 'rgba(255,255,255,.52)', '--surface-3': 'rgba(0,0,0,.06)', '--field-bg': 'rgba(255,255,255,.8)',
+      '--bg': lqHex(R, G, B), '--lq-solid': '#f5f5f3', '--lq-gs': 'rgba(255,255,255,.5)', '--lq-g1': 'rgba(255,255,255,.66)', '--lq-g2': 'rgba(255,255,255,.52)', '--lq-g3': 'rgba(0,0,0,.06)', '--field-bg': 'rgba(255,255,255,.8)',
       '--border': 'rgba(0,0,0,.08)', '--border-strong': 'rgba(0,0,0,.16)', '--ink': '#0e0e0e', '--ink-dim': '#55554f', '--ink-faint': '#8f8f89',
       '--green': '#16a35f', '--green-dim': '#a9dcc3', '--red': '#d9483c', '--red-dim': '#f0c3bf', '--amber': '#b8690a', '--amber-dim': '#f0d3ab',
       '--accent': hasHue ? lqHsl(hue, Math.max(0.45, sat), 0.42) : '#111', '--accent-dim': 'rgba(0,0,0,.15)', '--on-accent': '#fff',
@@ -8793,7 +8825,7 @@
       '--lq-tile-win': 'linear-gradient(#ffffff, #ececea)', '--lq-tile-win-line': '#fff', '--lq-tile-loss': 'linear-gradient(#d9d9d6, #cfcfcb)', '--lq-tile-loss-line': 'rgba(0,0,0,.05)', '--lq-tile-empty': 'rgba(0,0,0,.035)',
       '--lq-tile-shadow': '0 1px 0 #fff inset, 0 8px 18px rgba(0,0,0,.1)'
     } : {
-      '--bg': lqHex(R * 0.5, G * 0.5, B * 0.5), '--sidebar': tint(0.38), '--surface': 'rgba(255,255,255,.09)', '--surface-2': 'rgba(255,255,255,.12)', '--surface-3': 'rgba(255,255,255,.18)', '--field-bg': 'rgba(0,0,0,.25)',
+      '--bg': lqHex(R * 0.5, G * 0.5, B * 0.5), '--lq-solid': lqHex(R * 0.3 + 6, G * 0.3 + 6, B * 0.3 + 6), '--lq-gs': tint(0.38), '--lq-g1': 'rgba(255,255,255,.09)', '--lq-g2': 'rgba(255,255,255,.12)', '--lq-g3': 'rgba(255,255,255,.18)', '--field-bg': 'rgba(0,0,0,.25)',
       '--border': 'rgba(255,255,255,.12)', '--border-strong': 'rgba(255,255,255,.22)', '--ink': '#f6f6f4', '--ink-dim': '#c9c9c4', '--ink-faint': '#8f8f8a',
       '--green': '#5be39a', '--green-dim': 'rgba(91,227,154,.3)', '--red': '#f08a7e', '--red-dim': 'rgba(240,138,126,.3)', '--amber': '#f0b46a', '--amber-dim': 'rgba(240,180,106,.3)',
       '--accent': hasHue ? lqHsl(hue, Math.max(0.5, sat), 0.7) : '#f2f2ef', '--accent-dim': 'rgba(255,255,255,.25)', '--on-accent': '#111',
