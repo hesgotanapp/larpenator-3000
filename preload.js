@@ -6,6 +6,11 @@ contextBridge.exposeInMainWorld('larpenatorDesktop', {
   readAutoBackup: () => ipcRenderer.invoke('lvd-read-auto-backup'),
   econCalendar: () => ipcRenderer.invoke('lvd-econ-calendar'),
   flushStorage: () => ipcRenderer.send('lvd-flush-storage'),
+  // your wallpapers and card backgrounds (OneDriveLarpenatorLarpenator media)
+  media: {
+    list: () => ipcRenderer.invoke('lvd-media-list'),
+    openFolder: which => ipcRenderer.invoke('lvd-media-open', which)
+  },
   // desk widget (always-on-top panel)
   widget: {
     toggle: () => ipcRenderer.send('widget-toggle'),

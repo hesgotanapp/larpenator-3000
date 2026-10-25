@@ -7,8 +7,8 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Crect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23131415%22/%3E%3Cg transform=%22translate(32 32) scale(.92) rotate(-8) translate(-32 -32)%22 fill=%22none%22 stroke=%22%23c9a35b%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2229.5%22 stroke-width=%222.8%22/%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2218.5%22 stroke-width=%221.2%22/%3E%3Cpath id=%22r%22 d=%22M32 11.399999999999999 a20.6 20.6 0 1 1 -0.01 0%22 stroke=%22none%22/%3E%3Ctext font-family=%22monospace%22 font-weight=%22700%22 font-size=%225.3%22 fill=%22%23c9a35b%22 stroke=%22none%22%3E%3CtextPath href=%22%23r%22 textLength=%22127.49%22 lengthAdjust=%22spacing%22%3ELARPENATOR %E2%9C%A6 TRADING JOURNAL %E2%9C%A6 %3C/textPath%3E%3C/text%3E%3Ctext x=%2232%22 y=%2236.8%22 text-anchor=%22middle%22 font-family=%22Arial Narrow,Arial,sans-serif%22 font-weight=%22800%22 font-size=%2212.5%22 fill=%22%23c9a35b%22 stroke=%22none%22%3E3000%3C/text%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,700;12..96,75..100,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
   :root {
     --bg: #090909;
@@ -1645,6 +1645,118 @@
   }
   /* the brand text is painted by its gradient (see brand glint), so the fill has to be see-through */
   .brand .brand-name .brand-accent { -webkit-text-fill-color: transparent; }
+  /* ================= Liquid style (Settings > Appearance > Liquid): wallpaper + frosted glass ================= */
+  :root[data-style="liquid"] {
+    --font-body: 'Figtree', 'Plus Jakarta Sans', sans-serif;
+    --font-mono: 'Figtree', 'Plus Jakarta Sans', sans-serif; /* Liquid sets numbers and labels in the same soft sans */
+    --radius: 20px; --radius-sm: 12px;
+    --wash-1: transparent; --wash-2: transparent; --wash-corner: transparent; --wash-corner-core: transparent;
+    --lq-blur: 28px;
+  }
+  :root[data-style="liquid"] body {
+    background-color: var(--bg);
+    background-image: var(--lq-veil, linear-gradient(transparent, transparent)), var(--lq-wall, linear-gradient(transparent, transparent)), var(--lq-fallback, linear-gradient(transparent, transparent));
+    background-size: cover; background-position: center; background-attachment: fixed;
+  }
+  :root[data-style="liquid"] body::before, :root[data-style="liquid"] body::after { display: none; }
+  :root[data-style="liquid"] :is(.sidebar, .card, .stat-card, .entry-card, .equity-wrap, .stat-row, .data-card, .notes-app, #entry-form, .detail-blocks .entry-block, .day-popover, .welcome-card, .entries-split.detail-open #entries-list) {
+    backdrop-filter: blur(var(--lq-blur)) saturate(140%); -webkit-backdrop-filter: blur(var(--lq-blur)) saturate(140%);
+  }
+  :root[data-style="liquid"] :is(.card, .stat-card) { border-color: var(--lq-card-line, var(--border)); box-shadow: var(--lq-card-shadow, none); }
+  :root[data-style="liquid"] .sidebar { background: var(--sidebar); }
+  :root[data-style="liquid"] .dash-big { font-weight: 850; letter-spacing: -2px; }
+  :root[data-style="liquid"] .dash-big.pos, :root[data-style="liquid"] .dash-big.neg, :root[data-style="liquid"] .dash-big .roll { text-shadow: var(--lq-glow); animation: none; filter: none; }
+  /* calendar days as tiles you could press: raised glass on green days, sunk on red ones */
+  :root[data-style="liquid"] :is(.cal-cell, .cal-mini-cell).pos { background: var(--lq-tile-win); border-color: var(--lq-tile-win-line); box-shadow: var(--lq-tile-shadow); }
+  :root[data-style="liquid"] :is(.cal-cell, .cal-mini-cell).neg { background: var(--lq-tile-loss); border-color: var(--lq-tile-loss-line); box-shadow: var(--lq-tile-shadow); }
+  :root[data-style="liquid"] :is(.cal-cell, .cal-mini-cell).empty { background: var(--lq-tile-empty, transparent); border-color: transparent; }
+
+  :root[data-palette="liq-black"] {
+    --bg: #000; --sidebar: #000; --surface: #111; --surface-2: #171717; --surface-3: #222; --field-bg: #0c0c0c;
+    --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.14);
+    --ink: #f5f5f3; --ink-dim: #9c9c99; --ink-faint: #5d5d5a;
+    --green: #f2f2ef; --green-dim: #3a3a3a; --red: #9a9a96; --red-dim: #2c2c2c; --amber: #c9c9c5; --amber-dim: #333;
+    --accent: #f2f2ef; --accent-dim: #3a3a3a; --on-accent: #000;
+    --lq-blur: 0px; --lq-glow: 0 0 34px rgba(255,255,255,.35), 0 0 3px rgba(255,255,255,.6);
+    --lq-card-line: transparent;
+    --lq-tile-win: linear-gradient(#383838, #232323); --lq-tile-win-line: #4a4a4a; --lq-tile-loss: linear-gradient(#141414, #0b0b0b); --lq-tile-loss-line: #262626; --lq-tile-empty: #0c0c0c;
+    --lq-tile-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 6px 14px rgba(0,0,0,.5);
+  }
+  :root[data-palette="liq-peaks"] {
+    --bg: #0b0b0b; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-peaks.jpg"); --lq-fallback: linear-gradient(#8a8a8a, #2b2b2b 60%, #0d0d0d); --lq-veil: linear-gradient(rgba(0,0,0,.3), rgba(0,0,0,.55));
+    --sidebar: rgba(14,14,14,.45); --surface: rgba(255,255,255,.07); --surface-2: rgba(255,255,255,.1); --surface-3: rgba(255,255,255,.16); --field-bg: rgba(0,0,0,.28);
+    --border: rgba(255,255,255,0.1); --border-strong: rgba(255,255,255,0.2);
+    --ink: #f6f6f4; --ink-dim: #bdbdb8; --ink-faint: #8a8a85;
+    --green: #f4f4f1; --green-dim: rgba(255,255,255,.3); --red: #a7a7a2; --red-dim: rgba(255,255,255,.12); --amber: #d6d6d1; --amber-dim: rgba(255,255,255,.2);
+    --accent: #f2f2ef; --accent-dim: rgba(255,255,255,.25); --on-accent: #000;
+    --lq-glow: 0 0 38px rgba(255,255,255,.5); --lq-card-line: rgba(255,255,255,.08); --lq-card-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    --lq-tile-win: linear-gradient(rgba(255,255,255,.3), rgba(255,255,255,.12)); --lq-tile-win-line: rgba(255,255,255,.35); --lq-tile-loss: linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.3)); --lq-tile-loss-line: rgba(255,255,255,.08); --lq-tile-empty: rgba(255,255,255,.035);
+    --lq-tile-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 8px 18px rgba(0,0,0,.35);
+  }
+  :root[data-palette="liq-platinum"], :root[data-palette="liq-porsche"] {
+    --sidebar: rgba(255,255,255,.5); --surface: rgba(255,255,255,.7); --surface-2: rgba(255,255,255,.55); --surface-3: rgba(0,0,0,.06); --field-bg: rgba(255,255,255,.82);
+    --border: rgba(0,0,0,0.07); --border-strong: rgba(0,0,0,0.15);
+    --ink: #0d0d0d; --ink-dim: #5a5a56; --ink-faint: #96968f;
+    --green: #111; --green-dim: rgba(0,0,0,.25); --red: #8a8a85; --red-dim: rgba(0,0,0,.12); --amber: #6b6b66; --amber-dim: rgba(0,0,0,.15);
+    --accent: #2f6fe8; --accent-dim: rgba(47,111,232,.3); --on-accent: #fff;
+    --lq-glow: 0 12px 30px rgba(0,0,0,.14); --lq-card-line: rgba(255,255,255,.95); --lq-card-shadow: 0 1px 0 #fff inset, 0 10px 28px rgba(30,30,30,.07);
+    --lq-tile-win: linear-gradient(#ffffff, #ececea); --lq-tile-win-line: #fff; --lq-tile-loss: linear-gradient(#d9d9d6, #cfcfcb); --lq-tile-loss-line: rgba(0,0,0,.05); --lq-tile-empty: rgba(0,0,0,.035);
+    --lq-tile-shadow: 0 1px 0 #fff inset, 0 8px 18px rgba(0,0,0,.1);
+  }
+  :root[data-palette="liq-platinum"] { --bg: #ececea; --lq-fallback: radial-gradient(60% 70% at 20% 10%, #fff 0%, transparent 60%), radial-gradient(50% 60% at 85% 90%, #d3d3cf 0%, transparent 70%), linear-gradient(135deg, #f4f4f2, #dededa); }
+  :root[data-palette="liq-porsche"] { --bg: #f2f2f2; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-porsche.jpg"); --lq-fallback: linear-gradient(#f6f6f6, #e3e3e3); --sidebar: rgba(250,250,250,.42); --surface: rgba(255,255,255,.58); --surface-2: rgba(255,255,255,.45); }
+  :root[data-palette="liq-blue"], :root[data-palette="liq-ridge"], :root[data-palette="liq-rose"] {
+    --surface: rgba(255,255,255,.1); --surface-2: rgba(255,255,255,.14); --surface-3: rgba(255,255,255,.2); --field-bg: rgba(0,0,0,.22);
+    --border: rgba(255,255,255,0.13); --border-strong: rgba(255,255,255,0.24);
+    --green: #ffffff; --green-dim: rgba(255,255,255,.35); --amber: #f3e2c2; --amber-dim: rgba(255,255,255,.2);
+    --on-accent: #0b1b3a;
+    --lq-card-line: rgba(255,255,255,.1); --lq-card-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+    --lq-tile-win: linear-gradient(rgba(255,255,255,.32), rgba(255,255,255,.14)); --lq-tile-win-line: rgba(255,255,255,.4); --lq-tile-empty: rgba(255,255,255,.05);
+    --lq-tile-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 8px 18px rgba(0,10,40,.3);
+  }
+  :root[data-palette="liq-blue"] {
+    --bg: #0b2556; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-blue.jpg"); --lq-fallback: radial-gradient(60% 80% at 8% 15%, #dfe9f7 0%, #7d9ccf 25%, transparent 55%), linear-gradient(160deg, #16306a, #0b1f4d);
+    --lq-veil: linear-gradient(90deg, rgba(8,28,80,.62), rgba(8,28,80,.3) 35%, rgba(8,28,80,.08) 65%);
+    --sidebar: rgba(14,40,96,.34); --ink: #f3f6fc; --ink-dim: #b8c6e0; --ink-faint: #8295bb; --red: #9fb2d6; --red-dim: rgba(160,180,220,.25);
+    --accent: #e9f0ff; --accent-dim: rgba(233,240,255,.3);
+    --lq-glow: 0 0 40px rgba(170,200,255,.55); --lq-tile-loss: linear-gradient(rgba(10,20,45,.6), rgba(10,20,45,.45)); --lq-tile-loss-line: rgba(255,255,255,.08);
+  }
+  :root[data-palette="liq-ridge"] {
+    --bg: #0e2238; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-ridge.jpg"); --lq-fallback: linear-gradient(#aecbe6, #3d5a7a 55%, #0f2238); --lq-veil: linear-gradient(rgba(6,18,38,.2), rgba(6,18,38,.5));
+    --sidebar: rgba(16,36,62,.34); --ink: #f3f7fb; --ink-dim: #c2d0de; --ink-faint: #8ba0b6; --red: #a8b9cb; --red-dim: rgba(170,190,210,.25);
+    --accent: #eaf3ff; --accent-dim: rgba(234,243,255,.3);
+    --lq-glow: 0 0 40px rgba(200,225,255,.6); --lq-tile-loss: linear-gradient(rgba(5,15,30,.55), rgba(5,15,30,.4)); --lq-tile-loss-line: rgba(255,255,255,.08);
+  }
+  :root[data-palette="liq-rose"] {
+    --bg: #3f0e22; --lq-wall: url("app://larpenator/user-media/Wallpapers/liquid-rose.jpg"); --lq-fallback: radial-gradient(60% 80% at 8% 15%, #f6e1e8 0%, #c77f98 28%, transparent 58%), linear-gradient(160deg, #5e1a33, #3a0d1f);
+    --lq-veil: linear-gradient(90deg, rgba(70,10,35,.6), rgba(70,10,35,.28) 35%, rgba(70,10,35,.06) 65%);
+    --sidebar: rgba(80,14,40,.34); --ink: #fdf3f6; --ink-dim: #e6c3cf; --ink-faint: #b98a9b; --red: #e0a8bb; --red-dim: rgba(224,168,187,.25);
+    --accent: #fff0f4; --accent-dim: rgba(255,240,244,.3); --on-accent: #5a1530;
+    --lq-glow: 0 0 40px rgba(255,190,210,.55); --lq-tile-loss: linear-gradient(rgba(40,5,18,.55), rgba(40,5,18,.4)); --lq-tile-loss-line: rgba(255,255,255,.08);
+  }
+  /* "Your photo": the colours are worked out from the picture and set inline by applyTheme */
+  :root[data-palette="liq-custom"] { --bg: #111; --sidebar: rgba(20,20,20,.38); --surface: rgba(255,255,255,.09); --surface-2: rgba(255,255,255,.12); --surface-3: rgba(255,255,255,.18); --field-bg: rgba(0,0,0,.25); --border: rgba(255,255,255,.12); --border-strong: rgba(255,255,255,.22); }
+
+  /* settings: Larpenator / Liquid switch and the Liquid look tiles */
+  .style-switch { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); margin-top: 6px; }
+  .style-switch button { border: 0; background: transparent; color: var(--ink-dim); font: 600 12.5px var(--font-body); padding: 6px 14px; border-radius: 8px; cursor: pointer; }
+  .style-switch button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+  .lq-group { font: 600 10.5px var(--font-mono); letter-spacing: 1.4px; text-transform: uppercase; color: var(--ink-dim); margin: 14px 0 6px; }
+  .lq-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .lq-opt { position: relative; height: 86px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; overflow: hidden; background-size: cover; background-position: center; text-align: left; padding: 0; transition: scale .2s, border-color .2s; }
+  .lq-opt:hover { scale: 1.03; }
+  .lq-opt.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .lq-opt span { position: absolute; left: 8px; bottom: 8px; padding: 3px 9px; border-radius: 8px; font: 650 12px var(--font-body); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .lq-opt.dark span { background: rgba(0,0,0,.4); color: #fff; }
+  .lq-opt.light span { background: rgba(255,255,255,.65); color: #111; }
+  .lq-opt.add { display: grid; place-items: center; border-style: dashed; color: var(--ink-dim); font: 600 12.5px var(--font-body); background: var(--surface-2); }
+  .lq-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+  .lq-note { font-size: 12px; color: var(--ink-faint); }
+
+  /* trade cards with a video background: the clip sits behind the card's content */
+  .tc, .trade-card, .cv-card { isolation: isolate; }
+  .card-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; pointer-events: none; }
+  .card-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(9,9,9,0.05), rgba(9,9,9,0.32) 55%, rgba(9,9,9,0.86)); }
   .palette-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-top: 8px; }
   .palette-opt { display: grid; gap: 8px; text-align: left; padding: 10px; border-radius: 10px; border: 1px solid var(--border); cursor: pointer; font: 500 12.5px var(--font-body); transition: border-color .2s, scale .2s; }
   .palette-opt:hover { scale: 1.03; }
@@ -2916,6 +3028,12 @@
           <label>Colour style</label>
           <div class="palette-row" id="palette-row"></div>
         </div>
+        <div class="field" id="lq-card-field" style="margin-bottom:16px;" hidden>
+          <label>Trade card backgrounds</label>
+          <div class="lq-tools" style="margin-top:4px"><span class="lq-note" id="lq-card-count"></span>
+            <button type="button" class="btn ghost small" id="lq-open-cards">Open card backgrounds folder</button>
+            <button type="button" class="btn ghost small" id="lq-open-walls">Open wallpapers folder</button></div>
+        </div>
         <div class="field appearance-original-only" style="margin-bottom:16px;">
           <label>Theme</label>
           <div class="mode-switch" id="theme-toggle" style="margin-top:6px;">
@@ -3123,8 +3241,22 @@
     { id: 'original', name: 'Original', chips: ['#0f1216', '#3ddc97', '#3ddc97', '#f07167'] },
     { id: 'brass', name: 'Graphite & brass', chips: ['#131415', '#c9a35b', '#6cc391', '#df7b6d'] },
     { id: 'steel', name: 'Ink & steel', chips: ['#101419', '#8fb3d9', '#71c79a', '#e0806f'] },
-    { id: 'paper', name: 'Paper', chips: ['#efebe3', '#22201c', '#2f8a57', '#b8473a'] }
+    { id: 'paper', name: 'Paper', chips: ['#efebe3', '#22201c', '#2f8a57', '#b8473a'] },
+    // Liquid style: frosted glass over a wallpaper (wallpapers live in OneDrive\Larpenator\Larpenator media\Wallpapers)
+    { id: 'liq-black', family: 'liquid', group: 'Black', name: 'Solid black', theme: 'dark', preview: 'linear-gradient(160deg, #1a1a1a, #000)' },
+    { id: 'liq-peaks', family: 'liquid', group: 'Black', name: 'Peaks', theme: 'dark', wall: 'liquid-peaks.jpg', preview: 'linear-gradient(#8a8a8a, #2b2b2b 60%, #0d0d0d)' },
+    { id: 'liq-platinum', family: 'liquid', group: 'White', name: 'Platinum', theme: 'light', preview: 'radial-gradient(60% 70% at 20% 10%, #fff 0%, transparent 60%), linear-gradient(135deg, #f4f4f2, #d6d6d2)' },
+    { id: 'liq-porsche', family: 'liquid', group: 'White', name: 'Porsche', theme: 'light', wall: 'liquid-porsche.jpg', preview: 'linear-gradient(#f6f6f6, #e3e3e3)' },
+    { id: 'liq-blue', family: 'liquid', group: 'Blue', name: 'Blue field', theme: 'dark', wall: 'liquid-blue.jpg', preview: 'radial-gradient(60% 80% at 8% 15%, #dfe9f7 0%, #7d9ccf 25%, transparent 55%), linear-gradient(160deg, #16306a, #0b1f4d)' },
+    { id: 'liq-ridge', family: 'liquid', group: 'Blue', name: 'Snow ridge', theme: 'dark', wall: 'liquid-ridge.jpg', preview: 'linear-gradient(#aecbe6, #3d5a7a 55%, #0f2238)' },
+    { id: 'liq-rose', family: 'liquid', group: 'Extra', name: 'Rose field', theme: 'dark', wall: 'liquid-rose.jpg', preview: 'radial-gradient(60% 80% at 8% 15%, #f6e1e8 0%, #c77f98 28%, transparent 58%), linear-gradient(160deg, #5e1a33, #3a0d1f)' },
+    { id: 'liq-custom', family: 'liquid', group: 'Yours', name: 'Your photo', theme: 'dark' }
   ];
+  // "Your photo": the picture (shrunk) plus the colours worked out from it — this device only
+  const LIQUID_CUSTOM_KEY = 'lvd_liquid_custom';
+  let liquidCustom = null;
+  try { liquidCustom = JSON.parse(localStorage.getItem(LIQUID_CUSTOM_KEY) || 'null'); } catch (e) { liquidCustom = null; }
+  const LIQUID_TOKEN_NAMES = ['--bg', '--sidebar', '--surface', '--surface-2', '--surface-3', '--field-bg', '--border', '--border-strong', '--ink', '--ink-dim', '--ink-faint', '--green', '--green-dim', '--red', '--red-dim', '--amber', '--amber-dim', '--accent', '--accent-dim', '--on-accent', '--lq-veil', '--lq-glow', '--lq-card-line', '--lq-card-shadow', '--lq-tile-win', '--lq-tile-win-line', '--lq-tile-loss', '--lq-tile-loss-line', '--lq-tile-empty', '--lq-tile-shadow'];
   let palette = localStorage.getItem(PALETTE_KEY) || 'original';
   if (!PALETTES.some(p => p.id === palette)) palette = 'original';
   let customAccent = localStorage.getItem(ACCENT_KEY) || null;
@@ -3159,12 +3291,20 @@
   function applyTheme() {
     // Original keeps the dark/light toggle, accent picker and corner glow; the other styles fix their own colours
     const root = document.documentElement, custom = palette !== 'original';
+    const look = PALETTES.find(p => p.id === palette) || PALETTES[0];
+    const liquid = look.family === 'liquid';
+    const mine = palette === 'liq-custom' && liquidCustom && liquidCustom.img;
+    root.setAttribute('data-style', liquid ? 'liquid' : 'larpenator');
     root.setAttribute('data-palette', palette);
-    root.setAttribute('data-theme', palette === 'paper' ? 'light' : custom ? 'dark' : themeMode);
+    root.setAttribute('data-theme', liquid ? (mine ? liquidCustom.theme : look.theme) : palette === 'paper' ? 'light' : custom ? 'dark' : themeMode);
     if (customAccent && !custom) root.style.setProperty('--accent', customAccent);
     else root.style.removeProperty('--accent');
     if (custom) { root.style.removeProperty('--wash-corner-core'); root.style.removeProperty('--wash-corner'); }
     else applyGlowIntensity();
+    // Liquid: the wallpaper, and for "Your photo" the colours worked out from it
+    LIQUID_TOKEN_NAMES.forEach(t => root.style.removeProperty(t));
+    if (mine) { root.style.setProperty('--lq-wall', `url("${liquidCustom.img}")`); Object.entries(liquidCustom.tokens || {}).forEach(([k, v]) => root.style.setProperty(k, v)); }
+    else root.style.removeProperty('--lq-wall');
   }
   applyTheme();
 
@@ -4019,10 +4159,17 @@
     const e = entries.find(x => x.id === id);
     if (!e) return;
     exportFilename = 'trade-' + (e.symbol ? e.symbol.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'entry') + '-' + e.date;
-    const lossPhotos = e.result === 'loss' ? getLossBgPhotos() : [];
-    const photos = lossPhotos.length ? lossPhotos : getSharedBgPhotos();
+    const photos = photosForEntry(e);
     const idx = photos.length ? ((e.bgPhotoIndex || 0) % photos.length) : 0;
     const photoSrc = photos.length ? photos[idx] : null;
+    if (isCardVideo(photoSrc)) {
+      const v = document.createElement('video');
+      v.muted = true; v.preload = 'auto'; v.src = photoSrc;
+      v.addEventListener('loadeddata', () => { v.currentTime = Math.min(1.5, (v.duration || 2) / 3); }, { once: true });
+      v.addEventListener('seeked', () => drawExportCard(e, v), { once: true });
+      v.addEventListener('error', () => drawExportCard(e, null), { once: true });
+      return;
+    }
     if (photoSrc) {
       const img = new Image();
       img.onload = () => { drawExportCard(e, img); };
@@ -4055,8 +4202,9 @@
     ctx.fillStyle = surface;
     ctx.fillRect(0, 0, W, H);
     if (img) {
-      const scale = Math.max(W / img.width, H / img.height);
-      const dw = img.width * scale, dh = img.height * scale;
+      const iw = img.videoWidth || img.naturalWidth || img.width, ih = img.videoHeight || img.naturalHeight || img.height;
+      const scale = Math.max(W / iw, H / ih);
+      const dw = iw * scale, dh = ih * scale;
       ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
       const grad = ctx.createLinearGradient(0, 0, 0, H);
       grad.addColorStop(0, 'rgba(9,9,9,0.20)');
@@ -4191,8 +4339,9 @@
     ctx.fillStyle = surface;
     ctx.fillRect(0, 0, W, H);
     if (img) {
-      const scale = Math.max(W / img.width, H / img.height);
-      const dw = img.width * scale, dh = img.height * scale;
+      const iw = img.videoWidth || img.naturalWidth || img.width, ih = img.videoHeight || img.naturalHeight || img.height;
+      const scale = Math.max(W / iw, H / ih);
+      const dw = iw * scale, dh = ih * scale;
       ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
       const grad = ctx.createLinearGradient(0, 0, 0, H);
       grad.addColorStop(0, 'rgba(9,9,9,0.55)');
@@ -5009,6 +5158,23 @@
     marker(pts[sellIdx], 'S', '#ef6a5f');
   }
 
+  // Card backgrounds from OneDrive\Larpenator\Larpenator media\Card backgrounds (pictures or short
+  // videos) come after your own photos, so the ‹ › arrows on a card run through both.
+  let cardMedia = [];
+  const isCardVideo = u => typeof u === 'string' && /\.(mp4|webm|mov|m4v)(\?|$)/i.test(u);
+  function withCardMedia(arr) { return cardMedia.length ? arr.concat(cardMedia) : arr; }
+  function cardVideoHTML(url, shade) { return `<video class="card-video" src="${url}" muted loop playsinline autoplay preload="auto"></video>${shade ? '<div class="card-shade"></div>' : ''}`; }
+  function loadCardMedia() {
+    const m = window.larpenatorDesktop && window.larpenatorDesktop.media;
+    if (!m) return;
+    m.list().then(r => {
+      cardMedia = (r && r.cards || []).map(c => c.url);
+      bgPhotoStyleKey = '';
+      if (typeof renderEntries === 'function' && activeTab === 'entries') renderEntries();
+      if (typeof renderLogPreview === 'function') try { renderLogPreview(); } catch (e) {}
+      if (document.getElementById('lq-card-count')) renderAppearanceControls();
+    }).catch(() => {});
+  }
   // Photos are large data URLs; register each pool photo once as a CSS class
   // instead of repeating the URL on every card in the grid.
   let bgPhotoStyleKey = '';
@@ -5019,14 +5185,14 @@
     bgPhotoStyleKey = key;
     let el = document.getElementById('bgp-style');
     if (!el) { el = document.createElement('style'); el.id = 'bgp-style'; document.head.appendChild(el); }
-    el.textContent = shared.map((p, i) => `.bgp-s${i}{background-image:url('${p}')}`).join('\n') + '\n' + loss.map((p, i) => `.bgp-l${i}{background-image:url('${p}')}`).join('\n');
+    el.textContent = shared.map((p, i) => isCardVideo(p) ? '' : `.bgp-s${i}{background-image:url('${p}')}`).join('\n') + '\n' + loss.map((p, i) => isCardVideo(p) ? '' : `.bgp-l${i}{background-image:url('${p}')}`).join('\n');
   }
   function photoClassFor(e, shared, loss) {
     if (e.result === 'loss' && loss.length) return 'bgp-l' + ((e.bgPhotoIndex || 0) % loss.length);
     if (shared.length) return 'bgp-s' + ((e.bgPhotoIndex || 0) % shared.length);
     return '';
   }
-  function compactCardHTML(e, photoCls, attrs) {
+  function compactCardHTML(e, photoCls, attrs, videoUrl) {
     const sign = e.result === 'win' ? '+' : e.result === 'loss' ? '−' : '';
     const tags = [];
     if (e.session) tags.push(sessionLabel(e.session));
@@ -5034,7 +5200,8 @@
     if (e.result === 'breakeven') tags.push('Breakeven');
     if (e.rulesBroken) tags.push('⚠ Rule broken');
     return `
-      <div class="tc ${photoCls || 'no-photo'}" ${attrs || ''}>
+      <div class="tc ${photoCls || (videoUrl ? '' : 'no-photo')}" ${attrs || ''}>
+        ${videoUrl ? cardVideoHTML(videoUrl, false) : ''}
         <div class="tc-top"><b>${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</b><span>${e.date ? fmtDateShort(e.date) : ''}</span></div>
         <div>
           <div class="tc-pnl ${e.result || ''}">${sign}${fmtMoney(Math.abs(e.pnl || 0))}</div>
@@ -5128,9 +5295,11 @@
       rulesBroken,
       bgPhotoIndex: editing ? (editing.bgPhotoIndex || 0) : 0
     };
-    const shared = getSharedBgPhotos(), loss = getLossBgPhotos();
+    const shared = withCardMedia(getSharedBgPhotos()), loss = withCardMedia(getLossBgPhotos());
     syncBgPhotoClasses(shared, loss);
-    el.innerHTML = compactCardHTML(e, photoClassFor(e, shared, loss), '');
+    const pool = e.result === 'loss' && getLossBgPhotos().length ? loss : shared;
+    const cur = pool.length ? pool[(e.bgPhotoIndex || 0) % pool.length] : null;
+    el.innerHTML = compactCardHTML(e, isCardVideo(cur) ? '' : photoClassFor(e, shared, loss), '', isCardVideo(cur) ? cur : null);
   }
   document.getElementById('entry-form').addEventListener('input', renderLogPreview);
   document.getElementById('entry-form').addEventListener('click', () => setTimeout(renderLogPreview, 0));
@@ -5176,7 +5345,7 @@
     const sign = e.result === 'win' ? '+' : e.result === 'loss' ? '-' : '';
     const meta = [resultLabel, e.setupType ? setupTypeLabel(e.setupType) : '', e.session ? sessionLabel(e.session) + ' session' : ''].filter(Boolean);
     card.className = 'cv-card' + (url ? '' : ' no-photo');
-    card.style.backgroundImage = url ? `linear-gradient(180deg, rgba(9,9,9,0.12), rgba(9,9,9,0.5) 58%, rgba(9,9,9,0.93)), url('${url}')` : '';
+    card.style.backgroundImage = url && !isCardVideo(url) ? `linear-gradient(180deg, rgba(9,9,9,0.12), rgba(9,9,9,0.5) 58%, rgba(9,9,9,0.93)), url('${url}')` : '';
     card.style.setProperty('--ar', 16 / 9);
     card.innerHTML = `
       ${tradeChartSVG(e).replace('class="trade-card-chart"', 'class="cv-chart"')}
@@ -5189,7 +5358,8 @@
         <div class="cv-meta">${meta.map(m => `<span>${escapeHtml(m)}</span>`).join('')}</div>
         <div class="cv-brand"><span class="cv-stamp">${stampSVG(false)}</span>LARPENATOR <span>3000</span></div>
       </div>`;
-    if (url) photoAspect(url, ar => { if (cardViewId === id) card.style.setProperty('--ar', ar); });
+    if (isCardVideo(url)) { card.insertAdjacentHTML('afterbegin', cardVideoHTML(url, true)); card.style.setProperty('--ar', 16 / 9); }
+    else if (url) photoAspect(url, ar => { if (cardViewId === id) card.style.setProperty('--ar', ar); });
     const many = photos.length > 1;
     document.getElementById('cv-prev').hidden = !many;
     document.getElementById('cv-next').hidden = !many;
@@ -5255,8 +5425,8 @@
     if (selectedTradeId && !selected) selectedTradeId = null;
     split.classList.toggle('detail-open', !!selected);
 
-    const shared = getSharedBgPhotos();
-    const loss = getLossBgPhotos();
+    const shared = withCardMedia(getSharedBgPhotos());
+    const lossOwn = getLossBgPhotos(), loss = lossOwn.length ? withCardMedia(lossOwn) : [];
     syncBgPhotoClasses(shared, loss);
 
     if (selected) {
@@ -5266,8 +5436,11 @@
       const card = detail.querySelector('.trade-card');
       if (pool.length && card) {
         const url = pool[(selected.bgPhotoIndex || 0) % pool.length];
-        card.style.backgroundImage = `linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)), url('${url}')`;
-        photoAspect(url, ar => card.style.setProperty('--ar', ar));
+        if (isCardVideo(url)) { card.insertAdjacentHTML('afterbegin', cardVideoHTML(url, true)); card.style.setProperty('--ar', 16 / 9); }
+        else {
+          card.style.backgroundImage = `linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)), url('${url}')`;
+          photoAspect(url, ar => card.style.setProperty('--ar', ar));
+        }
       }
     } else {
       detail.innerHTML = '';
@@ -5314,9 +5487,9 @@
   function photosForEntry(e) {
     if (e.result === 'loss') {
       const lossPhotos = getLossBgPhotos();
-      if (lossPhotos.length) return lossPhotos;
+      if (lossPhotos.length) return withCardMedia(lossPhotos);
     }
-    return getSharedBgPhotos();
+    return withCardMedia(getSharedBgPhotos());
   }
   function advanceBgPhoto(id) {
     const e = entries.find(x => x.id === id);
@@ -8533,20 +8706,135 @@
   }
 
   // ---------- appearance ----------
+  let paletteFamily = null; // which half of the picker is showing; follows the current look until you switch
   function renderPalettePicker() {
     const row = document.getElementById('palette-row');
-    row.innerHTML = PALETTES.map(p => `<button type="button" class="palette-opt${p.id === palette ? ' active' : ''}" data-palette="${p.id}" style="background:${p.chips[0]}; color:${p.id === 'paper' ? '#22201c' : '#e8e4dc'}"><span class="pal-chips">${p.chips.slice(1).map(c => `<i style="background:${c}"></i>`).join('')}</span>${p.name}</button>`).join('');
-    row.querySelectorAll('.palette-opt').forEach(b => b.addEventListener('click', () => {
-      palette = b.dataset.palette;
-      try { if (palette === 'original') localStorage.removeItem(PALETTE_KEY); else localStorage.setItem(PALETTE_KEY, palette); } catch (e) {}
-      applyTheme();
-      renderAppearanceControls();
-      if (typeof renderDashboard === 'function' && activeTab === 'dashboard') renderDashboard();
-    }));
+    const current = PALETTES.find(p => p.id === palette) || PALETTES[0];
+    if (!paletteFamily) paletteFamily = current.family === 'liquid' ? 'liquid' : 'larpenator';
+    let sw = document.getElementById('style-switch');
+    if (!sw) {
+      sw = document.createElement('div'); sw.id = 'style-switch'; sw.className = 'style-switch';
+      sw.innerHTML = '<button type="button" data-family="larpenator">Larpenator</button><button type="button" data-family="liquid">Liquid</button>';
+      row.parentNode.insertBefore(sw, row);
+      sw.addEventListener('click', ev => { const b = ev.target.closest('[data-family]'); if (!b) return; paletteFamily = b.dataset.family; renderPalettePicker(); });
+    }
+    sw.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.family === paletteFamily));
+    if (paletteFamily === 'liquid') { renderLiquidPicker(row); document.querySelectorAll('.appearance-original-only').forEach(f => f.classList.toggle('hidden-by-palette', palette !== 'original')); return; }
+    row.className = 'palette-row';
+    row.innerHTML = PALETTES.filter(p => p.family !== 'liquid').map(p => `<button type="button" class="palette-opt${p.id === palette ? ' active' : ''}" data-palette="${p.id}" style="background:${p.chips[0]}; color:${p.id === 'paper' ? '#22201c' : '#e8e4dc'}"><span class="pal-chips">${p.chips.slice(1).map(c => `<i style="background:${c}"></i>`).join('')}</span>${p.name}</button>`).join('');
+    row.querySelectorAll('.palette-opt').forEach(b => b.addEventListener('click', () => pickPalette(b.dataset.palette)));
     document.querySelectorAll('.appearance-original-only').forEach(f => f.classList.toggle('hidden-by-palette', palette !== 'original'));
+  }
+  function pickPalette(id) {
+    palette = id;
+    try { if (palette === 'original') localStorage.removeItem(PALETTE_KEY); else localStorage.setItem(PALETTE_KEY, palette); } catch (e) {}
+    applyTheme();
+    renderAppearanceControls();
+    if (typeof renderDashboard === 'function' && activeTab === 'dashboard') renderDashboard();
+  }
+  function renderLiquidPicker(row) {
+    row.className = 'lq-picker';
+    const looks = PALETTES.filter(p => p.family === 'liquid' && p.id !== 'liq-custom');
+    const tile = p => {
+      const bg = (p.wall ? `url('app://larpenator/user-media/Wallpapers/${p.wall}'), ` : '') + p.preview;
+      return `<button type="button" class="lq-opt ${p.theme}${p.id === palette ? ' active' : ''}" data-lq="${p.id}" style="background-image:${bg}"><span>${p.name}</span></button>`;
+    };
+    const groups = ['Black', 'White', 'Blue', 'Extra'];
+    const mine = liquidCustom && liquidCustom.img
+      ? `<button type="button" class="lq-opt ${liquidCustom.theme}${palette === 'liq-custom' ? ' active' : ''}" data-lq="liq-custom" style="background-image:url('${liquidCustom.img}')"><span>Your photo</span></button>`
+      : '';
+    row.innerHTML = groups.map(g => `<div class="lq-group">${g}</div><div class="lq-row">${looks.filter(p => p.group === g).map(tile).join('')}</div>`).join('') +
+      `<div class="lq-group">Your photo</div><div class="lq-row">${mine}<button type="button" class="lq-opt add" id="lq-photo-btn">${mine ? 'Change photo' : '+ Add your own photo'}</button></div>
+       <div class="lq-tools"><span class="lq-note">Add a photo and the journal picks its glass, text and accent colours from it.</span></div>
+       <input type="file" id="lq-photo-input" accept="image/*" hidden>`;
+    row.querySelectorAll('[data-lq]').forEach(b => b.addEventListener('click', () => pickPalette(b.dataset.lq)));
+    document.getElementById('lq-photo-btn').addEventListener('click', () => document.getElementById('lq-photo-input').click());
+    document.getElementById('lq-photo-input').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) useLiquidPhoto(f); });
+  }
+
+  // ---- "Your photo": shrink the picture, read its colours, and build a look around it ----
+  function lqHex(r, g, b) { return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join(''); }
+  function lqRgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+    if (mx === mn) return [0, 0, l];
+    const d = mx - mn, s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+    const h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return [h * 60, s, l];
+  }
+  function lqHsl(h, s, l) { return `hsl(${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%)`; }
+  function deriveLiquidLook(img) {
+    const c = document.createElement('canvas'); c.width = 64; c.height = 40;
+    const g = c.getContext('2d'); g.drawImage(img, 0, 0, 64, 40);
+    const d = g.getImageData(0, 0, 64, 40).data;
+    let R = 0, G = 0, B = 0, L = 0, n = 0;
+    const bins = Array.from({ length: 12 }, () => ({ w: 0, h: 0, s: 0, l: 0 }));
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], gg = d[i + 1], b = d[i + 2];
+      R += r; G += gg; B += b; n++;
+      L += (0.2126 * r + 0.7152 * gg + 0.0722 * b) / 255;
+      const [h, s, l] = lqRgbToHsl(r, gg, b);
+      if (s > 0.2 && l > 0.15 && l < 0.85) { const bin = bins[Math.floor(h / 30) % 12], w = s * s; bin.w += w; bin.h += h * w; bin.s += s * w; bin.l += l * w; }
+    }
+    R /= n; G /= n; B /= n; L /= n;
+    const light = L > 0.6;
+    const best = bins.reduce((a, b) => (b.w > a.w ? b : a));
+    const hasHue = best.w > n * 0.01;
+    const hue = hasHue ? best.h / best.w : lqRgbToHsl(R, G, B)[0], sat = hasHue ? Math.min(0.85, best.s / best.w) : 0;
+    const [ah, as] = lqRgbToHsl(R, G, B);
+    const tint = (a) => `hsla(${Math.round(ah)}, ${Math.round(Math.min(as, 0.5) * 100)}%, ${light ? 96 : 12}%, ${a})`;
+    const tokens = light ? {
+      '--bg': lqHex(R, G, B), '--sidebar': 'rgba(255,255,255,.5)', '--surface': 'rgba(255,255,255,.66)', '--surface-2': 'rgba(255,255,255,.52)', '--surface-3': 'rgba(0,0,0,.06)', '--field-bg': 'rgba(255,255,255,.8)',
+      '--border': 'rgba(0,0,0,.08)', '--border-strong': 'rgba(0,0,0,.16)', '--ink': '#0e0e0e', '--ink-dim': '#55554f', '--ink-faint': '#8f8f89',
+      '--green': '#16a35f', '--green-dim': '#a9dcc3', '--red': '#d9483c', '--red-dim': '#f0c3bf', '--amber': '#b8690a', '--amber-dim': '#f0d3ab',
+      '--accent': hasHue ? lqHsl(hue, Math.max(0.45, sat), 0.42) : '#111', '--accent-dim': 'rgba(0,0,0,.15)', '--on-accent': '#fff',
+      '--lq-veil': 'linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.22))', '--lq-glow': '0 12px 30px rgba(0,0,0,.15)',
+      '--lq-card-line': 'rgba(255,255,255,.9)', '--lq-card-shadow': '0 1px 0 #fff inset, 0 10px 28px rgba(30,30,30,.08)',
+      '--lq-tile-win': 'linear-gradient(#ffffff, #ececea)', '--lq-tile-win-line': '#fff', '--lq-tile-loss': 'linear-gradient(#d9d9d6, #cfcfcb)', '--lq-tile-loss-line': 'rgba(0,0,0,.05)', '--lq-tile-empty': 'rgba(0,0,0,.035)',
+      '--lq-tile-shadow': '0 1px 0 #fff inset, 0 8px 18px rgba(0,0,0,.1)'
+    } : {
+      '--bg': lqHex(R * 0.5, G * 0.5, B * 0.5), '--sidebar': tint(0.38), '--surface': 'rgba(255,255,255,.09)', '--surface-2': 'rgba(255,255,255,.12)', '--surface-3': 'rgba(255,255,255,.18)', '--field-bg': 'rgba(0,0,0,.25)',
+      '--border': 'rgba(255,255,255,.12)', '--border-strong': 'rgba(255,255,255,.22)', '--ink': '#f6f6f4', '--ink-dim': '#c9c9c4', '--ink-faint': '#8f8f8a',
+      '--green': '#5be39a', '--green-dim': 'rgba(91,227,154,.3)', '--red': '#f08a7e', '--red-dim': 'rgba(240,138,126,.3)', '--amber': '#f0b46a', '--amber-dim': 'rgba(240,180,106,.3)',
+      '--accent': hasHue ? lqHsl(hue, Math.max(0.5, sat), 0.7) : '#f2f2ef', '--accent-dim': 'rgba(255,255,255,.25)', '--on-accent': '#111',
+      '--lq-veil': `linear-gradient(rgba(0,0,0,${L > 0.4 ? 0.35 : 0.15}), rgba(0,0,0,.45))`, '--lq-glow': `0 0 38px ${hasHue ? `hsla(${Math.round(hue)}, 80%, 75%, .5)` : 'rgba(255,255,255,.45)'}`,
+      '--lq-card-line': 'rgba(255,255,255,.1)', '--lq-card-shadow': 'inset 0 1px 0 rgba(255,255,255,.1)',
+      '--lq-tile-win': 'linear-gradient(rgba(255,255,255,.32), rgba(255,255,255,.14))', '--lq-tile-win-line': 'rgba(255,255,255,.4)', '--lq-tile-loss': 'linear-gradient(rgba(0,0,0,.5), rgba(0,0,0,.35))', '--lq-tile-loss-line': 'rgba(255,255,255,.08)', '--lq-tile-empty': 'rgba(255,255,255,.05)',
+      '--lq-tile-shadow': 'inset 0 1px 0 rgba(255,255,255,.4), 0 8px 18px rgba(0,0,0,.3)'
+    };
+    return { theme: light ? 'light' : 'dark', tokens };
+  }
+  function useLiquidPhoto(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        // shrink to at most 2200px wide so it fits in local storage
+        const k = Math.min(1, 2200 / Math.max(img.width, img.height));
+        const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        const look = deriveLiquidLook(c);
+        liquidCustom = { img: c.toDataURL('image/jpeg', 0.84), theme: look.theme, tokens: look.tokens };
+        try { localStorage.setItem(LIQUID_CUSTOM_KEY, JSON.stringify(liquidCustom)); }
+        catch (e) { showToast('That photo is too big to keep — try a smaller one'); return; }
+        pickPalette('liq-custom');
+        showToast('Journal themed to your photo');
+      };
+      img.onerror = () => showToast("Couldn't read that picture");
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   }
   function renderAppearanceControls() {
     renderPalettePicker();
+    const cardField = document.getElementById('lq-card-field');
+    if (cardField && window.larpenatorDesktop && window.larpenatorDesktop.media) {
+      cardField.hidden = false;
+      const vids = cardMedia.filter(isCardVideo).length, pics = cardMedia.length - vids;
+      document.getElementById('lq-card-count').textContent = cardMedia.length
+        ? `${vids} video${vids === 1 ? '' : 's'}${pics ? ` and ${pics} picture${pics === 1 ? '' : 's'}` : ''} in OneDrive › Larpenator › Larpenator media. They come after your own photos when you flip through a card's backgrounds.`
+        : 'Drop pictures or short videos into the card backgrounds folder and they show up on your trade cards.';
+    }
     document.querySelectorAll('#theme-toggle .mode-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === themeMode));
     const row = document.getElementById('accent-swatches');
     const sel = (customAccent || '').toLowerCase();
@@ -9711,7 +9999,14 @@
     };
   })();
 
+  if (window.larpenatorDesktop && window.larpenatorDesktop.media) {
+    document.getElementById('lq-open-cards').addEventListener('click', () => window.larpenatorDesktop.media.openFolder('cards'));
+    document.getElementById('lq-open-walls').addEventListener('click', () => window.larpenatorDesktop.media.openFolder('walls'));
+    window.addEventListener('focus', loadCardMedia); // pick up anything added to the folder while you were away
+  }
+
   // ---------- init ----------
+  loadCardMedia();
   migrateLegacyBgPhotosOnce();
   advanceAllBgPhotosOnLaunch();
   renderBgPhotoGrid();

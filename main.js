@@ -3,12 +3,13 @@ const path = require('path');
 const fs = require('fs');
 const { pathToFileURL } = require('url');
 const { initWidget, restoreWidget, closeWidget } = require('./widget-main');
+const { initMedia, resolveMediaPath, serveMediaFile } = require('./media-main');
 
 // file:// pages get an opaque origin in modern Chromium, so their localStorage
 // is wiped between launches. Serving the app over a privileged custom scheme
 // gives it a stable origin whose storage persists under userData.
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } }
+  { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }
 ]);
 
 let win = null;
@@ -262,6 +263,11 @@ function registerAppProtocol() {
   const appRoot = path.join(__dirname, 'app');
   protocol.handle('app', (request) => {
     const { pathname } = new URL(request.url);
+    // your own wallpapers and card backgrounds, kept outside the app (see media-main.js)
+    if (pathname.startsWith('/user-media/')) {
+      const media = resolveMediaPath(pathname);
+      return media ? serveMediaFile(media, request) : new Response('not found', { status: 404 });
+    }
     const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\//, '');
     const file = path.normalize(path.join(appRoot, rel));
     if (!file.startsWith(appRoot)) return new Response('forbidden', { status: 403 });
@@ -302,6 +308,7 @@ app.whenReady().then(() => {
   registerAppProtocol();
   createWindow();
   initWidget(() => win);
+  initMedia();
   if (win) win.webContents.once('did-finish-load', restoreWidget);
   runPersistTest();
   wireUpdater();
