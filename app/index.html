@@ -1655,7 +1655,8 @@
   }
   :root[data-style="liquid"] body { background: var(--bg); }
   :root[data-style="liquid"] body::before {
-    display: block; inset: 0; animation: none; z-index: -1;
+    display: block; inset: calc(var(--lq-wall-blur, 0) * -2px); animation: none; z-index: -1;
+    filter: blur(calc(var(--lq-wall-blur, 0) * 1px));
     background-image: var(--lq-veil, linear-gradient(transparent, transparent)), var(--lq-wall, linear-gradient(transparent, transparent)), var(--lq-fallback, linear-gradient(transparent, transparent));
     background-size: cover; background-position: center;
   }
@@ -3280,6 +3281,10 @@
   const LIQUID_FROST_KEY = 'lvd_liquid_frost';
   let liquidFrost = parseInt(localStorage.getItem(LIQUID_FROST_KEY), 10);
   if (isNaN(liquidFrost) || liquidFrost < 0 || liquidFrost > 100) liquidFrost = 55;
+  // how blurred the wallpaper itself is, in px (0 = sharp)
+  const LIQUID_WALLBLUR_KEY = 'lvd_liquid_wall_blur';
+  let liquidWallBlur = parseInt(localStorage.getItem(LIQUID_WALLBLUR_KEY), 10);
+  if (isNaN(liquidWallBlur) || liquidWallBlur < 0 || liquidWallBlur > 40) liquidWallBlur = 0;
   const LIQUID_TOKEN_NAMES = ['--bg', '--lq-solid', '--lq-gs', '--lq-g1', '--lq-g2', '--lq-g3', '--field-bg', '--border', '--border-strong', '--ink', '--ink-dim', '--ink-faint', '--green', '--green-dim', '--red', '--red-dim', '--amber', '--amber-dim', '--accent', '--accent-dim', '--on-accent', '--lq-veil', '--lq-glow', '--lq-card-line', '--lq-card-shadow', '--lq-tile-win', '--lq-tile-win-line', '--lq-tile-loss', '--lq-tile-loss-line', '--lq-tile-empty', '--lq-tile-shadow'];
   let palette = localStorage.getItem(PALETTE_KEY) || 'original';
   if (!PALETTES.some(p => p.id === palette)) palette = 'original';
@@ -3328,6 +3333,7 @@
     // Liquid: the wallpaper, and for "Your photo" the colours worked out from it
     LIQUID_TOKEN_NAMES.forEach(t => root.style.removeProperty(t));
     root.style.setProperty('--lq-frost', String(liquidFrost));
+    root.style.setProperty('--lq-wall-blur', String(liquidWallBlur));
     if (mine) { root.style.setProperty('--lq-wall', `url("${liquidCustom.img}")`); Object.entries(liquidCustom.tokens || {}).forEach(([k, v]) => root.style.setProperty(k, v)); }
     else root.style.removeProperty('--lq-wall');
   }
@@ -8773,9 +8779,16 @@
        <div class="lq-tools"><span class="lq-note">Add a photo and the journal picks its glass, text and accent colours from it.</span></div>
        <div class="lq-group">Glass</div>
        <div class="lq-frost-row"><span>See-through</span><input type="range" id="lq-frost" min="0" max="100" step="1" value="${liquidFrost}" aria-label="How solid the glass is"><span>Solid</span></div>
+       <div class="lq-group">Background blur</div>
+       <div class="lq-frost-row"><span>Sharp</span><input type="range" id="lq-wallblur" min="0" max="40" step="1" value="${liquidWallBlur}" aria-label="How blurred the background picture is"><span>Blurred</span></div>
        <input type="file" id="lq-photo-input" accept="image/*" hidden>`;
     row.querySelectorAll('[data-lq]').forEach(b => b.addEventListener('click', () => pickPalette(b.dataset.lq)));
     document.getElementById('lq-photo-btn').addEventListener('click', () => document.getElementById('lq-photo-input').click());
+    document.getElementById('lq-wallblur').addEventListener('input', ev => {
+      liquidWallBlur = parseInt(ev.target.value, 10);
+      document.documentElement.style.setProperty('--lq-wall-blur', String(liquidWallBlur));
+      try { localStorage.setItem(LIQUID_WALLBLUR_KEY, String(liquidWallBlur)); } catch (e) {}
+    });
     document.getElementById('lq-frost').addEventListener('input', ev => {
       liquidFrost = parseInt(ev.target.value, 10);
       document.documentElement.style.setProperty('--lq-frost', String(liquidFrost));
