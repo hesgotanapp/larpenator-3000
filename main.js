@@ -12,6 +12,11 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }
 ]);
 
+// Card video sound: on newer Windows builds the sandboxed audio process can't open the
+// speakers and Chromium silently plays to nothing. Run audio without that sandbox, inside
+// the main process, so it reaches the default output like any other app.
+app.commandLine.appendSwitch('disable-features', 'AudioServiceSandbox,AudioServiceOutOfProcess');
+
 let win = null;
 let updaterWired = false;
 
