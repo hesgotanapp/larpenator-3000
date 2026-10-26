@@ -1773,6 +1773,7 @@
   .tc, .trade-card, .cv-card { isolation: isolate; }
   .card-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; pointer-events: none; }
   .card-sound { position: absolute; right: 12px; top: 12px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.28); background: rgba(10,10,10,.45); color: #fff; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: background .2s, scale .2s; }
+  .tc .card-sound { top: auto; bottom: 12px; }
   .card-sound:hover { background: rgba(10,10,10,.7); scale: 1.08; }
   .card-sound svg { width: 17px; height: 17px; }
   .cm-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 8px; margin-top: 10px; }
@@ -5309,7 +5310,7 @@
     if (e.rulesBroken) tags.push('⚠ Rule broken');
     return `
       <div class="tc ${photoCls || (videoUrl ? '' : 'no-photo')}" ${attrs || ''}>
-        ${videoUrl ? cardVideoHTML(videoUrl, false) : ''}
+        ${videoUrl ? cardVideoHTML(videoUrl, false, true) : ''}
         <div class="tc-top"><b>${e.symbol ? escapeHtml(e.symbol) : 'Untitled trade'}</b><span>${e.date ? fmtDateShort(e.date) : ''}</span></div>
         <div>
           <div class="tc-pnl ${e.result || ''}">${sign}${fmtMoney(Math.abs(e.pnl || 0))}</div>
@@ -5410,6 +5411,7 @@
     const oldV = el.querySelector('video.card-video');
     el.innerHTML = compactCardHTML(e, isCardVideo(cur) ? '' : photoClassFor(e, shared, loss), '', isCardVideo(cur) ? cur : null);
     reuseCardVideo(oldV, el);
+    applyCardSound();
   }
   document.getElementById('entry-form').addEventListener('input', renderLogPreview);
   document.getElementById('entry-form').addEventListener('click', () => setTimeout(renderLogPreview, 0));
