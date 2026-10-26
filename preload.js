@@ -9,7 +9,9 @@ contextBridge.exposeInMainWorld('larpenatorDesktop', {
   // your wallpapers and card backgrounds (OneDriveLarpenatorLarpenator media)
   media: {
     list: () => ipcRenderer.invoke('lvd-media-list'),
-    openFolder: which => ipcRenderer.invoke('lvd-media-open', which)
+    openFolder: which => ipcRenderer.invoke('lvd-media-open', which),
+    addCards: () => ipcRenderer.invoke('lvd-media-add-cards'),
+    removeCard: name => ipcRenderer.invoke('lvd-media-remove-card', name)
   },
   // desk widget (always-on-top panel)
   widget: {

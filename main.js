@@ -59,7 +59,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      spellcheck: false
+      spellcheck: false,
+      autoplayPolicy: 'no-user-gesture-required' // card videos can play with their sound on
     }
   });
 

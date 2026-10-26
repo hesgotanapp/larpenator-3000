@@ -1,7 +1,7 @@
 // Your own media for the app: wallpapers for the Liquid looks and backgrounds (pictures or short
 // videos) for trade cards. They live outside the app — in OneDrive when you have it, so every PC
 // you sign in on gets them — and are served to the page as app://larpenator/user-media/<folder>/<file>.
-const { app, ipcMain, shell } = require('electron');
+const { app, ipcMain, shell, dialog, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -82,6 +82,36 @@ function initMedia() {
   ipcMain.handle('lvd-media-open', (e, which) => {
     const root = ensureFolders();
     return shell.openPath(path.join(root, which === 'walls' ? FOLDERS.walls : FOLDERS.cards));
+  });
+  // pick videos/pictures anywhere on the PC and copy them into the card backgrounds folder
+  ipcMain.handle('lvd-media-add-cards', async e => {
+    const win = BrowserWindow.fromWebContents(e.sender);
+    const noDot = set => [...set].map(x => x.slice(1));
+    const r = await dialog.showOpenDialog(win, {
+      title: 'Add trade card backgrounds',
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'Videos and pictures', extensions: [...noDot(VIDEO), ...noDot(PICTURE)] }, { name: 'Videos', extensions: noDot(VIDEO) }, { name: 'Pictures', extensions: noDot(PICTURE) }]
+    });
+    if (r.canceled || !r.filePaths.length) return { added: [] };
+    const dir = path.join(ensureFolders(), FOLDERS.cards);
+    const added = [];
+    for (const src of r.filePaths) {
+      const ext = path.extname(src).toLowerCase();
+      if (!VIDEO.has(ext) && !PICTURE.has(ext)) continue;
+      const base = path.basename(src, path.extname(src));
+      let name = base + ext, n = 2;
+      while (fs.existsSync(path.join(dir, name))) name = base + ' (' + (n++) + ')' + ext;
+      await fs.promises.copyFile(src, path.join(dir, name));
+      added.push(name);
+    }
+    return { added };
+  });
+  // removing one sends it to the Recycle Bin (never a hard delete)
+  ipcMain.handle('lvd-media-remove-card', async (e, name) => {
+    const file = resolveMediaPath('/user-media/' + encodeURIComponent(FOLDERS.cards) + '/' + encodeURIComponent(String(name || '')));
+    if (!file) return false;
+    await shell.trashItem(file);
+    return true;
   });
 }
 

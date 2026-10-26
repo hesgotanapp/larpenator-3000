@@ -1563,25 +1563,9 @@
   });
 
   // ---------- launch intro: split reveal ----------
-  // ---------- the Larpenator stamp (Inked) ----------
-  // One colour (currentColor), tilted, with a rubber-stamp ink texture. small = the icon-size cut (ring + 3K).
-  let stampSeq = 0;
-  function stampSVG(small) {
-    const id = 'lvink' + (stampSeq++);
-    const tex = `<defs><filter id="${id}" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.3 2.3" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter></defs>`;
-    const display = `font-family="'Bricolage Grotesque','Geist',sans-serif" font-weight="800" font-stretch="75%"`;
-    let body;
-    if (small) {
-      body = `<circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" stroke-width="4.5"/><text x="32" y="39" text-anchor="middle" ${display} font-size="20" fill="currentColor">3K</text>`;
-    } else {
-      const r = 20.6, L = (2 * Math.PI * r * 0.985).toFixed(2);
-      body = `<circle cx="32" cy="32" r="29.5" fill="none" stroke="currentColor" stroke-width="2.8"/><circle cx="32" cy="32" r="18.5" fill="none" stroke="currentColor" stroke-width="1.2"/>` +
-        `<defs><path id="${id}r" d="M32 ${32 - r} a${r} ${r} 0 1 1 -0.01 0"/></defs><text font-family="'Geist Mono','JetBrains Mono',monospace" font-weight="700" font-size="5.3" fill="currentColor"><textPath href="#${id}r" textLength="${L}" lengthAdjust="spacing">LARPENATOR ✦ TRADING JOURNAL ✦ </textPath></text>` +
-        `<text x="32" y="36.8" text-anchor="middle" ${display} font-size="12.5" fill="currentColor">3000</text>`;
-    }
-    return `<svg class="stamp-svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">${tex}<g filter="url(#${id})" transform="rotate(-8 32 32)">${body}</g></svg>`;
-  }
-  // the same stamp drawn onto a canvas (exported images), with speckles knocked out for the ink texture
+  // ---------- the Larpenator logo (glass panels) ----------
+  // stampSVG keeps its old name so every place that showed the stamp now shows the logo
+  function stampSVG() { return '<img class="stamp-svg logo-img" src="icons/logo.png" alt="" draggable="false">'; }
 
   // saving a new trade: a ticket pops up and gets stamped
   function stampSavedTicket(entry) {

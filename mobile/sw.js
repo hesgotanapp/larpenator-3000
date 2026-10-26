@@ -1,5 +1,5 @@
 // Bump when the caching strategy changes; the activate step clears older caches.
-const CACHE_NAME = 'larpenator-mobile-v2';
+const CACHE_NAME = 'larpenator-mobile-v3';
 const SHELL_FILES = [
   'index.html',
   'app.js',
@@ -10,7 +10,8 @@ const SHELL_FILES = [
   'vendor/firebase/firebase-auth-compat.js',
   'vendor/firebase/firebase-firestore-compat.js',
   'icons/icon-192.png',
-  'icons/icon-512.png'
+  'icons/icon-512.png',
+  'icons/logo.png'
 ];
 
 self.addEventListener('install', (event) => {
