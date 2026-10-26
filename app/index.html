@@ -5210,7 +5210,7 @@
   const isCardVideo = u => typeof u === 'string' && /\.(mp4|webm|mov|m4v)(\?|$)/i.test(u);
   function withCardMedia(arr) { return cardMedia.length ? arr.concat(cardMedia) : arr; }
   const CARD_SOUND_KEY = 'lvd_card_sound';
-  let cardSound = localStorage.getItem(CARD_SOUND_KEY) === '1';
+  let cardSound = localStorage.getItem(CARD_SOUND_KEY) !== '0'; // on unless you've muted it
   let cardFiles = []; // [{name, label, kind, url}] for the settings list
   const SPEAKER_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
   const SPEAKER_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m22 9-6 6"/><path d="m16 9 6 6"/></svg>';
