@@ -1,5 +1,5 @@
 // Bump when the caching strategy changes; the activate step clears older caches.
-const CACHE_NAME = 'larpenator-mobile-v3';
+const CACHE_NAME = 'larpenator-mobile-v4';
 const SHELL_FILES = [
   'index.html',
   'app.js',
