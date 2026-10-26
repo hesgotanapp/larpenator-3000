@@ -5220,6 +5220,30 @@
       (sound ? `<button type="button" class="card-sound" data-card-sound title="${cardSound ? 'Mute' : 'Play sound'}" aria-label="${cardSound ? 'Mute the video' : 'Play the video sound'}">${cardSound ? SPEAKER_ON : SPEAKER_OFF}</button>` : '');
   }
   // only one card is heard at a time: the big card view when it's open, otherwise the detail card
+  // re-rendering a card shouldn't restart its clip: put the already-playing video back in place
+  function reuseCardVideo(oldV, root) {
+    if (!oldV || !root) return;
+    const nv = root.querySelector('video.card-video');
+    if (!nv || nv.getAttribute('src') !== oldV.getAttribute('src')) return;
+    if (nv.hasAttribute('data-sound')) oldV.setAttribute('data-sound', ''); else oldV.removeAttribute('data-sound');
+    nv.replaceWith(oldV);
+    oldV.play().catch(() => {});
+  }
+  // only clips you can actually see get decoded (other tabs, scrolled-off cards and a hidden window pause)
+  const cardVideoSeen = new IntersectionObserver(list => list.forEach(en => {
+    const v = en.target;
+    if (en.isIntersecting && !document.hidden) v.play().catch(() => {}); else v.pause();
+  }));
+  new MutationObserver(muts => muts.forEach(m => m.addedNodes.forEach(n => {
+    if (n.nodeType !== 1) return;
+    (n.matches('video.card-video') ? [n] : n.querySelectorAll('video.card-video')).forEach(v => cardVideoSeen.observe(v));
+  }))).observe(document.body, { childList: true, subtree: true });
+  document.addEventListener('visibilitychange', () => {
+    document.querySelectorAll('video.card-video').forEach(v => {
+      if (document.hidden) v.pause();
+      else { cardVideoSeen.unobserve(v); cardVideoSeen.observe(v); } // re-check what's on screen
+    });
+  });
   function applyCardSound() {
     const cv = document.getElementById('card-view');
     const viewOpen = !!(cv && cv.classList.contains('open'));
@@ -5383,7 +5407,9 @@
     syncBgPhotoClasses(shared, loss);
     const pool = e.result === 'loss' && getLossBgPhotos().length ? loss : shared;
     const cur = pool.length ? pool[(e.bgPhotoIndex || 0) % pool.length] : null;
+    const oldV = el.querySelector('video.card-video');
     el.innerHTML = compactCardHTML(e, isCardVideo(cur) ? '' : photoClassFor(e, shared, loss), '', isCardVideo(cur) ? cur : null);
+    reuseCardVideo(oldV, el);
   }
   document.getElementById('entry-form').addEventListener('input', renderLogPreview);
   document.getElementById('entry-form').addEventListener('click', () => setTimeout(renderLogPreview, 0));
@@ -5520,12 +5546,13 @@
 
     if (selected) {
       list.innerHTML = shown.length ? shown.map(e => tradeRowHTML(e, e.id === selected.id) + rowMenuHTML(e)).join('') : `<div class="empty-state"><p>No other trades match these filters.</p></div>`;
+      const oldDetailV = detail.querySelector('.trade-card video.card-video');
       detail.innerHTML = tradeDetailHTML(selected, shared, loss);
       const pool = selected.result === 'loss' && loss.length ? loss : shared;
       const card = detail.querySelector('.trade-card');
       if (pool.length && card) {
         const url = pool[(selected.bgPhotoIndex || 0) % pool.length];
-        if (isCardVideo(url)) { card.insertAdjacentHTML('afterbegin', cardVideoHTML(url, true, true)); card.style.setProperty('--ar', 16 / 9); applyCardSound(); }
+        if (isCardVideo(url)) { card.insertAdjacentHTML('afterbegin', cardVideoHTML(url, true, true)); card.style.setProperty('--ar', 16 / 9); reuseCardVideo(oldDetailV, card); applyCardSound(); }
         else {
           card.style.backgroundImage = `linear-gradient(180deg, rgba(9,9,9,0.15), rgba(9,9,9,0.6) 60%, rgba(9,9,9,0.94)), url('${url}')`;
           photoAspect(url, ar => card.style.setProperty('--ar', ar));
