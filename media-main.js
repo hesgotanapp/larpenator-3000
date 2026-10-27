@@ -106,6 +106,56 @@ function initMedia() {
     }
     return { added };
   });
+  // ---- syncing between PCs (the page does the cloud side, see mediaSync in index.html) ----
+  // copies that came from the cloud land in the app's own folder, never in OneDrive, so they
+  // can't collide with a OneDrive copy that is still on its way
+  const cacheDir = folder => path.join(app.getPath('userData'), 'media', folder);
+  const safe = (folder, name) => Object.values(FOLDERS).includes(folder) && typeof name === 'string' && name && path.basename(name) === name;
+  ipcMain.handle('lvd-media-files', () => {
+    const out = [];
+    let roots = 0;
+    Object.values(FOLDERS).forEach(folder => {
+      const seen = new Set();
+      mediaRoots().forEach(root => {
+        let names;
+        try { names = fs.readdirSync(path.join(root, folder)); roots++; } catch (e) { return; }
+        names.forEach(name => {
+          const ext = path.extname(name).toLowerCase();
+          if ((!PICTURE.has(ext) && !VIDEO.has(ext)) || name.startsWith('.') || seen.has(name.toLowerCase())) return;
+          try {
+            const st = fs.statSync(path.join(root, folder, name));
+            if (!st.isFile()) return;
+            seen.add(name.toLowerCase());
+            out.push({ folder, name, size: st.size, mtime: st.mtimeMs });
+          } catch (e) { /* vanished meanwhile */ }
+        });
+      });
+    });
+    return { files: out, readable: roots > 0 };
+  });
+  ipcMain.handle('lvd-media-read', (e, folder, name) => {
+    if (!safe(folder, name)) return null;
+    const file = resolveMediaPath('/user-media/' + encodeURIComponent(folder) + '/' + encodeURIComponent(name));
+    return file ? fs.promises.readFile(file) : null;
+  });
+  ipcMain.handle('lvd-media-write', async (e, folder, name, bytes) => {
+    if (!safe(folder, name) || !bytes) return false;
+    const dir = cacheDir(folder);
+    await fs.promises.mkdir(dir, { recursive: true });
+    const tmp = path.join(dir, '.' + name + '.part');
+    await fs.promises.writeFile(tmp, Buffer.from(bytes));
+    await fs.promises.rename(tmp, path.join(dir, name));
+    return true;
+  });
+  // removed on another PC: every copy here goes to the Recycle Bin
+  ipcMain.handle('lvd-media-trash', async (e, folder, name) => {
+    if (!safe(folder, name)) return false;
+    for (const root of mediaRoots()) {
+      const file = path.join(root, folder, name);
+      try { if (fs.statSync(file).isFile()) await shell.trashItem(file); } catch (err) { /* not here */ }
+    }
+    return true;
+  });
   // removing one sends it to the Recycle Bin (never a hard delete)
   ipcMain.handle('lvd-media-remove-card', async (e, name) => {
     const file = resolveMediaPath('/user-media/' + encodeURIComponent(FOLDERS.cards) + '/' + encodeURIComponent(String(name || '')));

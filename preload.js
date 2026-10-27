@@ -11,7 +11,12 @@ contextBridge.exposeInMainWorld('larpenatorDesktop', {
     list: () => ipcRenderer.invoke('lvd-media-list'),
     openFolder: which => ipcRenderer.invoke('lvd-media-open', which),
     addCards: () => ipcRenderer.invoke('lvd-media-add-cards'),
-    removeCard: name => ipcRenderer.invoke('lvd-media-remove-card', name)
+    removeCard: name => ipcRenderer.invoke('lvd-media-remove-card', name),
+    // for syncing between PCs
+    files: () => ipcRenderer.invoke('lvd-media-files'),
+    read: (folder, name) => ipcRenderer.invoke('lvd-media-read', folder, name),
+    write: (folder, name, bytes) => ipcRenderer.invoke('lvd-media-write', folder, name, bytes),
+    trash: (folder, name) => ipcRenderer.invoke('lvd-media-trash', folder, name)
   },
   // desk widget (always-on-top panel)
   widget: {

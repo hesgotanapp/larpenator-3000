@@ -5272,6 +5272,19 @@
     ev.stopPropagation(); ev.preventDefault();
     setCardSound(!cardSound);
   }, true);
+  // a wallpaper that arrived after the page asked for it (synced from your other PC): point the
+  // looks at a fresh address so the picture loads instead of the plain colour fade
+  let mediaBust = '';
+  function refreshWallpapers() {
+    mediaBust = '?v=' + Date.now();
+    [...document.styleSheets].forEach(sh => {
+      let rules; try { rules = sh.cssRules; } catch (e) { return; }
+      [...rules].forEach(r => {
+        const v = r.style && r.style.getPropertyValue('--lq-wall');
+        if (v && v.includes('user-media/')) r.style.setProperty('--lq-wall', v.replace(/(user-media\/[^"')?]+)(\?v=\d+)?/g, '$1' + mediaBust));
+      });
+    });
+  }
   function loadCardMedia() {
     const m = window.larpenatorDesktop && window.larpenatorDesktop.media;
     if (!m) return;
@@ -8854,7 +8867,7 @@
     row.className = 'lq-picker';
     const looks = PALETTES.filter(p => p.family === 'liquid' && p.id !== 'liq-custom');
     const tile = p => {
-      const bg = (p.wall ? `url('app://larpenator/user-media/Wallpapers/${p.wall}'), ` : '') + p.preview;
+      const bg = (p.wall ? `url('app://larpenator/user-media/Wallpapers/${p.wall}${mediaBust}'), ` : '') + p.preview;
       return `<button type="button" class="lq-opt ${p.theme}${p.id === palette ? ' active' : ''}" data-lq="${p.id}" style="background-image:${bg}"><span>${p.name}</span></button>`;
     };
     const groups = ['Black', 'White', 'Blue', 'Extra'];
@@ -10104,7 +10117,7 @@
     document.getElementById('lq-add-cards').addEventListener('click', async () => {
       try {
         const r = await window.larpenatorDesktop.media.addCards();
-        if (r && r.added && r.added.length) { showToast(`Added ${r.added.length} card background${r.added.length === 1 ? '' : 's'}`); loadCardMedia(); }
+        if (r && r.added && r.added.length) { showToast(`Added ${r.added.length} card background${r.added.length === 1 ? '' : 's'}`); loadCardMedia(); if (window.__lvdMediaSync) window.__lvdMediaSync(); }
       } catch (e) { showToast('Could not add that file'); }
     });
     document.getElementById('lq-card-list').addEventListener('click', async ev => {
@@ -10117,11 +10130,108 @@
       }
       try { await window.larpenatorDesktop.media.removeCard(b.dataset.cmDel); showToast('Moved to the Recycle Bin'); } catch (e) {}
       loadCardMedia();
+      if (window.__lvdMediaSync) window.__lvdMediaSync();
     });
     document.getElementById('lq-card-sound').addEventListener('change', ev => setCardSound(ev.target.checked));
     document.getElementById('lq-open-walls').addEventListener('click', () => window.larpenatorDesktop.media.openFolder('walls'));
     window.addEventListener('focus', loadCardMedia); // pick up anything added to the folder while you were away
   }
+
+  // Card backgrounds and wallpapers sync between your PCs through your Larpenator account, so
+  // they don't depend on OneDrive. Each file is kept in ~900 KB pieces: /users/{uid}/media holds
+  // the list, /users/{uid}/mediaChunks the pieces. Removing a file leaves a "deleted" marker so
+  // the other PC bins its copy instead of uploading it again.
+  (function mediaSync() {
+    const m = window.larpenatorDesktop && window.larpenatorDesktop.media;
+    if (!m || !m.files || !window.LvdSync || !LvdSync.isSupported || typeof firebase === 'undefined') return;
+    const CHUNK = 900 * 1024;
+    const KNOWN_KEY = 'lvd_media_known'; // what this PC had last time, to tell "removed here" from "new elsewhere"
+    const db = firebase.firestore();
+    let uid = null, unsub = null, cloud = null, running = false, again = false;
+    const keyOf = (folder, name) => encodeURIComponent(folder + '/' + name);
+    const col = n => db.collection('users').doc(uid).collection(n);
+    const loadKnown = () => { try { return new Set(JSON.parse(localStorage.getItem(KNOWN_KEY) || '[]')); } catch (e) { return new Set(); } };
+    const saveKnown = s => { try { localStorage.setItem(KNOWN_KEY, JSON.stringify([...s])); } catch (e) {} };
+
+    async function upload(f) {
+      const bytes = await m.read(f.folder, f.name);
+      if (!bytes) return;
+      const key = keyOf(f.folder, f.name);
+      const n = Math.max(1, Math.ceil(bytes.length / CHUNK));
+      for (let i = 0; i < n; i++) {
+        await col('mediaChunks').doc(key + '~' + i).set({ data: firebase.firestore.Blob.fromUint8Array(bytes.subarray(i * CHUNK, (i + 1) * CHUNK)) });
+      }
+      await col('media').doc(key).set({ folder: f.folder, name: f.name, size: bytes.length, chunks: n, updatedAt: Date.now() });
+    }
+    async function download(c) {
+      const key = keyOf(c.folder, c.name);
+      const parts = [];
+      for (let i = 0; i < c.chunks; i++) {
+        const d = await col('mediaChunks').doc(key + '~' + i).get({ source: 'server' });
+        if (!d.exists) return false; // still being uploaded from the other PC
+        parts.push(d.data().data.toUint8Array());
+      }
+      const bytes = new Uint8Array(parts.reduce((s, p) => s + p.length, 0));
+      let at = 0; parts.forEach(p => { bytes.set(p, at); at += p.length; });
+      if (bytes.length !== c.size) return false;
+      return m.write(c.folder, c.name, bytes);
+    }
+    async function markRemoved(c) {
+      const key = keyOf(c.folder, c.name);
+      await col('media').doc(key).set({ folder: c.folder, name: c.name, deleted: true, chunks: 0, size: 0, updatedAt: Date.now() });
+      for (let i = 0; i < (c.chunks || 0); i++) await col('mediaChunks').doc(key + '~' + i).delete();
+    }
+
+    async function reconcile() {
+      if (!uid || !cloud) return;
+      if (running) { again = true; return; }
+      running = true;
+      let got = 0, sent = 0, binned = 0;
+      try {
+        const local = await m.files();
+        const here = new Map(local.files.map(f => [keyOf(f.folder, f.name), f]));
+        const known = loadKnown();
+        // an unreadable or empty folder looks like "everything was removed": never act on that
+        const trustMissing = local.readable && here.size > 0;
+        for (const [key, f] of here) {
+          const c = cloud.get(key);
+          if (!c || (c.deleted && f.mtime > c.updatedAt) || (!c.deleted && c.size !== f.size && f.mtime > c.updatedAt)) { await upload(f); sent++; }
+          else if (c.deleted) { await m.trash(f.folder, f.name); here.delete(key); binned++; }
+        }
+        for (const [key, c] of cloud) {
+          if (c.deleted || here.has(key)) continue;
+          if (known.has(key) && trustMissing) { await markRemoved(c); continue; } // you removed it on this PC
+          if (await download(c)) { here.set(key, c); got++; }
+        }
+        saveKnown(new Set(here.keys()));
+      } catch (e) {
+        console.error('[media sync]', e);
+      } finally {
+        running = false;
+        if (got || binned) {
+          loadCardMedia();
+          refreshWallpapers();
+          showToast(got ? `Synced ${got} background${got === 1 ? '' : 's'} from your other PC` : 'Backgrounds updated from your other PC');
+        }
+        if (sent) console.log('[media sync] uploaded', sent);
+        if (again) { again = false; reconcile(); }
+      }
+    }
+
+    LvdSync.onAuthChange(user => {
+      if (unsub) { unsub(); unsub = null; }
+      uid = user ? user.uid : null;
+      cloud = null;
+      if (!uid) return;
+      unsub = col('media').onSnapshot({ includeMetadataChanges: true }, snap => {
+        if (snap.metadata.fromCache || snap.metadata.hasPendingWrites) return; // wait for the server's list
+        cloud = new Map(snap.docs.map(d => [d.id, d.data()]));
+        reconcile();
+      }, err => console.error('[media sync] listen', err));
+    });
+    window.addEventListener('focus', () => reconcile()); // picks up files added or removed in the folder
+    window.__lvdMediaSync = reconcile;
+  })();
 
   // ---------- init ----------
   loadCardMedia();
