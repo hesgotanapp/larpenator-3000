@@ -4,7 +4,7 @@ const fs = require('fs');
 const { pathToFileURL } = require('url');
 const { initWidget, restoreWidget, closeWidget } = require('./widget-main');
 const { initMedia, resolveMediaPath, serveMediaFile } = require('./media-main');
-const { initTradeSea } = require('./tradesea-main');
+const { initTradeSea, saveTradeSea } = require('./tradesea-main');
 
 // file:// pages get an opaque origin in modern Chromium, so their localStorage
 // is wiped between launches. Serving the app over a privileged custom scheme
@@ -325,7 +325,15 @@ app.whenReady().then(() => {
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
 
-app.on('before-quit', flushStorage);
+let tradeSeaSaved = false;
+app.on('before-quit', ev => {
+  flushStorage();
+  // TradeSea's tab state and sign-in are written out before quitting (once)
+  if (tradeSeaSaved) return;
+  ev.preventDefault();
+  tradeSeaSaved = true;
+  saveTradeSea().finally(() => app.quit());
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

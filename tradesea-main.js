@@ -2,7 +2,7 @@
 // cookie jar, "persist:tradesea"); you sign in there yourself and Larpenator never sees the password.
 // The page asks this module for your accounts and executions using that sign-in, and for a picture
 // of the TradeSea chart when a trade closes. Deciding what becomes a journal entry happens in the page.
-const { app, BrowserWindow, ipcMain, session } = require('electron');
+const { app, BrowserWindow, ipcMain, session, powerMonitor } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -13,9 +13,34 @@ const TRADE_READ = 'https://prod-trade-read.tradesea.ai';
 const DISCOVERY = 'https://prod-discovery.tradesea.ai'; // Compass, TradeSea's own journal: finished trades by date
 
 let tsWin = null;
+let quitting = false; // Larpenator already saved TradeSea on its way out (see main.js before-quit)
 let refreshing = null;
 const ses = () => session.fromPartition(PARTITION);
 const boundsFile = () => path.join(app.getPath('userData'), 'tradesea-window.json');
+// TradeSea keeps your chart layout (drawings included) and chosen account in sessionStorage, which a
+// browser tab keeps but a new window starts without. Larpenator keeps a copy here and puts it back
+// (tradesea-preload.js) before TradeSea's own code runs, so every open is like reopening your tab.
+const sessionFile = () => path.join(app.getPath('userData'), 'tradesea-session.json');
+
+async function saveTabState() {
+  if (!tsWin || tsWin.isDestroyed()) return;
+  try {
+    const json = await tsWin.webContents.executeJavaScript(
+      `location.origin === 'https://app.tradesea.ai' && sessionStorage.length ? JSON.stringify(Object.fromEntries(Object.keys(sessionStorage).map(k => [k, sessionStorage.getItem(k)]))) : ''`
+    );
+    if (json) fs.writeFileSync(sessionFile(), json);
+  } catch (e) { /* page busy or navigating — the next save catches it */ }
+}
+// Chromium writes storage and cookies to disk in batches; this writes them now, so closing the
+// window, quitting, or the laptop sleeping can't lose your sign-in or settings
+function flushToDisk() {
+  try { ses().flushStorageData(); } catch (e) {}
+  try { ses().cookies.flushStore(); } catch (e) {}
+}
+async function saveTradeSea() {
+  await saveTabState();
+  flushToDisk();
+}
 
 function openWindow(show) {
   if (tsWin && !tsWin.isDestroyed()) {
@@ -29,26 +54,37 @@ function openWindow(show) {
     title: 'TradeSea',
     autoHideMenuBar: true,
     // keeps drawing while behind other windows, so the chart picture is current
-    webPreferences: { partition: PARTITION, backgroundThrottling: false }
+    webPreferences: { partition: PARTITION, backgroundThrottling: false, preload: path.join(__dirname, 'tradesea-preload.js') }
   }));
   const saveBounds = () => { try { if (!tsWin.isMinimized() && !tsWin.isMaximized()) fs.writeFileSync(boundsFile(), JSON.stringify(tsWin.getBounds())); } catch (e) {} };
   tsWin.on('resize', saveBounds);
   tsWin.on('move', saveBounds);
-  tsWin.on('closed', () => { tsWin = null; });
+  // save everything before the window goes, then let it close
+  let closing = false;
+  tsWin.on('close', ev => {
+    if (closing || quitting) return;
+    ev.preventDefault();
+    closing = true;
+    const w = tsWin;
+    saveTradeSea().finally(() => { if (!w.isDestroyed()) w.close(); });
+  });
+  tsWin.on('closed', () => { tsWin = null; flushToDisk(); });
   tsWin.loadURL(APP_URL);
   return tsWin;
 }
 
-// TradeSea's page renews its own sign-in when it loads, so an expired sign-in gets one quiet
-// page load in a hidden window before we give up and ask you to sign in again
-function renewSignIn() {
+// TradeSea's sign-in token lasts about 5 minutes and is renewed with the refresh cookie, the same
+// call TradeSea's own page makes. Only one renewal runs at a time, and none while the TradeSea
+// window is open (the page renews it itself, and two renewals racing can end the sign-in).
+async function renewSignIn() {
   if (refreshing) return refreshing;
-  refreshing = new Promise(resolve => {
-    const already = tsWin && !tsWin.isDestroyed();
-    const w = already ? tsWin : openWindow(false);
-    if (already) w.webContents.reload();
-    setTimeout(() => { if (!already && w && !w.isDestroyed() && !w.isVisible()) w.destroy(); resolve(); }, 15000);
-  }).finally(() => { refreshing = null; });
+  refreshing = (async () => {
+    if (tsWin && !tsWin.isDestroyed() && tsWin.isVisible()) { await new Promise(r => setTimeout(r, 5000)); return; }
+    try {
+      await ses().fetch(IDENTITY + '/um/v1/login/refresh', { method: 'POST', credentials: 'include', headers: { Origin: 'https://app.tradesea.ai' } });
+      flushToDisk(); // the renewed cookies are what keeps you signed in next time
+    } catch (e) { /* offline — the next request tries again */ }
+  })().finally(() => { refreshing = null; });
   return refreshing;
 }
 
@@ -75,6 +111,12 @@ async function withSignIn(url, body) {
 }
 
 function initTradeSea() {
+  ipcMain.on('lvd-ts-tab-state', e => {
+    try { e.returnValue = JSON.parse(fs.readFileSync(sessionFile(), 'utf8')); } catch (err) { e.returnValue = null; }
+  });
+  app.on('before-quit', () => { quitting = true; });
+  setInterval(saveTradeSea, 30000);
+  ['suspend', 'lock-screen', 'shutdown'].forEach(ev => powerMonitor.on(ev, saveTradeSea));
   ipcMain.handle('lvd-ts-open', () => { openWindow(true); return true; });
   ipcMain.handle('lvd-ts-accounts', async () => {
     try {
@@ -126,4 +168,4 @@ function initTradeSea() {
   });
 }
 
-module.exports = { initTradeSea };
+module.exports = { initTradeSea, saveTradeSea };
