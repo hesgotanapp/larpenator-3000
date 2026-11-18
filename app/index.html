@@ -1783,6 +1783,17 @@
   .cm-item .cm-del { position: absolute; right: 5px; top: 5px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; cursor: pointer; font: 600 14px/1 var(--font-body); opacity: 0; transition: opacity .2s; }
   .cm-item:hover .cm-del, .cm-del:focus-visible, .cm-del.confirm { opacity: 1; }
   .cm-del.confirm { background: var(--loss, #e5484d); }
+  .nav-trade-dot { width: 7px; height: 7px; border-radius: 50%; margin-left: auto; background: transparent; }
+  .nav-trade-dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .aj-text { font-size: 13px; color: var(--ink-dim); margin: 0 0 12px; line-height: 1.55; }
+  .aj-status { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 12px; }
+  .aj-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-faint); flex-shrink: 0; }
+  .aj-dot.on { background: var(--green); } .aj-dot.warn { background: var(--red); }
+  .aj-accounts { display: grid; gap: 6px; margin-top: 12px; }
+  .aj-acc { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--border); border-radius: 9px; font-size: 13px; cursor: pointer; }
+  .aj-acc .nm { font-family: "JetBrains Mono", monospace; font-size: 12.5px; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+  .aj-acc .tag { font-size: 11px; color: var(--ink-faint); }
+  .aj-acc .tag.new { color: var(--accent); font-weight: 700; }
   .cm-sound { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 12.5px; color: var(--ink-dim); cursor: pointer; }
   .card-shade { position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(9,9,9,0.05), rgba(9,9,9,0.32) 55%, rgba(9,9,9,0.86)); }
   .palette-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-top: 8px; }
@@ -2109,6 +2120,9 @@
           <div class="nav-item" data-tab="dashboard" tabindex="0">Overview</div>
           <div class="nav-item" data-tab="premarket" tabindex="0">Premarket</div>
         </div>
+      </div>
+      <div class="nav-group" id="nav-trade-group" hidden>
+        <div class="nav-group-head" id="nav-trade" tabindex="0" title="Open TradeSea in Larpenator. Trades on your tracked accounts are logged as they close"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v4M7 17v4M17 3v6M17 15v6"></path><rect x="4.5" y="7" width="5" height="10" rx="1"></rect><rect x="14.5" y="9" width="5" height="6" rx="1"></rect></svg><span>Trade</span><span class="nav-trade-dot" id="nav-trade-dot" title=""></span></div>
       </div>
       <div class="nav-group" data-group="journal">
         <div class="nav-group-head" data-group-head="journal" tabindex="0"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"></path><path d="M8 9h8M8 13h8M8 17h5"></path></svg><span>Journal</span><span class="nav-count" id="nav-count-journal"></span></div>
@@ -3123,6 +3137,18 @@
       </div>
 
       <div class="settings-col">
+      <div class="card" id="aj-card" hidden>
+        <div class="cal-card-head"><h3>Auto journal <span class="head-note">TradeSea</span></h3></div>
+        <p class="aj-text">Trades on the accounts you tick are logged for you as they close, with a picture of the TradeSea chart. Only trades over $100 profit or loss (after fees) are logged, and breakevens are skipped. Your notes stay blank for you to fill in.</p>
+        <div class="aj-status"><span class="aj-dot" id="aj-dot"></span><span id="aj-status">Checking TradeSea…</span></div>
+        <div class="lq-tools"><button type="button" class="btn small" id="aj-open">Open TradeSea</button>
+          <button type="button" class="btn ghost small" id="aj-refresh">Refresh accounts</button></div>
+        <div class="aj-accounts" id="aj-accounts"></div>
+        <div class="field" style="margin-top:14px;">
+          <label for="aj-markets">Markets you trade</label>
+          <input type="text" id="aj-markets" placeholder="MNQ, NQ, MES, ES, MGC, GC">
+        </div>
+      </div>
       <div class="card">
         <div class="cal-card-head"><h3>Cloud sync</h3></div>
         <div id="sync-signed-out">
@@ -3641,7 +3667,7 @@
     const g = TAB_GROUP[name];
     document.querySelectorAll('.nav-group').forEach(el => el.classList.toggle('open', el.dataset.group === g));
   }
-  document.querySelectorAll('.nav-group-head').forEach(h => {
+  document.querySelectorAll('.nav-group-head[data-group-head]').forEach(h => {
     const go = () => switchTab(NAV_GROUPS[h.dataset.groupHead].tabs[0][0]);
     h.addEventListener('click', go);
     h.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } });
@@ -4543,6 +4569,7 @@
       bad: document.getElementById('f-bad').value.trim(),
       improve: document.getElementById('f-improve').value.trim(),
       screenshot: currentScreenshot || null,
+      autoTrade: editingId ? (entries.find(x => x.id === editingId) || {}).autoTrade || null : null,
       bgPhotoIndex: editingId ? (entries.find(x => x.id === editingId) || {}).bgPhotoIndex || 0 : 0,
       createdAt: editingId ? (entries.find(x => x.id === editingId) || {}).createdAt || Date.now() : Date.now()
     };
@@ -5355,6 +5382,7 @@
     const blocks = [
       e.brokenRules && e.brokenRules.length ? block('Rules broken', e.brokenRules.join(', ')) : '',
       e.checklistChecked && e.checklistChecked.length ? block('Pre-trade checklist confirmed', e.checklistChecked.join(', ')) : '',
+      e.autoTrade ? block('From TradeSea', autoTradeSummary(e)) : '',
       block('Emotions', e.emotions),
       block('What happened', e.happened),
       block('What went well', e.good),
@@ -10231,6 +10259,243 @@
     });
     window.addEventListener('focus', () => reconcile()); // picks up files added or removed in the folder
     window.__lvdMediaSync = reconcile;
+  })();
+
+  // ---------- auto journal (TradeSea) ----------
+  // Trades on the TradeSea accounts you tick become journal entries as they close: result, market,
+  // date, session and P&L are filled in, with a picture of the TradeSea chart; your notes stay blank.
+  // TradeSea only gives executions per market, so the markets you trade are checked in turn.
+  const AJ_KEY = 'lvd_autojournal';           // { tracked: {accountId: bool}, since: {accountId: ms}, markets: [] }
+  const AJ_SEEN_KEY = 'lvd_autojournal_seen'; // trade ids already handled (logged or skipped)
+  const AJ_MIN_PNL = 100;                     // smaller wins/losses (and breakevens) aren't logged
+  const AJ_EXCHANGE = { NQ: 'CME', MNQ: 'CME', ES: 'CME', MES: 'CME', RTY: 'CME', M2K: 'CME', '6E': 'CME', M6E: 'CME', '6B': 'CME', '6J': 'CME', '6A': 'CME',
+    YM: 'CBOT', MYM: 'CBOT', ZB: 'CBOT', ZN: 'CBOT', ZF: 'CBOT', GC: 'COMEX', MGC: 'COMEX', SI: 'COMEX', SIL: 'COMEX', HG: 'COMEX', MHG: 'COMEX',
+    CL: 'NYMEX', MCL: 'NYMEX', QM: 'NYMEX', NG: 'NYMEX' };
+  const AJ_POINT_VALUE = { NQ: 20, MNQ: 2, ES: 50, MES: 5, RTY: 50, M2K: 5, YM: 5, MYM: 0.5, GC: 100, MGC: 10, SI: 5000, SIL: 1000, HG: 25000, MHG: 2500,
+    CL: 1000, MCL: 100, QM: 500, NG: 10000, ZB: 1000, ZN: 1000, ZF: 1000, '6E': 125000, M6E: 12500, '6B': 62500, '6J': 12500000, '6A': 100000 };
+
+  function autoTradeSummary(e) {
+    const t = e.autoTrade;
+    const tm = s => new Date(s * 1000).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const pts = Math.round(t.points * 100) / 100;
+    return `${t.side === 'long' ? 'Long' : 'Short'} ${t.qty} ${e.symbol} · ${t.entryPrice} → ${t.exitPrice} (${pts >= 0 ? '+' : ''}${pts} pts) · ${tm(t.entryTime)}–${tm(t.exitTime)} · ${t.account}`;
+  }
+
+  // executions (newest first, as TradeSea sends them) → finished round trips, oldest first.
+  // A trade starts when the position leaves flat and ends when it's flat again.
+  function ajRoundTrips(execs, root) {
+    const pv = AJ_POINT_VALUE[root] || 0;
+    const trades = [];
+    let cur = null, pos = 0;
+    [...execs].sort((a, b) => a.time - b.time).forEach(x => {
+      let q = x.side === 'buy' ? x.qty : -x.qty;
+      while (q !== 0) {
+        if (pos === 0) cur = { id: 'ts-' + x.id, dir: Math.sign(q), qty: 0, inCost: 0, outQty: 0, outCost: 0, fees: 0, entryTime: x.time, exitTime: x.time };
+        if (Math.sign(q) === cur.dir) { // adding to the position
+          cur.qty += Math.abs(q); cur.inCost += Math.abs(q) * x.price; cur.fees += (x.commission || 0) * Math.abs(q) / x.qty; pos += q; q = 0;
+        } else {                         // taking it off (a reversal closes this trade and opens the next)
+          const n = Math.min(Math.abs(q), Math.abs(pos));
+          cur.outQty += n; cur.outCost += n * x.price; cur.fees += (x.commission || 0) * n / x.qty; cur.exitTime = x.time;
+          pos += Math.sign(q) * n; q -= Math.sign(q) * n;
+          if (pos === 0) {
+            const entryPrice = cur.inCost / cur.qty, exitPrice = cur.outCost / cur.outQty;
+            const points = (exitPrice - entryPrice) * cur.dir;
+            trades.push(Object.assign(cur, { entryPrice, exitPrice, points, pnl: pv ? points * cur.qty * pv - cur.fees : null }));
+            cur = null;
+          }
+        }
+      }
+    });
+    return trades;
+  }
+
+  // which session the trade was taken in, by New York time
+  function ajSession(sec) {
+    const p = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' }).formatToParts(new Date(sec * 1000));
+    const h = +p.find(x => x.type === 'hour').value + p.find(x => x.type === 'minute').value / 60;
+    return h >= 8 && h < 17 ? 'ny' : h >= 2 && h < 8 ? 'london' : 'asia';
+  }
+
+  (function autoJournal() {
+    const ts = window.larpenatorDesktop && window.larpenatorDesktop.tradesea;
+    const card = document.getElementById('aj-card');
+    if (!ts || !card) return;
+    card.hidden = false;
+    let cfg = loadJSON(AJ_KEY, {});
+    cfg.tracked = cfg.tracked || {}; cfg.since = cfg.since || {};
+    if (!Array.isArray(cfg.markets) || !cfg.markets.length) cfg.markets = ['MNQ', 'NQ', 'MES', 'ES', 'MGC', 'GC'];
+    const saveCfg = () => { try { localStorage.setItem(AJ_KEY, JSON.stringify(cfg)); } catch (e) {} };
+    const seen = new Set(loadJSON(AJ_SEEN_KEY, []));
+    const saveSeen = () => { try { localStorage.setItem(AJ_SEEN_KEY, JSON.stringify([...seen].slice(-3000))); } catch (e) {} };
+    let accounts = [], state = 'checking', queue = [], lastAccounts = 0;
+
+    function setStatus(text, cls) {
+      document.getElementById('aj-status').textContent = text;
+      document.getElementById('aj-dot').className = 'aj-dot' + (cls ? ' ' + cls : '');
+      const dot = document.getElementById('nav-trade-dot');
+      dot.classList.toggle('on', cls === 'on');
+      dot.title = cls === 'on' ? 'Logging your trades' : text;
+    }
+    function renderAccounts() {
+      const list = accounts.filter(a => !a.demo);
+      document.getElementById('aj-accounts').innerHTML = list.length ? list.map(a => `
+        <label class="aj-acc"><input type="checkbox" data-aj-acc="${escapeHtml(a.id)}"${cfg.tracked[a.id] ? ' checked' : ''}>
+          <span class="nm">${escapeHtml(a.name)}</span>
+          <span class="tag${a.id in cfg.tracked ? '' : ' new'}">${a.id in cfg.tracked ? (cfg.tracked[a.id] ? 'Tracking (funded)' : 'Not tracked') : 'New: funded? tick to track'}</span></label>`).join('')
+        : (state === 'ok' ? '<p class="lq-note">No prop accounts on your TradeSea yet.</p>' : '');
+      document.getElementById('aj-markets').value = cfg.markets.join(', ');
+    }
+    async function loadAccounts() {
+      const r = await ts.accounts();
+      lastAccounts = Date.now();
+      if (r.signedOut) { state = 'signedOut'; setStatus('Not signed in. Open TradeSea and sign in.', 'warn'); accounts = []; }
+      else if (r.error) { state = 'error'; setStatus('Can’t reach TradeSea right now (' + r.error + ')', 'warn'); }
+      else {
+        state = 'ok';
+        const before = new Set(accounts.map(a => a.id));
+        accounts = r.accounts;
+        const tracked = accounts.filter(a => cfg.tracked[a.id]);
+        setStatus(tracked.length ? `Signed in · logging ${tracked.length === 1 ? tracked[0].name : tracked.length + ' accounts'}` : 'Signed in · tick your funded accounts below', tracked.length ? 'on' : '');
+        const fresh = accounts.filter(a => !a.demo && !(a.id in cfg.tracked) && !before.has(a.id));
+        if (fresh.length && before.size) showToast(`New TradeSea account ${fresh[0].name}. If it's funded, tick it in Settings › Auto journal`);
+      }
+      renderAccounts();
+    }
+
+    async function checkNext() {
+      if (state !== 'ok') return;
+      if (!queue.length) {
+        queue = [];
+        accounts.filter(a => cfg.tracked[a.id]).forEach(a => cfg.markets.forEach(m => queue.push([a, m])));
+        if (!queue.length) return;
+      }
+      const [acc, root] = queue.shift();
+      const r = await ts.executions(acc.id, (AJ_EXCHANGE[root] || 'CME') + ':' + root);
+      if (r.signedOut) { state = 'signedOut'; setStatus('Signed out of TradeSea. Open TradeSea and sign in.', 'warn'); return; }
+      if (!r.executions) return;
+      for (const t of ajRoundTrips(r.executions, root)) {
+        if (seen.has(t.id)) continue;
+        seen.add(t.id);
+        if (t.exitTime * 1000 < (cfg.since[acc.id] || Infinity)) { markSig(acc, t); saveSeen(); continue; } // from before you started tracking it
+        if (t.pnl === null) continue;
+        const recent = Date.now() - t.exitTime * 1000 < 3 * 60 * 1000;
+        const worth = Math.abs(t.pnl) > AJ_MIN_PNL && !sigSeen(acc, t) && !alreadyLogged(acc, t);
+        const shot = worth && recent ? await ts.capture() : null;
+        if (logTrade(acc, root, t, shot)) showToast(`Logged ${root} ${t.pnl > 0 ? 'win +' : 'loss -'}${fmtMoney(Math.abs(t.pnl))} from TradeSea. Add your notes when you're ready`);
+      }
+    }
+
+    // the same trade can arrive twice (live fills and Compass, or both PCs): it's matched by account,
+    // exit time (to within 2 seconds) and size
+    const sig = (acc, sec, qty) => 'sig:' + acc.id.slice(0, 24) + '|' + sec + '|' + qty;
+    function sigSeen(acc, t) { for (let d = -2; d <= 2; d++) if (seen.has(sig(acc, Math.round(t.exitTime) + d, t.qty))) return true; return false; }
+    function markSig(acc, t) { seen.add(sig(acc, Math.round(t.exitTime), t.qty)); }
+    function alreadyLogged(acc, t) {
+      return entries.some(x => x.autoTrade && x.autoTrade.account === acc.name && x.autoTrade.qty === t.qty && Math.abs(x.autoTrade.exitTime - t.exitTime) <= 2);
+    }
+    // t: { id, dir, qty, entryPrice, exitPrice, entryTime, exitTime (seconds), points, pnl (after fees), fees }
+    function logTrade(acc, root, t, shot) {
+      const skip = sigSeen(acc, t) || alreadyLogged(acc, t) || Math.abs(t.pnl) <= AJ_MIN_PNL;
+      markSig(acc, t); saveSeen();
+      if (skip || entries.some(x => x.id === t.id)) return false;
+      const exit = new Date(t.exitTime * 1000);
+      entries.push({
+        id: t.id,
+        date: `${exit.getFullYear()}-${String(exit.getMonth() + 1).padStart(2, '0')}-${String(exit.getDate()).padStart(2, '0')}`,
+        symbol: root,
+        result: t.pnl > 0 ? 'win' : 'loss',
+        pnl: Math.round(t.pnl * 100) / 100,
+        rulesBroken: false, brokenRules: [], checklistChecked: [], setupType: null,
+        session: ajSession(t.entryTime),
+        premarketLink: null,
+        emotions: '', happened: '', good: '', bad: '', improve: '',
+        screenshot: shot || null,
+        autoTrade: { source: 'TradeSea', account: acc.name, side: t.dir > 0 ? 'long' : 'short', qty: t.qty,
+          entryPrice: Math.round(t.entryPrice * 100) / 100, exitPrice: Math.round(t.exitPrice * 100) / 100,
+          entryTime: t.entryTime, exitTime: t.exitTime, points: t.points, fees: Math.round((t.fees || 0) * 100) / 100 },
+        bgPhotoIndex: 0,
+        createdAt: Date.now()
+      });
+      saveEntries();
+      renderDashboard();
+      if (activeTab === 'entries') renderEntries();
+      return true;
+    }
+
+    // Compass (TradeSea's own journal) has finished trades by date: used to bring in your earlier
+    // trades when you tick an account, and to catch up on anything taken while Larpenator was closed
+    const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    async function catchUp(acc, fromDate) {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      let start = new Date(fromDate); start.setHours(0, 0, 0, 0);
+      let added = 0;
+      while (start <= today) {
+        const end = new Date(start); end.setDate(end.getDate() + 6);
+        const to = end > today ? today : end;
+        const r = await ts.history(acc.id, ymd(start), ymd(to));
+        if (!r.trades) return { added, ok: false };
+        r.trades.filter(x => x.status === 'FILLED' && x.exitedAt).sort((a, b) => a.exitedAt - b.exitedAt).forEach(x => {
+          const id = 'tl-' + x.id;
+          if (seen.has(id)) return;
+          seen.add(id);
+          const dir = String(x.side).toUpperCase() === 'SHORT' ? -1 : 1;
+          const t = { id, dir, qty: x.quantity, entryPrice: x.entryPrice, exitPrice: x.exitPrice,
+            entryTime: Math.round(x.enteredAt / 1e6), exitTime: Math.round(x.exitedAt / 1e6),
+            points: (x.exitPrice - x.entryPrice) * dir, pnl: x.netPnl, fees: x.totalCharges || 0 };
+          if (logTrade(acc, x.productCode || x.instrument, t, null)) added++;
+        });
+        start.setDate(start.getDate() + 7);
+      }
+      return { added, ok: true };
+    }
+    let lastCatchUp = 0;
+    async function catchUpAll() {
+      lastCatchUp = Date.now();
+      let added = 0;
+      for (const acc of accounts.filter(a => cfg.tracked[a.id])) {
+        cfg.history = cfg.history || {};
+        const first = !cfg.history[acc.id];
+        const from = first ? new Date(acc.created || Date.now() - 60 * 864e5) : new Date(Date.now() - 6 * 864e5);
+        const r = await catchUp(acc, from);
+        added += r.added;
+        if (r.ok && first) { cfg.history[acc.id] = Date.now(); saveCfg(); }
+      }
+      if (added) showToast(`Brought in ${added} earlier trade${added === 1 ? '' : 's'} from TradeSea. Add your notes when you're ready`);
+    }
+
+    document.getElementById('aj-open').addEventListener('click', () => ts.open());
+    const navTrade = document.getElementById('nav-trade');
+    document.getElementById('nav-trade-group').hidden = false;
+    navTrade.addEventListener('click', () => ts.open());
+    navTrade.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ts.open(); } });
+    document.getElementById('aj-refresh').addEventListener('click', loadAccounts);
+    document.getElementById('aj-accounts').addEventListener('change', ev => {
+      const id = ev.target.dataset.ajAcc;
+      if (!id) return;
+      cfg.tracked[id] = ev.target.checked;
+      // turning one on picks up today's trades too, but nothing from before that
+      if (ev.target.checked) { const d = new Date(); d.setHours(0, 0, 0, 0); cfg.since[id] = d.getTime(); }
+      saveCfg(); queue = []; lastCatchUp = 0; loadAccounts();
+    });
+    document.getElementById('aj-markets').addEventListener('change', ev => {
+      const list = ev.target.value.toUpperCase().split(/[\s,]+/).map(x => x.replace(/^[A-Z]+:/, '')).filter(x => /^[0-9A-Z]{1,4}$/.test(x));
+      if (list.length) { cfg.markets = [...new Set(list)]; saveCfg(); queue = []; }
+      renderAccounts();
+    });
+
+    // one quiet request every 4 seconds, accounts re-read every 10 minutes (or after a sign-in problem, every minute)
+    let busy = false;
+    setInterval(async () => {
+      if (busy) return;
+      busy = true;
+      try {
+        if (Date.now() - lastAccounts > (state === 'ok' ? 10 * 60 * 1000 : 60 * 1000)) await loadAccounts();
+        if (state === 'ok' && Date.now() - lastCatchUp > 30 * 60 * 1000) await catchUpAll();
+        await checkNext();
+      } catch (e) { console.error('[auto journal]', e); }
+      busy = false;
+    }, 4000);
+    loadAccounts();
   })();
 
   // ---------- init ----------

@@ -4,6 +4,7 @@ const fs = require('fs');
 const { pathToFileURL } = require('url');
 const { initWidget, restoreWidget, closeWidget } = require('./widget-main');
 const { initMedia, resolveMediaPath, serveMediaFile } = require('./media-main');
+const { initTradeSea } = require('./tradesea-main');
 
 // file:// pages get an opaque origin in modern Chromium, so their localStorage
 // is wiped between launches. Serving the app over a privileged custom scheme
@@ -315,6 +316,7 @@ app.whenReady().then(() => {
   createWindow();
   initWidget(() => win);
   initMedia();
+  initTradeSea();
   if (win) win.webContents.once('did-finish-load', restoreWidget);
   runPersistTest();
   wireUpdater();

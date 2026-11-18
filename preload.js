@@ -18,6 +18,14 @@ contextBridge.exposeInMainWorld('larpenatorDesktop', {
     write: (folder, name, bytes) => ipcRenderer.invoke('lvd-media-write', folder, name, bytes),
     trash: (folder, name) => ipcRenderer.invoke('lvd-media-trash', folder, name)
   },
+  // TradeSea (auto journal): its own window you sign in to; accounts, executions and a chart picture
+  tradesea: {
+    open: () => ipcRenderer.invoke('lvd-ts-open'),
+    accounts: () => ipcRenderer.invoke('lvd-ts-accounts'),
+    executions: (accountId, instrument) => ipcRenderer.invoke('lvd-ts-executions', accountId, instrument),
+    history: (accountId, from, to) => ipcRenderer.invoke('lvd-ts-history', accountId, from, to),
+    capture: () => ipcRenderer.invoke('lvd-ts-capture')
+  },
   // desk widget (always-on-top panel)
   widget: {
     toggle: () => ipcRenderer.send('widget-toggle'),
