@@ -10316,6 +10316,14 @@
     return h >= 8 && h < 17 ? 'ny' : h >= 2 && h < 8 ? 'london' : 'asia';
   }
 
+  // the journal date for a trade: New York and London session trades take New York's date (the
+  // evening the session opened for you in Melbourne), Asia session trades take your own date
+  function ajDate(sec) {
+    const d = new Date(sec * 1000);
+    if (ajSession(sec) === 'asia') return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  }
+
   (function autoJournal() {
     const ts = window.larpenatorDesktop && window.larpenatorDesktop.tradesea;
     const card = document.getElementById('aj-card');
@@ -10398,10 +10406,9 @@
       const skip = sigSeen(acc, t) || alreadyLogged(acc, t) || Math.abs(t.pnl) <= AJ_MIN_PNL;
       markSig(acc, t); saveSeen();
       if (skip || entries.some(x => x.id === t.id)) return false;
-      const exit = new Date(t.exitTime * 1000);
       entries.push({
         id: t.id,
-        date: `${exit.getFullYear()}-${String(exit.getMonth() + 1).padStart(2, '0')}-${String(exit.getDate()).padStart(2, '0')}`,
+        date: ajDate(t.entryTime),
         symbol: root,
         result: t.pnl > 0 ? 'win' : 'loss',
         pnl: Math.round(t.pnl * 100) / 100,
@@ -10463,6 +10470,13 @@
       if (added) showToast(`Brought in ${added} earlier trade${added === 1 ? '' : 's'} from TradeSea. Add your notes when you're ready`);
     }
 
+    // entries logged before the session-date rule (1.14.3) were dated by the exit in your time
+    if (!localStorage.getItem('lvd_autojournal_dates_v2')) {
+      let fixed = 0;
+      entries.forEach(x => { if (x.autoTrade && x.autoTrade.entryTime && x.date !== ajDate(x.autoTrade.entryTime)) { x.date = ajDate(x.autoTrade.entryTime); x.updatedAt = Date.now(); fixed++; } });
+      if (fixed) { saveEntries(); renderDashboard(); if (activeTab === 'entries') renderEntries(); }
+      try { localStorage.setItem('lvd_autojournal_dates_v2', '1'); } catch (e) {}
+    }
     document.getElementById('aj-open').addEventListener('click', () => ts.open());
     const navTrade = document.getElementById('nav-trade');
     document.getElementById('nav-trade-group').hidden = false;
