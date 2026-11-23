@@ -76,12 +76,18 @@ function openWindow(show) {
 // TradeSea's sign-in token lasts about 5 minutes and is renewed with the refresh cookie, the same
 // call TradeSea's own page makes. Only one renewal runs at a time, and none while the TradeSea
 // window is open (the page renews it itself, and two renewals racing can end the sign-in).
+// every TradeSea request gives up after 20 seconds, so a dropped connection (the laptop waking,
+// Wi-Fi changing) can't leave the trade checker waiting forever
+const REQUEST_TIMEOUT = 20000;
+// resolves to fallback if the promise hasn't settled in ms
+const within = (p, ms, fallback) => Promise.race([p, new Promise(r => setTimeout(() => r(fallback), ms))]);
+
 async function renewSignIn() {
   if (refreshing) return refreshing;
   refreshing = (async () => {
     if (tsWin && !tsWin.isDestroyed() && tsWin.isVisible()) { await new Promise(r => setTimeout(r, 5000)); return; }
     try {
-      await ses().fetch(IDENTITY + '/um/v1/login/refresh', { method: 'POST', credentials: 'include', headers: { Origin: 'https://app.tradesea.ai' } });
+      await ses().fetch(IDENTITY + '/um/v1/login/refresh', { method: 'POST', credentials: 'include', headers: { Origin: 'https://app.tradesea.ai' }, signal: AbortSignal.timeout(REQUEST_TIMEOUT) });
       flushToDisk(); // the renewed cookies are what keeps you signed in next time
     } catch (e) { /* offline — the next request tries again */ }
   })().finally(() => { refreshing = null; });
@@ -93,7 +99,8 @@ async function getData(url, body) {
     method: body ? 'POST' : 'GET',
     credentials: 'include',
     headers: Object.assign({ Origin: 'https://app.tradesea.ai' }, body ? { 'Content-Type': 'application/json' } : {}),
-    body: body ? JSON.stringify(body) : undefined
+    body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT)
   });
   if (r.status === 401 || r.status === 403) { const e = new Error('signed out'); e.signedOut = true; throw e; }
   if (!r.ok) throw new Error('TradeSea answered ' + r.status);
@@ -159,8 +166,10 @@ function initTradeSea() {
   ipcMain.handle('lvd-ts-capture', async () => {
     if (!tsWin || tsWin.isDestroyed() || !tsWin.isVisible() || tsWin.isMinimized()) return null;
     try {
-      let img = await tsWin.webContents.capturePage();
-      if (img.isEmpty()) return null;
+      // a window that's partly covered can stall the capture on Windows: keep it painting
+      // (stayAwake) and never wait more than 8 seconds for the picture
+      let img = await within(tsWin.webContents.capturePage(undefined, { stayAwake: true }), 8000, null);
+      if (!img || img.isEmpty()) return null;
       const { width } = img.getSize();
       if (width > 1600) img = img.resize({ width: 1600, quality: 'best' });
       return 'data:image/jpeg;base64,' + img.toJPEG(82).toString('base64');

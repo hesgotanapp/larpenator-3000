@@ -10443,7 +10443,7 @@
         if (t.pnl === null) continue;
         const recent = Date.now() - t.exitTime * 1000 < 3 * 60 * 1000;
         const worth = Math.abs(t.pnl) > AJ_MIN_PNL && !sigSeen(acc, t) && !alreadyLogged(acc, t);
-        const shot = worth && recent ? await ts.capture() : null;
+        const shot = worth && recent ? await Promise.race([ts.capture(), new Promise(r => setTimeout(() => r(null), 10000))]) : null;
         if (logTrade(acc, root, t, shot)) showToast(`Logged ${root} ${t.pnl > 0 ? 'win +' : 'loss -'}${fmtMoney(Math.abs(t.pnl))} from TradeSea. Add your notes when you're ready`);
       }
     }
@@ -10553,10 +10553,12 @@
     });
 
     // one quiet request every 4 seconds, accounts re-read every 10 minutes (or after a sign-in problem, every minute)
-    let busy = false;
+    // a check that hangs (it shouldn't: every request has a time limit) is abandoned after
+    // two minutes instead of stopping the checker for good
+    let busy = false, busySince = 0;
     setInterval(async () => {
-      if (busy) return;
-      busy = true;
+      if (busy && Date.now() - busySince < 2 * 60 * 1000) return;
+      busy = true; busySince = Date.now();
       try {
         if (Date.now() - lastAccounts > (state === 'ok' ? 10 * 60 * 1000 : 60 * 1000)) await loadAccounts();
         if (state === 'ok' && Date.now() - lastCatchUp > 30 * 60 * 1000) await catchUpAll();
