@@ -3399,6 +3399,49 @@
   const CHECKLIST_CATEGORIES_KEY = 'lvd_checklist_categories';
 
   let entries = loadJSON(STORAGE_KEY, []);
+  // Trade screenshots live in IndexedDB, not localStorage: Chromium caps localStorage at about
+  // 5 million characters per app and screenshots filled it, so saves started failing. A saved entry
+  // keeps screenshot: SHOT_IN_STORE and gets its picture back once the store has loaded (shotsReady);
+  // cloud sync waits for that so it never uploads an entry without its picture.
+  const SHOT_IN_STORE = 'idb:shot';
+  const shotDB = new Promise(res => {
+    try {
+      const r = indexedDB.open('lvd-shots', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('shots');
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => res(null);
+    } catch (e) { res(null); }
+  });
+  function shotTx(mode, fn) {
+    return shotDB.then(db => db && new Promise((res, rej) => {
+      const t = db.transaction('shots', mode);
+      const req = fn(t.objectStore('shots'));
+      t.oncomplete = () => res(req && req.result);
+      t.onerror = () => rej(t.error);
+    }));
+  }
+  const shotSaved = new Map(); // entry id -> signature of the picture already in the store
+  const shotSig = d => d.length + ':' + d.slice(-48);
+  const shotsPending = new Set(entries.filter(e => e.screenshot === SHOT_IN_STORE).map(e => e.id));
+  entries.forEach(e => { if (e.screenshot === SHOT_IN_STORE) e.screenshot = null; });
+  const shotsReady = (async () => {
+    try {
+      const db = await shotDB;
+      if (!db) return;
+      const stored = await new Promise((res, rej) => {
+        const map = new Map(), t = db.transaction('shots', 'readonly');
+        t.objectStore('shots').openCursor().onsuccess = ev => { const c = ev.target.result; if (c) { map.set(c.key, c.value); c.continue(); } };
+        t.oncomplete = () => res(map); t.onerror = () => rej(t.error);
+      });
+      entries.forEach(e => {
+        if (shotsPending.has(e.id) && stored.has(e.id)) e.screenshot = stored.get(e.id);
+        if (e.screenshot && stored.get(e.id) === e.screenshot) shotSaved.set(e.id, shotSig(e.screenshot));
+      });
+      const live = new Set(entries.map(e => e.id));
+      stored.forEach((v, id) => { if (!live.has(id)) shotTx('readwrite', st => st.delete(id)).catch(() => {}); }); // deleted entries
+    } catch (e) { console.error('[screenshots]', e); }
+    finally { shotsPending.clear(); }
+  })();
   let focusRules = loadJSON(FOCUS_RULES_KEY, null);
   if (!focusRules) {
     const legacy = localStorage.getItem(FOCUS_KEY);
@@ -3562,7 +3605,19 @@
     catch (e) { return fallback; }
   }
   function saveEntries() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }
+    const lite = entries.map(e => {
+      if (e.screenshot && e.screenshot !== SHOT_IN_STORE && /^data:/.test(e.screenshot)) {
+        const sig = shotSig(e.screenshot), shot = e.screenshot, id = e.id;
+        if (shotSaved.get(id) !== sig) {
+          shotSaved.set(id, sig);
+          shotTx('readwrite', st => st.put(shot, id)).catch(err => { shotSaved.delete(id); console.error('[screenshots]', err); });
+        }
+        return Object.assign({}, e, { screenshot: SHOT_IN_STORE });
+      }
+      if (!e.screenshot && shotsPending.has(e.id)) return Object.assign({}, e, { screenshot: SHOT_IN_STORE }); // picture not loaded yet
+      return e;
+    });
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(lite)); }
     catch (e) { showToast('Could not save — storage may be full'); console.error(e); }
   }
   function saveMilestone() { localStorage.setItem(MILESTONE_KEY, JSON.stringify(milestone)); }
@@ -9541,7 +9596,7 @@
       if (id === 'mistakes') renderMistakes();
     }
 
-    LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; _localSaveEntries(); }, rerenderAfterRemoteSync);
+    shotsReady.then(() => LvdSync.registerCollection('entries', () => entries, (arr) => { entries = arr; _localSaveEntries(); }, rerenderAfterRemoteSync));
     // notes: one document per note, folders as their own small collection. A note too big for one
     // cloud document (lots of pasted pictures) stays on this computer instead of failing to sync.
     const NOTE_SYNC_LIMIT = 900000;
@@ -10513,6 +10568,12 @@
   })();
 
   // ---------- init ----------
+  // pictures back in place: redraw, and move any still stored inline (older saves) into the store
+  shotsReady.then(() => {
+    if (entries.some(e => e.screenshot && /^data:/.test(e.screenshot) && shotSaved.get(e.id) !== shotSig(e.screenshot))) saveEntries();
+    renderDashboard();
+    if (activeTab === 'entries') renderEntries();
+  });
   loadCardMedia();
   migrateLegacyBgPhotosOnce();
   advanceAllBgPhotosOnLaunch();
